@@ -1,4 +1,4 @@
-name: template
+name: Code Quality Check
 
 concurrency:
   group: $-$
