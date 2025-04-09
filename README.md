@@ -1,6 +1,6 @@
 # MEV TECH MOBILE APPLICATION README GUIDELINE /  DEVELOPER MANUAL
 
-***PROJECT DESCRIPTION TEMPLATE  : MANUAL / GUIDE***
+***PROJECT DESCRIPTION PROJECT  : MANUAL / GUIDE***
 
 ![coverage][coverage_badge]
 [![style: very good analysis][very_good_analysis_badge]][very_good_analysis_link]
@@ -12,8 +12,6 @@ Powered by the [Very Good CLI][very_good_cli_link] 🤖
 
 ## Available Platforms 📃
 
-Please check other branch to see other template.
-
 - Mobile (Not available yet)
 - Multiplatform (Not available yet)
 
@@ -21,13 +19,13 @@ Please check other branch to see other template.
 
 ## Getting Started 🚀
 
-This project contains 3 flavors:
+This project contains 3 Enviroments:
 
 - development
 - staging
 - production
 
-To run the desired flavor either use the launch configuration in VSCode/Android Studio or use the following commands:
+To run the desired enviroment either use the launch configuration in VSCode/Android Studio or use the following commands:
 
 ```sh
 # Development
@@ -40,7 +38,7 @@ $ flutter run --flavor staging --target lib/main_staging.dart
 $ flutter run --flavor production --target lib/main_production.dart
 ```
 
-*\*Template works on iOS, Android, Web, Linux, and Windows.*
+*\*Project works on iOS, Android, Web, Linux, and Windows.*
 
 ---
 
@@ -238,7 +236,7 @@ Then add a new key/value and description
 Use the new string
 
 ```dart
-import 'package:template/l10n/l10n.dart';
+import 'package:Project/l10n/l10n.dart';
 
 @override
 Widget build(BuildContext context) {
@@ -302,7 +300,7 @@ Add the translated strings to each `.arb` file:
 
 ## Migration Guide
 
-This section provides an overview of the breaking changes and steps needed to migrate from the previous version of this template to the latest release.
+This section provides an overview of the breaking changes and steps needed to migrate from the previous version of this Project to the latest release.
 
 ### 1. Flutter Version & Tooling
 
