@@ -10,29 +10,12 @@ Powered by the [Very Good CLI][very_good_cli_link] 🤖
 
 ---
 
-## Available Templates 📃
+## Available Platforms 📃
 
 Please check other branch to see other template.
 
 - Mobile (Not available yet)
 - Multiplatform (Not available yet)
-
----
-
-## How to Use 🎮
-
-Using this template is easy.
-
-1. Choose template from branch.
-2. Press use this template button.
-3. Create your repository.
-4. Clone your repository.
-5. Rename package name from `dev.adryanev.template` to your liking.
-6. Rename the project name from `template` to your need.
-
-Snackbar Flash
-
-You can use snackbar easily with `FlashCubit`. You can call `context.displayFlash(message)` to show a snackbar.
 
 ---
 
