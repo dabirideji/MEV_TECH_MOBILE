@@ -13,6 +13,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:template/app/router/app_router.dart';
 import 'package:template/core/extensions/context_extensions.dart';
 import 'package:template/core/utils/constants.dart';
+import 'package:template/features/auth/logic/auth-cubit/auth_cubit.dart';
+import 'package:template/features/home/home_cubit.dart';
+import 'package:template/features/presentation/dashboard/dashboard_cubit.dart';
+import 'package:template/features/presentation/landing/landing_cubit.dart';
 import 'package:template/injector.dart';
 import 'package:template/l10n/l10n.dart';
 import 'package:template/shared/flash/presentation/blocs/cubit/flash_cubit.dart';
@@ -26,6 +30,15 @@ class App extends StatelessWidget {
       providers: [
         BlocProvider(
           create: (context) => getIt<FlashCubit>(),
+        ),
+        BlocProvider(
+          create: (context) => getIt<LandingCubit>(),
+        ),
+        BlocProvider(
+          create: (context) => getIt<AuthCubit>(),
+        ),
+        BlocProvider(
+          create: (context) => getIt<HomeCubit>(),
         ),
       ],
       child: MultiBlocListener(
@@ -47,17 +60,18 @@ class App extends StatelessWidget {
           designSize: const Size(ScreenUtilSize.width, ScreenUtilSize.height),
           builder: (context, child) {
             return MaterialApp.router(
-              scaffoldMessengerKey: rootScaffoldMessengerKey,
+              debugShowCheckedModeBanner: false,
+              // scaffoldMessengerKey: rootScaffoldMessengerKey,
               theme: ThemeData(
                 useMaterial3: true,
-                fontFamily: GoogleFonts.poppins().fontFamily,
+                textTheme: GoogleFonts.poppinsTextTheme(),
               ),
               localizationsDelegates: const [
                 AppLocalizations.delegate,
                 GlobalMaterialLocalizations.delegate,
               ],
               supportedLocales: AppLocalizations.supportedLocales,
-              routerConfig: router(),
+              routerConfig: appRouter,
               builder: (context, widget) {
                 return MediaQuery(
                   data: MediaQuery.of(context)
@@ -72,3 +86,22 @@ class App extends StatelessWidget {
     );
   }
 }
+
+// theme: ThemeData(
+//   textTheme: poppinsTextTheme,
+//   colorScheme: ColorScheme.fromSeed(
+//     seedColor: Colors.deepPurple,
+//     primary: Colors.deepPurple,
+//     onPrimary: Colors.white,
+//     onBackground: Colors.black, // Used for general text color
+//   ),
+// ),
+
+// final poppinsTextTheme = GoogleFonts.poppinsTextTheme().copyWith(
+//   headlineLarge: GoogleFonts.poppins(fontSize: 32, fontWeight: FontWeight.bold),
+//   headlineMedium: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.w600),
+//   titleLarge: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w500),
+//   bodyLarge: GoogleFonts.poppins(fontSize: 16),
+//   bodyMedium: GoogleFonts.poppins(fontSize: 14),
+//   labelLarge: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500), late final GoRouter _router;
+// );

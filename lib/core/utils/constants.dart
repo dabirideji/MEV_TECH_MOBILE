@@ -30,3 +30,29 @@ enum MessageType {
   success,
   danger,
 }
+
+String? checkNullString(dynamic value) {
+  if (value != null) {
+    return value as String;
+  }
+  return null;
+}
+
+// class NullModel<T> {
+//   T? checkNull(dynamic value) {
+//     if (value != null) {
+//       return value as T;
+//     }
+//     return null;
+//   }
+// }
+
+class UserType {
+  static const instructor = 'instructor';
+  static const student = 'student';
+}
+
+class Youtube {
+  static String thumbnailUrl(String videoID) =>
+      'https://img.youtube.com/vi/$videoID/default.jpg';
+}

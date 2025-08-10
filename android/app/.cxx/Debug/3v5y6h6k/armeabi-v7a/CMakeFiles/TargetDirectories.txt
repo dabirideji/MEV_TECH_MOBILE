@@ -1,0 +1,2 @@
+/Users/mac/Documents/MEV_TECH_MOBILE/android/app/.cxx/Debug/3v5y6h6k/armeabi-v7a/CMakeFiles/edit_cache.dir
+/Users/mac/Documents/MEV_TECH_MOBILE/android/app/.cxx/Debug/3v5y6h6k/armeabi-v7a/CMakeFiles/rebuild_cache.dir

@@ -1,7 +1,20 @@
 import 'package:flutter/material.dart';
 
 class AppColor {
-  static const primary = Color(0xFF006BB3);
+  // static const primary = Color(0xFF006BB3);
+  static const secondary = Color(0xFFFF4E9A);
+  static const primary = Color(0xFF04654a);
+  static const primaryLight1 = Color(0xFFd3e4df);
+  static const primaryLight2 = Color(0xFFdfebe8);
+  static const primaryLight3 = Color(0xFFf7faf9);
+
+  static const secondaryFade = Color(0xFFff75b0);
+  static const secondaryTint = Color(0xFFffebf4);
+  static const secondaryFaint = Color(0xFFffd7e8);
+
+  static const primaryTint = Color(0xFFaecdc5);
+  static const primaryFaint = Color(0xFFa2c6bc);
+
   static const blueLightest = Color(0xFFD7F4FE);
   static const blueLighter = Color(0xFFAAD9E9);
   static const blue = Color(0xFF62B8F6);
@@ -26,3 +39,16 @@ class AppColor {
     ],
   );
 }
+
+// #65a090
+// #72a899
+// #7eafa2
+// #8ab7aa
+// #96beb3
+// #a2c6bc
+// #aecdc5
+// #bad5cd
+// #c7dcd6
+// #d3e4df
+// #dfebe8
+// #f7faf9

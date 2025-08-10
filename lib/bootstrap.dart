@@ -10,13 +10,14 @@ import 'dart:developer';
 
 import 'package:bloc/bloc.dart';
 import 'package:flutter/widgets.dart';
+import 'package:template/features/auth/logic/auth-cubit/auth_cubit.dart';
 import 'package:template/injector.dart';
 
 class AppBlocObserver extends BlocObserver {
   @override
   void onChange(BlocBase<dynamic> bloc, Change<dynamic> change) {
     super.onChange(bloc, change);
-    log('onChange(${bloc.runtimeType}, $change)');
+    // log('onChange(${bloc.runtimeType}, $change)');
   }
 
   @override
@@ -27,17 +28,20 @@ class AppBlocObserver extends BlocObserver {
 }
 
 Future<void> bootstrap(
-  FutureOr<Widget> Function() builder, {
+  Widget builder, {
   required String environment,
 }) async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await configureDependencies(environment: environment);
+
+  await getIt.allReady();
+
   FlutterError.onError = (details) {
     log(details.exceptionAsString(), stackTrace: details.stack);
   };
 
   Bloc.observer = AppBlocObserver();
 
-  runApp(await builder());
+  runApp(builder);
 }

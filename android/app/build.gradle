@@ -52,6 +52,7 @@ android {
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
+        multiDexEnabled true
     }
 
     signingConfigs {
@@ -62,6 +63,12 @@ android {
                 keyPassword System.getenv("ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD")
                 storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
             }
+            debug {
+            storeFile file(System.getenv("ANDROID_KEYSTORE_PATH")) // Use the same keystore
+            keyAlias System.getenv("ANDROID_KEYSTORE_ALIAS")
+            keyPassword System.getenv("ANDROID_KEYSTORE_PRIVATE_KEY_PASSWORD")
+            storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+        }
         } else {
             release {
                 keyAlias keystoreProperties['keyAlias']
@@ -69,6 +76,12 @@ android {
                 storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
                 storePassword keystoreProperties['storePassword']
             }
+            debug {
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+            storePassword keystoreProperties['storePassword']
+        }
         }
     }
 
@@ -77,25 +90,26 @@ android {
         production {
             dimension "default"
             applicationIdSuffix ""
-            manifestPlaceholders = [appName: "Template"]
+            manifestPlaceholders = [appName: "Template",redirectScheme: "dev.adryanev.template"]
         }
         staging {
             dimension "default"
             applicationIdSuffix ".stg"
-            manifestPlaceholders = [appName: "[STG] Template"]
+            manifestPlaceholders = [appName: "[STG] Template",redirectScheme: "dev.adryanev.template.stg"]
         }
         development {
             dimension "default"
             applicationIdSuffix ".dev"
-            manifestPlaceholders = [appName: "[DEV] Template"]
+            manifestPlaceholders = [appName: "[DEV] Template",redirectScheme: "dev.adryanev.template.dev"]
         }
     }
 
     buildTypes {
         release {
             signingConfig signingConfigs.release
-            minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt')
+            shrinkResources false
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro' // ('proguard-android.txt') only after getDefaultProguardFile
         }
         debug {
             signingConfig signingConfigs.debug
@@ -108,7 +122,8 @@ flutter {
 }
 
 dependencies {
-        implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.20"
+        implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.22" // 1.9.20
+        implementation 'com.google.android.gms:play-services-auth:20.7.0'
     def multidex_version = "2.0.1"
         implementation "androidx.multidex:multidex:$multidex_version"
 }
