@@ -7,6 +7,7 @@ import 'package:template/core/utils/colors.dart';
 import 'package:template/features/course/course-widget/course_card.dart';
 import 'package:template/features/course/data/models/course-models/course_model.dart';
 import 'package:template/features/course/logic/course-cubit/course_cubit.dart';
+import 'package:template/features/course/logic/selected_course_cubit.dart';
 import 'package:template/features/presentation/widgets/course.dart';
 
 class CategoryViewMorePage extends StatelessWidget {
@@ -47,8 +48,13 @@ class CategoryViewMorePage extends StatelessWidget {
         ),
         body: CourseModelCard(
           courses: categoryList,
-          onTap: (id) {
-            context.pushNamed(AppRouter.courseDetails, extra: id);
+          onTap: (course) {
+            context.read<SelectedCourseCubit>().selectCourse(course);
+
+            context.pushNamed(
+              AppRouter.courseDetails,
+              pathParameters: {'id': course.id},
+            );
           },
         ),
       );
@@ -71,8 +77,13 @@ class CategoryViewMorePage extends StatelessWidget {
         ),
         body: CourseModelCard(
           courses: allCategoryList,
-          onTap: (id) {
-            context.pushNamed(AppRouter.courseDetails, extra: id);
+          onTap: (course) {
+            context.read<SelectedCourseCubit>().selectCourse(course);
+
+            context.pushNamed(
+              AppRouter.courseDetails,
+              pathParameters: {'id': course.id},
+            );
           },
         ),
       );

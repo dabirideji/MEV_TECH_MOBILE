@@ -1,48 +1,51 @@
 part of 'user_cubit.dart';
 
-enum UserActionType {
-  update,
-  delete,
-}
-
 sealed class UserState extends Equatable {
-  const UserState();
+  const UserState({
+    this.user,
+    this.updateUserStatus = const RequestState.initial(),
+    this.imageUploadStatus = const RequestState.initial(),
+    this.message = '',
+    this.file,
+  });
+
+  final UserModel? user;
+  final RequestState updateUserStatus;
+  final RequestState imageUploadStatus;
+  final String message;
+  final File? file;
 
   @override
-  List<Object> get props => [];
-}
-
-final class UserInitial extends UserState {}
-
-final class UserLoading extends UserState {
-  const UserLoading({required this.actionType});
-
-  final UserActionType actionType;
-  @override
-  List<Object> get props => [actionType];
+  List<Object?> get props =>
+      [user, updateUserStatus, imageUploadStatus, message, file];
 }
 
 final class UserSuccess extends UserState {
   const UserSuccess({
-    required this.user,
-    required this.actionType,
-    this.message = '',
+    super.user,
+    super.updateUserStatus,
+    super.imageUploadStatus,
+    super.message,
+    super.file,
   });
 
-  final UserModel user;
-  final UserActionType actionType;
-  final String message;
+  UserSuccess copyWith({
+    UserModel? user,
+    RequestState? updateUserStatus,
+    RequestState? imageUploadStatus,
+    String? message,
+    File? file,
+  }) {
+    return UserSuccess(
+      user: user ?? this.user,
+      updateUserStatus: updateUserStatus ?? this.updateUserStatus,
+      imageUploadStatus: imageUploadStatus ?? this.imageUploadStatus,
+      message: message ?? this.message,
+      file: file ?? this.file,
+    );
+  }
 
   @override
-  List<Object> get props => [user, actionType];
-}
-
-final class UserFailure extends UserState {
-  const UserFailure(this.errorMessage, {required this.actionType});
-
-  final String errorMessage;
-  final UserActionType actionType;
-
-  @override
-  List<Object> get props => [errorMessage, actionType];
+  List<Object?> get props =>
+      [user, updateUserStatus, imageUploadStatus, message, file];
 }

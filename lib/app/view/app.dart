@@ -12,8 +12,11 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:template/app/router/app_router.dart';
 import 'package:template/core/extensions/context_extensions.dart';
+import 'package:template/core/network/signalr_cubit.dart';
 import 'package:template/core/utils/constants.dart';
 import 'package:template/features/auth/logic/auth-cubit/auth_cubit.dart';
+import 'package:template/features/chat/data/chat-data/chat_data_cubit.dart';
+import 'package:template/features/course/logic/selected_course_cubit.dart';
 import 'package:template/features/home/home_cubit.dart';
 import 'package:template/features/presentation/dashboard/dashboard_cubit.dart';
 import 'package:template/features/presentation/landing/landing_cubit.dart';
@@ -21,11 +24,14 @@ import 'package:template/injector.dart';
 import 'package:template/l10n/l10n.dart';
 import 'package:template/shared/flash/presentation/blocs/cubit/flash_cubit.dart';
 
+final _appTextTheme = GoogleFonts.poppinsTextTheme();
+
 class App extends StatelessWidget {
   const App({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // print('Rebuilding main app');
     return MultiBlocProvider(
       providers: [
         BlocProvider(
@@ -34,11 +40,26 @@ class App extends StatelessWidget {
         BlocProvider(
           create: (context) => getIt<LandingCubit>(),
         ),
-        BlocProvider(
-          create: (context) => getIt<AuthCubit>(),
+        // BlocProvider(
+        //   create: (context) => getIt<AuthCubit>(),
+        // ),
+        BlocProvider.value(
+          value: getIt<AuthCubit>(),
         ),
         BlocProvider(
           create: (context) => getIt<HomeCubit>(),
+        ),
+        BlocProvider(
+          create: (context) => getIt<SelectedCourseCubit>(),
+        ),
+        // BlocProvider<SignalRCubit>(
+        //   create: (context) => getIt<SignalRCubit>(),
+        // ),
+        BlocProvider.value(
+          value: getIt<SignalRCubit>(),
+        ),
+        BlocProvider(
+          create: (context) => getIt<ChatDataCubit>(),
         ),
       ],
       child: MultiBlocListener(
@@ -55,17 +76,53 @@ class App extends StatelessWidget {
               }
             },
           ),
+          BlocListener<AuthCubit, AuthState>(
+            listener: (context, authState) {
+              final signalRCubit = context.read<SignalRCubit>();
+              if (authState is AuthLoginSuccess) {
+                signalRCubit.connect(
+                    userId: authState.model.user.id,
+                    token: authState.model.accessToken);
+                // signalRCubit.disconnect();
+              } else if (authState is AuthUnAuthenticated) {
+                signalRCubit.disconnect();
+              }
+            },
+          ),
+          BlocListener<SignalRCubit, SignalRState>(
+            listener: (context, signalRState) {
+              // This is a global listener for any connection event.
+              if (signalRState.overallStatus == ConnectionStatus.disconnected ||
+                  signalRState.overallStatus == ConnectionStatus.error) {
+                final authState = context.read<AuthCubit>().state;
+                final authCubit = context.read<AuthCubit>();
+                if (authState is AuthLoginSuccess) {
+                  // A slight delay to avoid overwhelming the server, then retry.
+                  Future.delayed(
+                    const Duration(seconds: 3),
+                    () async {
+                      await authCubit.refreshAndAuthenticate(
+                        isTokenExpired:
+                            signalRState.message?.contains('400') ?? false,
+                      );
+                    },
+                  );
+                }
+              }
+            },
+          ),
         ],
         child: ScreenUtilInit(
           designSize: const Size(ScreenUtilSize.width, ScreenUtilSize.height),
+          // designSize: const Size(390, 844),
           builder: (context, child) {
             return MaterialApp.router(
               debugShowCheckedModeBanner: false,
               // scaffoldMessengerKey: rootScaffoldMessengerKey,
               theme: ThemeData(
-                useMaterial3: true,
-                textTheme: GoogleFonts.poppinsTextTheme(),
-              ),
+                  useMaterial3: true,
+                  // textTheme: GoogleFonts.poppinsTextTheme(),
+                  textTheme: _appTextTheme),
               localizationsDelegates: const [
                 AppLocalizations.delegate,
                 GlobalMaterialLocalizations.delegate,

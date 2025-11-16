@@ -1,112 +1,112 @@
 import 'package:flutter/material.dart';
 import 'package:template/core/utils/colors.dart';
 
-class CustomAlertDialog extends StatelessWidget {
-  const CustomAlertDialog({
-    required this.title,
-    required this.message,
-    required this.onCancel,
-    required this.onConfirm,
-    super.key,
-    this.cancelText = 'Cancel',
-    this.confirmText = 'Confirm',
-  });
-  final String title;
-  final String message;
-  final String cancelText;
-  final String confirmText;
-  final VoidCallback onCancel;
-  final VoidCallback onConfirm;
+// class CustomAlertDialog extends StatelessWidget {
+//   const CustomAlertDialog({
+//     required this.title,
+//     required this.message,
+//     required this.onCancel,
+//     required this.onConfirm,
+//     super.key,
+//     this.cancelText = 'Cancel',
+//     this.confirmText = 'Confirm',
+//   });
+//   final String title;
+//   final String message;
+//   final String cancelText;
+//   final String confirmText;
+//   final VoidCallback onCancel;
+//   final VoidCallback onConfirm;
 
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      elevation: 0,
-      backgroundColor: Colors.transparent,
-      child: contentBox(context),
-    );
-  }
+//   @override
+//   Widget build(BuildContext context) {
+//     return Dialog(
+//       shape: RoundedRectangleBorder(
+//         borderRadius: BorderRadius.circular(16),
+//       ),
+//       elevation: 0,
+//       backgroundColor: Colors.transparent,
+//       child: contentBox(context),
+//     );
+//   }
 
-  Widget contentBox(BuildContext context) {
-    return Container(
-      width: 280, // Compact width
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        // shape: BoxShape.rectangle,
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black26,
-            offset: Offset(0, 10),
-            blurRadius: 10,
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            message,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Colors.black54,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton(
-                onPressed: onCancel,
-                child: Text(
-                  cancelText,
-                  style: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: onConfirm,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueAccent,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                  ),
-                ),
-                child: Text(
-                  confirmText,
-                  style: const TextStyle(
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
+//   Widget contentBox(BuildContext context) {
+//     return Container(
+//       width: 280, // Compact width
+//       padding: const EdgeInsets.all(15),
+//       decoration: BoxDecoration(
+//         // shape: BoxShape.rectangle,
+//         color: Colors.white,
+//         borderRadius: BorderRadius.circular(16),
+//         boxShadow: const [
+//           BoxShadow(
+//             color: Colors.black26,
+//             offset: Offset(0, 10),
+//             blurRadius: 10,
+//           ),
+//         ],
+//       ),
+//       child: Column(
+//         mainAxisSize: MainAxisSize.min,
+//         children: <Widget>[
+//           Text(
+//             title,
+//             style: const TextStyle(
+//               fontSize: 16,
+//               fontWeight: FontWeight.bold,
+//               color: Colors.black87,
+//             ),
+//           ),
+//           const SizedBox(height: 5),
+//           Text(
+//             message,
+//             style: const TextStyle(
+//               fontSize: 12,
+//               color: Colors.black54,
+//             ),
+//             textAlign: TextAlign.center,
+//           ),
+//           const SizedBox(height: 10),
+//           Row(
+//             mainAxisAlignment: MainAxisAlignment.end,
+//             children: [
+//               TextButton(
+//                 onPressed: onCancel,
+//                 child: Text(
+//                   cancelText,
+//                   style: const TextStyle(
+//                     color: Colors.grey,
+//                     fontSize: 14,
+//                   ),
+//                 ),
+//               ),
+//               const SizedBox(width: 8),
+//               ElevatedButton(
+//                 onPressed: onConfirm,
+//                 style: ElevatedButton.styleFrom(
+//                   backgroundColor: Colors.blueAccent,
+//                   foregroundColor: Colors.white,
+//                   shape: RoundedRectangleBorder(
+//                     borderRadius: BorderRadius.circular(8),
+//                   ),
+//                   padding: const EdgeInsets.symmetric(
+//                     horizontal: 16,
+//                   ),
+//                 ),
+//                 child: Text(
+//                   confirmText,
+//                   style: const TextStyle(
+//                     fontSize: 14,
+//                   ),
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
 
 class AnimatedAlertDialog extends StatefulWidget {
   const AnimatedAlertDialog({
@@ -593,3 +593,118 @@ void showAnimatedSlideAlert(BuildContext context) {
   );
 }
 */
+
+class CustomAlertDialogue extends StatefulWidget {
+  const CustomAlertDialogue({
+    required this.message,
+    super.key,
+    // this.alignment,
+  });
+
+  final String message;
+
+  // final AlignmentGeometry? alignment;
+
+  @override
+  _CustomAlertDialogueState createState() => _CustomAlertDialogueState();
+}
+
+class _CustomAlertDialogueState extends State<CustomAlertDialogue>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
+    );
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: Dialog(
+          // alignment: widget.alignment,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          child: contentBox(context),
+        ),
+      ),
+    );
+  }
+
+  Widget contentBox(BuildContext context) {
+    return Container(
+      width: 280, // Compact width
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        // shape: BoxShape.rectangle,
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(5),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black26,
+            offset: Offset(0, 10),
+            blurRadius: 15,
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          const SizedBox(height: 12),
+          Text(
+            widget.message,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.black87,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 10),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text(
+                'Ok',
+                style: TextStyle(
+                  color: AppColor.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

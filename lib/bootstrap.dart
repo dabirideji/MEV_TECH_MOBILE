@@ -10,6 +10,7 @@ import 'dart:developer';
 
 import 'package:bloc/bloc.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:template/features/auth/logic/auth-cubit/auth_cubit.dart';
 import 'package:template/injector.dart';
 
@@ -27,11 +28,26 @@ class AppBlocObserver extends BlocObserver {
   }
 }
 
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
+
 Future<void> bootstrap(
   Widget builder, {
   required String environment,
 }) async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  const initializationSettingsAndroid =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
+
+  const initializationSettingsDarwin = DarwinInitializationSettings();
+
+  const initializationSettings = InitializationSettings(
+    android: initializationSettingsAndroid,
+    iOS: initializationSettingsDarwin,
+  );
+
+  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
 
   await configureDependencies(environment: environment);
 

@@ -15,6 +15,7 @@ class CourseContentModel {
     required this.order,
     required this.isPreview,
     required this.isFree,
+    this.courseContentThumbnailUrl,
     this.createdAt,
     this.updatedAt,
   });
@@ -25,10 +26,11 @@ class CourseContentModel {
       courseContentCourseId: json['courseContentCourseId'] as String,
       courseContentTitle: json['courseContentTitle'] as String,
       courseContentVideoUrl: json['courseContentVideoUrl'] as String,
+      courseContentThumbnailUrl: checkNullString(json['courseContentVideoUrl']),
       courseContentType: json['courseContentType'] as String,
       courseContentDescription: json['courseContentDescription'] as String,
-      courseContentTranscript: json['courseContentTranscript'] as String,
-      courseContentSummary: json['courseContentSummary'] as String,
+      courseContentTranscript: checkNullString(json['courseContentTranscript']),
+      courseContentSummary: checkNullString(json['courseContentSummary']),
       order: json['order'] as int,
       isPreview: json['isPreview'] as bool,
       isFree: json['isFree'] as bool,
@@ -40,15 +42,17 @@ class CourseContentModel {
   final String courseContentCourseId;
   final String courseContentTitle;
   final String courseContentVideoUrl;
+  final String? courseContentThumbnailUrl;
   final String courseContentType;
   final String courseContentDescription;
-  final String courseContentTranscript;
-  final String courseContentSummary;
+  final String? courseContentTranscript;
+  final String? courseContentSummary;
   final int order;
   final bool isPreview;
   final bool isFree;
   final String? createdAt;
   final String? updatedAt;
+  // "courseContentThumbnailUrl" -> null
 }
 
 // Course content Features Model Classes

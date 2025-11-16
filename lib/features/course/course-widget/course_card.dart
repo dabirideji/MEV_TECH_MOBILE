@@ -9,8 +9,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:non_uniform_border/non_uniform_border.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:template/core/utils/colors.dart';
+import 'package:template/features/course/course-widget/course_thumbnail.dart';
+import 'package:template/features/course/data/models/course-content-models/course_content_model.dart';
 import 'package:template/features/course/data/models/course-models/course_model.dart';
 import 'package:template/features/presentation/dashboard/dashboard_cubit.dart';
+import 'package:template/features/presentation/utilities-class/mev_tech_utilities.dart';
 import 'package:template/features/presentation/widgets/course.dart';
 
 class CourseCard extends StatelessWidget {
@@ -185,7 +188,7 @@ class MainCourseCardSlide extends StatelessWidget {
   final CarouselSliderController carouselController;
   final LoadStatus status;
   final String failureMessage;
-  final void Function(String)? onClick;
+  final void Function(CourseModel)? onClick;
   final void Function()? onRetry;
 
   // DIP BAS MBA
@@ -347,7 +350,7 @@ class MainCourseCardSlide extends StatelessWidget {
               ),
               SizedBox(height: 10.h),
               TextButton(
-                onPressed: () => onClick?.call(course.id),
+                onPressed: () => onClick?.call(course),
                 child: const Text(
                   'Start Now',
                   style: TextStyle(
@@ -844,7 +847,7 @@ class CourseModelCard extends StatelessWidget {
 
   final List<CourseModel> courses;
   // final String category;
-  final void Function(String)? onTap;
+  final void Function(CourseModel)? onTap;
 
   static final random = Random();
 
@@ -864,7 +867,7 @@ class CourseModelCard extends StatelessWidget {
           itemBuilder: (context, index) {
             final course = courses[index];
             return GestureDetector(
-              onTap: () => onTap?.call(course.id),
+              onTap: () => onTap?.call(course),
               child: Column(
                 children: [
                   Container(
@@ -918,7 +921,7 @@ class CourseModelCard extends StatelessWidget {
                                 child: Text(
                                   course.courseTitle,
                                   overflow: TextOverflow.ellipsis,
-                                  maxLines: 3,
+                                  maxLines: 2,
                                   style: TextStyle(
                                     fontWeight: FontWeight.w600,
                                     fontSize: 14.sp,
@@ -1000,6 +1003,7 @@ class CourseCategoryCard extends StatelessWidget {
     required this.categoryList,
     required this.category,
     this.onClickViewAll,
+    this.onTap,
     this.onExpansionChanged,
     super.key,
   });
@@ -1007,7 +1011,7 @@ class CourseCategoryCard extends StatelessWidget {
   final bool isMenuExpanded;
   final String category;
   final void Function(String)? onClickViewAll;
-
+  final void Function(CourseModel)? onTap;
   final ValueChanged<bool>? onExpansionChanged;
   final List<CourseModel> categoryList;
 
@@ -1085,55 +1089,58 @@ class CourseCategoryCard extends StatelessWidget {
                   itemCount: categoryList.length,
                   itemBuilder: (context, index) {
                     final course = categoryList[index];
-                    return SizedBox(
-                      width: itemWidth,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: itemWidth,
-                            height: 120.h,
-                            // margin: EdgeInsets.symmetric(horizontal: 12.w),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(8.r),
-                              image: DecorationImage(
-                                fit: BoxFit.cover,
-                                image: NetworkImage(
-                                  course.courseImageUrl,
+                    return GestureDetector(
+                      onTap: () => onTap?.call(course),
+                      child: SizedBox(
+                        width: itemWidth,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: itemWidth,
+                              height: 120.h,
+                              // margin: EdgeInsets.symmetric(horizontal: 12.w),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(8.r),
+                                image: DecorationImage(
+                                  fit: BoxFit.cover,
+                                  image: NetworkImage(
+                                    course.courseImageUrl,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          SizedBox(height: 10.h),
-                          Text(
-                            course.courseTitle,
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 2,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12.sp,
+                            SizedBox(height: 10.h),
+                            Text(
+                              course.courseTitle,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 2,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12.sp,
+                              ),
                             ),
-                          ),
-                          SizedBox(height: 10.h),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.school,
-                                size: 15.w,
-                              ),
-                              SizedBox(width: 5.w),
-                              Text(
-                                'Free',
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 11.sp,
-                                  color: AppColor.secondary,
+                            SizedBox(height: 10.h),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.school,
+                                  size: 15.w,
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                                SizedBox(width: 5.w),
+                                Text(
+                                  'Free',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 11.sp,
+                                    color: AppColor.secondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   },
@@ -1147,6 +1154,165 @@ class CourseCategoryCard extends StatelessWidget {
   }
 }
 
+class CourseContentListCard extends StatelessWidget {
+  const CourseContentListCard({
+    required this.courseContents,
+    this.onTap,
+    this.onLongPress,
+    super.key,
+  });
+
+  final List<CourseContentModel> courseContents;
+  final void Function(String)? onTap;
+  final void Function(String)? onLongPress;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final itemWidth = (constraints.maxWidth - 17.w) * 0.3;
+        return ListView.separated(
+          padding: EdgeInsets.only(top: 10.h),
+          physics: const ClampingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
+          separatorBuilder: (context, index) => SizedBox(height: 10.h),
+          itemCount: courseContents.length,
+          itemBuilder: (context, index) {
+            final courseContent = courseContents[index];
+            final videoId = MevTechUtilities.extractYoutubeId(
+                courseContent.courseContentVideoUrl);
+            return GestureDetector(
+              onTap: () => onTap?.call(courseContent.id),
+              onLongPress: () => onLongPress?.call(courseContent.id),
+              child: Stack(
+                alignment: AlignmentDirectional.center,
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(15.r),
+                    decoration: ShapeDecoration(
+                      shape: NonUniformBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        color: Colors.black12,
+                        topWidth: 0.5,
+                        bottomWidth: 2.5,
+                        leftWidth: 0.7,
+                        rightWidth: 0.7,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: itemWidth,
+                          height: 85.h,
+                          // margin: EdgeInsets.symmetric(horizontal: 12.w),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8.r),
+                            child: CourseThumbnail(
+                              videoUrl: courseContent.courseContentVideoUrl,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 8.w),
+                        Expanded(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  courseContent.courseContentTitle,
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 2,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14.sp,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 10.h),
+                              Row(
+                                children: [
+                                  // const Icon(
+                                  //   Icons.person_2_outlined,
+                                  //   color: AppColor.secondary,
+                                  // ),
+                                  Flexible(
+                                    child: Text(
+                                      courseContent.courseContentDescription,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w400,
+                                        fontSize: 12.sp,
+                                        color: Colors.black54,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 5.h),
+                              Text(
+                                // '₦${MevTechUtilities.formatterDouble(
+                                //   // course.price,
+                                //   50000.23,
+                                // )}',
+                                'Free',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13.sp,
+                                  color: AppColor.secondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Column(
+                          // mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.more_vert,
+                              size: 15.r,
+                              color: Colors.black54,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black12,
+                      borderRadius: BorderRadius.circular(360),
+                    ),
+                    child: Icon(
+                      Icons.play_arrow,
+                      color: AppColor.primary,
+                      size: 50.w,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void clearSingleImage(String url) {
+    CachedNetworkImage.evictFromCache(url);
+  }
+
+// Or to clear everything (not recommended unless needed):
+
+  Future<void> clearAllCache() async {
+    // await DefaultCacheManager().emptyCache();
+  }
+}
+
 class CourseOperationCard extends StatelessWidget {
   const CourseOperationCard({
     required this.courses,
@@ -1154,6 +1320,7 @@ class CourseOperationCard extends StatelessWidget {
     super.key,
     this.onTapEdit,
     this.onTapDelete,
+    this.onTapAddContent,
   });
 
   final List<CourseModel> courses;
@@ -1161,6 +1328,7 @@ class CourseOperationCard extends StatelessWidget {
   final void Function(String)? onTap;
   final void Function(String)? onTapEdit;
   final void Function(String)? onTapDelete;
+  final void Function(String)? onTapAddContent;
 
   @override
   Widget build(BuildContext context) {
@@ -1275,10 +1443,37 @@ class CourseOperationCard extends StatelessWidget {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
+                                  ElevatedButton.icon(
+                                    onPressed: () =>
+                                        onTapAddContent?.call(course.id),
+                                    style: ElevatedButton.styleFrom(
+                                      padding: EdgeInsets.only(left: 5.w),
+                                      minimumSize: Size(60.w, 30.h),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      backgroundColor: Colors.blue,
+                                    ),
+                                    icon: const Icon(
+                                      Icons.add,
+                                      color: Colors.white,
+                                    ),
+                                    iconAlignment: IconAlignment.end,
+                                    label: Text(
+                                      'Content',
+                                      style: TextStyle(
+                                        fontSize: 11.sp,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: 10.w),
                                   ElevatedButton(
                                     onPressed: () => onTapEdit?.call(course.id),
                                     style: ElevatedButton.styleFrom(
                                       padding: EdgeInsets.zero,
+                                      minimumSize: Size(60.w, 30.h),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(10),
                                       ),
@@ -1287,7 +1482,7 @@ class CourseOperationCard extends StatelessWidget {
                                     child: Text(
                                       'Edit',
                                       style: TextStyle(
-                                        fontSize: 13.sp,
+                                        fontSize: 11.sp,
                                         fontWeight: FontWeight.w600,
                                         color: Colors.white,
                                       ),
@@ -1299,6 +1494,7 @@ class CourseOperationCard extends StatelessWidget {
                                         onTapDelete?.call(course.id),
                                     style: ElevatedButton.styleFrom(
                                       padding: EdgeInsets.zero,
+                                      minimumSize: Size(60.w, 30.h),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(10),
                                       ),
@@ -1307,7 +1503,7 @@ class CourseOperationCard extends StatelessWidget {
                                     child: Text(
                                       'Delete',
                                       style: TextStyle(
-                                        fontSize: 13.sp,
+                                        fontSize: 11.sp,
                                         fontWeight: FontWeight.w600,
                                         color: Colors.white,
                                       ),
@@ -1317,16 +1513,6 @@ class CourseOperationCard extends StatelessWidget {
                               ),
                             ],
                           ),
-                        ),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.arrow_forward_ios,
-                              size: 15.r,
-                              color: Colors.black54,
-                            ),
-                          ],
                         ),
                       ],
                     ),

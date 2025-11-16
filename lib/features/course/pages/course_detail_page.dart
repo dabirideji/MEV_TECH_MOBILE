@@ -10,87 +10,112 @@ import 'package:template/features/auth/logic/auth-cubit/auth_cubit.dart';
 import 'package:template/features/course/data/models/course-content-models/course_content_model.dart';
 import 'package:template/features/course/data/models/course-models/course_model.dart';
 import 'package:template/features/course/logic/course-cubit/course_cubit.dart';
+import 'package:template/features/course/logic/course_details_cubit.dart';
+import 'package:template/features/course/logic/selected_course_cubit.dart';
+import 'package:template/features/presentation/dashboard/dashboard_cubit.dart';
 import 'package:template/features/presentation/utilities-class/mev_tech_utilities.dart';
+import 'package:template/injector.dart';
 
-class CourseDetailPage extends StatefulWidget {
-  const CourseDetailPage({required this.courseId, super.key});
+class CourseDetailsPage extends StatelessWidget {
+  const CourseDetailsPage({required this.courseId, super.key});
   final String courseId;
 
   @override
-  State<CourseDetailPage> createState() => _CourseDetailPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => getIt<CourseDetailsCubit>(),
+      child: CourseDetailsView(courseId: courseId),
+    );
+  }
 }
 
-class _CourseDetailPageState extends State<CourseDetailPage> {
+class CourseDetailsView extends StatefulWidget {
+  const CourseDetailsView({required this.courseId, super.key});
+  final String courseId;
+
+  @override
+  State<CourseDetailsView> createState() => _CourseDetailsViewState();
+}
+
+class _CourseDetailsViewState extends State<CourseDetailsView> {
   @override
   void initState() {
     super.initState();
-    context.read<CourseCubit>().fetchCourseEnrollment(
-          courseId: widget.courseId,
-          studentId: MevTechUtilities.id,
-        );
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   final courses = context.read<DashboardCubit>().state.courses;
+    //   context.read<CourseCubit>().checkState(courses: courses);
+
+    //   context.read<CourseCubit>().fetchCourseEnrollment(
+    //         courseId: widget.courseId,
+    //         studentId: MevTechUtilities.id,
+    //       );
+    // });
+
+    final selectedCourse = context.read<SelectedCourseCubit>().state;
+    if (selectedCourse == null || selectedCourse.id != widget.courseId) {
+      context.read<CourseDetailsCubit>().fetchCourseById(widget.courseId);
+      context.read<CourseDetailsCubit>().fetchCourseEnrollment(
+            courseId: widget.courseId,
+            studentId: MevTechUtilities.id,
+          );
+    } else {
+      context.read<CourseDetailsCubit>().loadFromMemory(selectedCourse);
+      context.read<CourseDetailsCubit>().fetchCourseEnrollment(
+            courseId: selectedCourse.id,
+            studentId: MevTechUtilities.id,
+          );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final authState = context.watch<AuthCubit>().state;
-    return BlocConsumer<CourseCubit, CourseState>(
-      listenWhen: (previous, current) {
-        if (current is CourseSuccess &&
-            current.routeName == AppRouter.courseDetails) {
-          if (current.actionMethod == ActionMethod.fetching ||
-              current.actionMethod == ActionMethod.creating) {
-            return true;
-          }
-          if (current.actionMethod == ActionMethod.fetched ||
-              current.actionMethod == ActionMethod.created) {
-            return true;
-          }
-          if (current.actionMethod == ActionMethod.notFetched ||
-              current.actionMethod == ActionMethod.notCreated) {
-            return true;
-          }
-          return false;
-        }
-        return false;
-      },
+    final authSuccess = context.read<AuthCubit>().state as AuthLoginSuccess;
+
+    return BlocConsumer<CourseDetailsCubit, CourseDetailsState>(
       listener: (context, state) {
-        if (state is CourseSuccess) {
-          if (state.actionMethod == ActionMethod.creating) {
-            MevTechUtilities.showProgressIndicator(context);
-          } else if (state.actionMethod == ActionMethod.notCreated) {
-            MevTechUtilities.hideProgressIndicator(context);
+        if (state is CourseDetailsLoading) {
+          MevTechUtilities.showProgressIndicator(context);
+        } else if (state is CourseDetailsFailure) {
+          MevTechUtilities.hideProgressIndicator(context);
 
-            MevTechUtilities.errorToast(context, state.message ?? '');
-            context.read<CourseCubit>().resetRoute();
-          } else if (state.actionMethod == ActionMethod.created) {
-            MevTechUtilities.hideProgressIndicator(context);
+          MevTechUtilities.errorToast(context, state.errorMessage);
+        } else if (state is CourseDetailsSuccess &&
+            state.createStatus.isLoading) {
+          MevTechUtilities.showProgressIndicator(context);
+        } else if (state is CourseDetailsSuccess &&
+            state.createStatus.isFailure) {
+          MevTechUtilities.hideProgressIndicator(context);
 
-            successBottomSheet(context,
-                message: state.message ?? 'Request Successful');
-
-            context.read<CourseCubit>().resetRoute();
-            // context.goNamed(AppRouter.course);
-          }
+          MevTechUtilities.errorToast(
+              context, state.createStatus.error ?? 'Something went wrong');
+        } else if (state is CourseDetailsSuccess &&
+            state.createStatus.isSuccess) {
+          MevTechUtilities.hideProgressIndicator(context);
+          successBottomSheet(context, message: state.message);
         }
       },
       builder: (context, state) {
-        final courseCubit = context.read<CourseCubit>();
-        var isInstructor = false;
-        if (authState is AuthLoginSuccess) {
-          isInstructor = authState.model.user.isInstructor;
-        }
-        if (state is CourseSuccess) {
-          final course = state.courses
-              .firstWhere((course) => course.id == widget.courseId);
+        final detailsCubit = context.read<CourseDetailsCubit>();
+
+        if (state is CourseDetailsSuccess) {
+          final course = state.course;
           return PopScope(
             onPopInvokedWithResult: (didPop, result) {
               // courseCubit.fetchCourses();
             },
             child: Scaffold(
               appBar: AppBar(
+                leading: IconButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  icon: const Icon(
+                    Icons.arrow_back_ios,
+                  ),
+                ),
                 title: Text(
                   'Course Details',
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                     fontSize: 17.sp,
                     fontWeight: FontWeight.w500,
                   ),
@@ -103,143 +128,127 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
                     size: 13,
                     color: AppColor.secondary,
                   );
-                  return Stack(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: SingleChildScrollView(
-                          physics: const ClampingScrollPhysics(),
-                          child: Column(
+                  return Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: SingleChildScrollView(
+                      physics: const ClampingScrollPhysics(),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            width: constraints.maxWidth,
+                            height: constraints.maxHeight * 0.3,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: CachedNetworkImage(
+                                imageUrl: course.courseImageUrl,
+                                placeholder: (_, url) => const Center(
+                                  child: SizedBox(
+                                    width: 30,
+                                    height: 30,
+                                    child: CircularProgressIndicator(
+                                      color: AppColor.secondary,
+                                      backgroundColor: AppColor.primary,
+                                    ),
+                                  ),
+                                ),
+                                errorWidget: (context, url, error) =>
+                                    const Icon(Icons.error),
+                                fit: BoxFit.fill,
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 20.h),
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              SizedBox(
-                                width: constraints.maxWidth,
-                                height: constraints.maxHeight * 0.3,
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: CachedNetworkImage(
-                                    imageUrl: course.courseImageUrl,
-                                    placeholder: (_, url) => const Center(
-                                      child: SizedBox(
-                                        width: 30,
-                                        height: 30,
-                                        child: CircularProgressIndicator(
-                                          color: AppColor.secondary,
-                                          backgroundColor: AppColor.primary,
-                                        ),
-                                      ),
-                                    ),
-                                    errorWidget: (context, url, error) =>
-                                        const Icon(Icons.error),
-                                    fit: BoxFit.fill,
+                              ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                title: Text(
+                                  course.courseTitle,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 17.sp,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                trailing: Text(
+                                  'Free',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 16.sp,
+                                    color: AppColor.secondary,
                                   ),
                                 ),
                               ),
-                              SizedBox(height: 20.h),
-                              Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  ListTile(
-                                    contentPadding: EdgeInsets.zero,
-                                    title: Text(
-                                      course.courseTitle,
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 17.sp,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    trailing: Text(
-                                      'Free',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 16.sp,
-                                        color: AppColor.secondary,
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(height: 10.h),
-                                  // Text(
-                                  //   'By Willy Morgan',
-                                  //   style: GoogleFonts.poppins(
-                                  //     fontSize: 12.sp,
-                                  //     fontWeight: FontWeight.w500,
-                                  //     color: Colors.black54,
-                                  //   ),
-                                  // ),
-                                  // SizedBox(height: 10.h),
-                                  // Row(
-                                  //   children: List.generate(5, (index) {
-                                  //     return icons;
-                                  //   }),
-                                  // ),
-                                ],
-                              ),
-                              SizedBox(height: 20.h),
-                              Text(
-                                'Description',
-                                style: GoogleFonts.poppins(
-                                  // fontSize: 17.sp,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              SizedBox(height: 15.h),
-                              Text(
-                                course.description,
-                                style: TextStyle(
-                                  fontSize: 12.sp,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.black45,
-                                ),
-                              ),
-                              SizedBox(height: 15.h),
+                              SizedBox(height: 10.h),
                               // Text(
-                              //   'Instructor',
+                              //   'By Willy Morgan',
                               //   style: GoogleFonts.poppins(
-                              //     fontSize: 14.sp,
+                              //     fontSize: 12.sp,
                               //     fontWeight: FontWeight.w500,
-                              //     // color: Colors.black45,
+                              //     color: Colors.black54,
                               //   ),
                               // ),
                               // SizedBox(height: 10.h),
                               // Row(
-                              //   children: [
-                              //     SizedBox(width: 15.w),
-                              //     const CircleAvatar(
-                              //       backgroundColor: AppColor.primaryTint,
-                              //       child: Icon(
-                              //         Icons.person,
-                              //         color: AppColor.primary,
-                              //       ),
-                              //     ),
-                              //     SizedBox(width: 7.w),
-                              //     Text(
-                              //       'Willy Morgan',
-                              //       style: GoogleFonts.poppins(
-                              //         fontSize: 12.sp,
-                              //         fontWeight: FontWeight.w500,
-                              //         color: Colors.black45,
-                              //       ),
-                              //     ),
-                              //   ],
+                              //   children: List.generate(5, (index) {
+                              //     return icons;
+                              //   }),
                               // ),
                             ],
                           ),
-                        ),
-                      ),
-                      if (state.isDeleting)
-                        const ModalBarrier(
-                          dismissible: false,
-                          color: Colors.black45,
-                        ),
-                      if (state.isDeleting)
-                        const Center(
-                          child: CircularProgressIndicator(
-                            color: AppColor.secondary,
-                            backgroundColor: AppColor.primary,
+                          SizedBox(height: 20.h),
+                          Text(
+                            'Description',
+                            style: GoogleFonts.poppins(
+                              // fontSize: 17.sp,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        ),
-                    ],
+                          SizedBox(height: 15.h),
+                          Text(
+                            course.description,
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black45,
+                            ),
+                          ),
+                          SizedBox(height: 15.h),
+                          // Text(
+                          //   'Instructor',
+                          //   style: GoogleFonts.poppins(
+                          //     fontSize: 14.sp,
+                          //     fontWeight: FontWeight.w500,
+                          //     // color: Colors.black45,
+                          //   ),
+                          // ),
+                          // SizedBox(height: 10.h),
+                          // Row(
+                          //   children: [
+                          //     SizedBox(width: 15.w),
+                          //     const CircleAvatar(
+                          //       backgroundColor: AppColor.primaryTint,
+                          //       child: Icon(
+                          //         Icons.person,
+                          //         color: AppColor.primary,
+                          //       ),
+                          //     ),
+                          //     SizedBox(width: 7.w),
+                          //     Text(
+                          //       'Willy Morgan',
+                          //       style: GoogleFonts.poppins(
+                          //         fontSize: 12.sp,
+                          //         fontWeight: FontWeight.w500,
+                          //         color: Colors.black45,
+                          //       ),
+                          //     ),
+                          //   ],
+                          // ),
+                        ],
+                      ),
+                    ),
                   );
                 },
               ),
@@ -283,34 +292,33 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
               //           ),
               //         ),
               //       ),
-              floatingActionButton:
-                  state.actionMethod == ActionMethod.notFetched
-                      ? Padding(
-                          padding: EdgeInsets.only(bottom: 10.h),
-                          child: TextButton.icon(
-                              onPressed: () {
-                                courseCubit.fetchCourseEnrollment(
-                                  courseId: widget.courseId,
-                                  studentId: MevTechUtilities.id,
-                                );
-                              },
-                              iconAlignment: IconAlignment.end,
-                              icon: Icon(
-                                Icons.refresh,
-                                color: Colors.red,
-                                size: 23.w,
-                              ),
-                              label: Text(
-                                'unable to fetch enrollment\nclick to refresh or Enrol below',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 11.sp,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.red,
-                                ),
-                              )),
-                        )
-                      : null,
+              // floatingActionButton: state.fetchStatus.isFailure
+              //     ? Padding(
+              //         padding: EdgeInsets.only(bottom: 10.h),
+              //         child: TextButton.icon(
+              //             onPressed: () {
+              //               courseCubit.fetchCourseEnrollment(
+              //                 courseId: widget.courseId,
+              //                 studentId: MevTechUtilities.id,
+              //               );
+              //             },
+              //             iconAlignment: IconAlignment.end,
+              //             icon: Icon(
+              //               Icons.refresh,
+              //               color: Colors.red,
+              //               size: 23.w,
+              //             ),
+              //             label: Text(
+              //               'unable to fetch enrollment\nclick to refresh or Enrol below',
+              //               textAlign: TextAlign.center,
+              //               style: TextStyle(
+              //                 fontSize: 11.sp,
+              //                 fontWeight: FontWeight.w500,
+              //                 color: Colors.red,
+              //               ),
+              //             )),
+              //       )
+              //     : null,
 
               bottomNavigationBar: SafeArea(
                 child: Padding(
@@ -318,15 +326,17 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
                       EdgeInsets.symmetric(horizontal: 12.w, vertical: 5.h),
                   child: ElevatedButton.icon(
                     onPressed: () {
-                      state.courseEnrollment != null
-                          ? context.pushNamed(
-                              AppRouter.courseContent,
-                              extra: widget.courseId,
-                            )
-                          : courseCubit.createCourseEnrollment(
-                              courseId: widget.courseId,
-                              studentId: MevTechUtilities.id,
-                            );
+                      !authSuccess.isSubscribed
+                          ? context.pushNamed(AppRouter.subscription)
+                          : state.courseEnrollment != null
+                              ? context.pushNamed(
+                                  AppRouter.courseContentlist,
+                                  extra: widget.courseId,
+                                )
+                              : detailsCubit.createCourseEnrollment(
+                                  courseId: widget.courseId,
+                                  studentId: MevTechUtilities.id,
+                                );
                     },
                     style: ElevatedButton.styleFrom(
                       shape: RoundedRectangleBorder(
@@ -336,7 +346,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
                       foregroundColor: Colors.white,
                     ),
                     iconAlignment: IconAlignment.end,
-                    icon: state.actionMethod == ActionMethod.fetching
+                    icon: state.fetchStatus.isLoading
                         ? SizedBox(
                             height: 20.h,
                             width: 20.w,
@@ -498,10 +508,12 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () {
-                            context.pushNamed(
-                              AppRouter.courseDetails,
-                              extra: widget.courseId,
-                            );
+                            context
+                              ..pop(context)
+                              ..pushNamed(
+                                AppRouter.courseContentlist,
+                                extra: widget.courseId,
+                              );
                           },
                           style: ElevatedButton.styleFrom(
                             shape: RoundedRectangleBorder(

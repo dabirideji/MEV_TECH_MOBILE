@@ -812,3 +812,263 @@
 //   }
 //   return const SizedBox.shrink(); // Fallback
 // },
+
+// testing
+
+  // Future<void> registerUser() async {
+  //   final jsonData = RegisterRequest(
+  //     username: txtUsername.text,
+  //     firstName: txtFirstName.text,
+  //     lastName: txtLastName.text,
+  //     email: txtEmail.text,
+  //     phoneNumber: txtPhoneNumber.text,
+  //     password: txtPassword.text,
+  //     confirmPassword: txtConfirmPassword.text,
+  //   );
+
+  //   try {
+  //     emit(const AuthLoading(AuthActionType.register));
+
+  //     final result = await Future.delayed(const Duration(seconds: 2), () {
+  //       return 'Register succesful';
+  //     });
+
+  //     emit(AuthRegisterSuccess(result));
+  //     // await localStorage.clearUserData();
+
+  //     userEmail = txtEmail.text;
+  //   } catch (e) {
+  //     emit(AuthFailure(e.toString(), actionType: AuthActionType.register));
+  //   }
+  // }
+
+  // Future<void> sendEmailConfirmToken() async {
+  //   final jsonData = <String, dynamic>{
+  //     'emailAddress': userEmail,
+  //     'title': 'USER SIGNUP VERICATION',
+  //   };
+  //   if (state is! AuthRegisterSuccess) return;
+  //   final current = state as AuthRegisterSuccess;
+  //   try {
+  //     emit(current.copyWith(sendStatus: const RequestState.loading()));
+  //     await Future.delayed(const Duration(seconds: 3), () {});
+
+  //     final result = 'send succesful';
+
+  //     emit(current.copyWith(
+  //       sendStatus: const RequestState.success(),
+  //       message: result,
+  //     ));
+  //   } catch (e) {
+  //     emit(current.copyWith(
+  //       sendStatus: RequestState.failure(e.toString()),
+  //     ));
+  //   }
+  // }
+
+  // Future<void> verifyEmailConfirmToken() async {
+  //   final jsonData = <String, dynamic>{
+  //     'tk': txtToken.text,
+  //     'reference': userEmail,
+  //   };
+  //   if (state is! AuthRegisterSuccess) return;
+  //   final current = state as AuthRegisterSuccess;
+  //   try {
+  //     emit(current.copyWith(verifyStatus: const RequestState.loading()));
+
+  //     final result = await Future.delayed(const Duration(seconds: 2), () {
+  //       return 'verify succesful';
+  //     });
+
+  //     // final wrong = jsonData['wrong'];
+  //     // final dd = int.parse(wrong.toString());
+  //     // log(dd.toString());
+
+  //     emit(current.copyWith(
+  //       verifyStatus: const RequestState.success(),
+  //       message: result,
+  //     ));
+  //   } catch (e) {
+  //     emit(current.copyWith(
+  //       verifyStatus: RequestState.failure(e.toString()),
+  //     ));
+  //   }
+  // }
+  // end of test
+
+  // final HubConnection? _chatHubConnection;
+
+  // // Use a StreamController to broadcast incoming events
+  // final _messageController = StreamController<ChatMessageModel>.broadcast();
+  // Stream<ChatMessageModel> get incomingMessages => _messageController.stream;
+
+  // void _registerListeners() {
+  //   _chatHubConnection?.on('ReceiveMessage', (data) {
+  //     if (data != null) {
+  //       // final message = ChatMessageModel.fromJson(data);
+  //       // _messageController.sink.add(message);
+  //       log(data.toString());
+  //     }
+  //   });
+
+  //   // ... all other .on() handlers go here
+  // }
+
+  // // Public method to send a message
+  // Future<void> sendMessage(String text) {
+  //   return _chatHubConnection!.invoke('SendMessage', args: [text]);
+  // }
+
+//   class ChatPageCubit extends Cubit<ChatPageState> {
+//   final ChatDataCubit _dataCubit;
+  
+//   // Assuming the channelId (the room you are viewing) is passed into the Cubit's constructor
+//   ChatPageCubit(this._dataCubit, String channelId) 
+//     : 
+//     // STEP 1: INITIALIZATION (Immediate Data)
+//     // Find the single active room from the global state immediately.
+//     super(ChatPageState.initial(
+//         // Use .state to access the current value right now!
+//         activeRoom: _dataCubit.state.currentRooms.firstWhereOrNull(
+//             (r) => r.id == channelId
+//         )
+//     )) 
+//   {
+//     // STEP 2: SUBSCRIPTION (Future Reactive Data)
+//     _dataCubit.stream.listen((globalState) {
+//       // Find the single room again whenever the global list changes
+//       final updatedRoom = globalState.currentRooms.firstWhereOrNull(
+//           (r) => r.id == channelId
+//       );
+      
+//       // If the data is found or changed, emit a new state for the page.
+//       if (updatedRoom != state.activeRoom) {
+//           emit(state.copyWith(activeRoom: updatedRoom));
+//       }
+//     });
+//   }
+//   // ...
+// }
+
+// rooms
+// {
+//   "status": true,
+//   "responseCode": "200",
+//   "responseMessage": "Request was successful.",
+//   "data": [
+//     {
+//       "name": "💬 dabirideji ↔ kunle7",
+//       "description": "",
+//       "createdBy": "fcf1a72e-22e5-488c-2ae5-08de127d127a",
+//       "members": [],
+//       "settings": {
+//         "memberCount": 2,
+//         "otherRoomMembers": [
+//           {
+//             "userId": "fcf1a72e-22e5-488c-2ae5-08de127d127a",
+//             "username": "dabirideji",
+//             "joinedAt": "2025-11-01T10:38:34.6081826",
+//             "role": 0,
+//             "isMuted": false,
+//             "lastActiveAt": null,
+//             "firstName": "AYODEJI",
+//             "lastName": "DABIRI",
+//             "profilePictureUrl": null
+//           }
+//         ],
+//         "mostRecentMessage": {
+//           "roomId": "dm_-1947229616_275193331",
+//           "userId": "fcf1a72e-22e5-488c-2ae5-08de127d127a",
+//           "username": "dabirideji",
+//           "content": "hi",
+//           "type": "Text",
+//           "timestamp": "2025-11-01T11:35:51.6900586",
+//           "metadata": {},
+//           "isEdited": false,
+//           "replyToMessageId": null,
+//           "replyToMessage": null,
+//           "mentions": [],
+//           "mediaId": null,
+//           "readStatuses": [],
+//           "media": null,
+//           "editedAt": null,
+//           "id": "3f33d08a-019a-0000-0100-05000d0daff1",
+//           "createdAt": "2025-11-01T11:35:51.6900554",
+//           "updatedAt": "2025-11-01T11:35:51.6900554",
+//           "rowVersion": "AAAAAAAAaNs=",
+//           "createdBy": null,
+//           "updatedBy": null,
+//           "isDeleted": false,
+//           "deletedAt": null,
+//           "deletedBy": null,
+//           "isArchived": false,
+//           "archivedAt": null,
+//           "archivedBy": null,
+//           "physicallyArchivedAt": null,
+//           "archiveReason": null
+//         },
+//         "unreadRoomMessagesCount": 1
+//       },
+//       "isPrivate": true,
+//       "password": null,
+//       "lastMessageAt": null,
+//       "maxMembers": 1000,
+//       "id": "dm_-1947229616_275193331",
+//       "createdAt": "2025-11-01T10:38:34.6079316",
+//       "updatedAt": "2025-11-01T10:38:34.607885",
+//       "rowVersion": "AAAAAAAAaH8=",
+//       "updatedBy": null,
+//       "isDeleted": false,
+//       "deletedAt": null,
+//       "deletedBy": null,
+//       "isArchived": false,
+//       "archivedAt": null,
+//       "archivedBy": null,
+//       "physicallyArchivedAt": null,
+//       "archiveReason": null
+//     },
+//     ///////
+//     {
+//       "name": "👥 Elite Club",
+//       "description": "",
+//       "createdBy": "a1d238c7-286f-4dfe-3caa-08de13e02cfa",
+//       "members": [],
+//       "settings": {
+//         "memberCount": 2,
+//         "otherRoomMembers": [
+//           {
+//             "userId": "a1d238c7-286f-4dfe-3caa-08de13e02cfa",
+//             "username": "ade77",
+//             "joinedAt": "2025-10-26T13:30:00.2779325",
+//             "role": 0,
+//             "isMuted": false,
+//             "lastActiveAt": null,
+//             "firstName": "ade",
+//             "lastName": "kola",
+//             "profilePictureUrl": null
+//           }
+//         ],
+//         "mostRecentMessage": null,
+//         "unreadRoomMessagesCount": 0
+//       },
+//       "isPrivate": false,
+//       "password": null,
+//       "lastMessageAt": null,
+//       "maxMembers": 1000,
+//       "id": "group_elite_club_638970821999777481",
+//       "createdAt": "2025-10-26T13:30:00.2776357",
+//       "updatedAt": "2025-10-26T13:30:00.27759",
+//       "rowVersion": "AAAAAAAAZzo=",
+//       "updatedBy": null,
+//       "isDeleted": false,
+//       "deletedAt": null,
+//       "deletedBy": null,
+//       "isArchived": false,
+//       "archivedAt": null,
+//       "archivedBy": null,
+//       "physicallyArchivedAt": null,
+//       "archiveReason": null
+//     }
+//   ]
+// }
+

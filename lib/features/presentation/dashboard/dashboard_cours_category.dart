@@ -6,6 +6,7 @@ import 'package:template/app/router/app_router.dart';
 import 'package:template/core/utils/colors.dart';
 import 'package:template/features/course/course-widget/course_card.dart';
 import 'package:template/features/course/data/models/course-models/course_model.dart';
+import 'package:template/features/course/logic/selected_course_cubit.dart';
 import 'package:template/features/presentation/dashboard/dashboard_cubit.dart';
 
 class DashboardCoursCategory extends StatelessWidget {
@@ -43,8 +44,13 @@ class DashboardCoursCategory extends StatelessWidget {
         body: categoryList.isNotEmpty
             ? CourseModelCard(
                 courses: categoryList,
-                onTap: (id) {
-                  context.pushNamed(AppRouter.courseDetails, extra: id);
+                onTap: (course) {
+                  context.read<SelectedCourseCubit>().selectCourse(course);
+
+                  context.pushNamed(
+                    AppRouter.courseDetails,
+                    pathParameters: {'id': course.id},
+                  );
                 },
               )
             : const Center(

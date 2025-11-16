@@ -4,8 +4,11 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
+import 'package:template/core/utils/multiple_status_states.dart';
+import 'package:template/core/utils/request_states.dart';
 import 'package:template/features/course/course-widget/course_content_widgets.dart';
 import 'package:template/features/course/data/models/course-content-models/course_content_model.dart';
+import 'package:template/features/course/data/models/course-content-models/course_video_model.dart';
 import 'package:template/features/course/data/repository/course_repository.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
@@ -62,63 +65,55 @@ class CourseContentCubit extends Cubit<CourseContentState> {
     }
   }
 
-  Future<void> fetchCourseContent(String id) async {
-    // https://www.youtube.com/watch?v=AURnISajubk
+  Future<void> fetchCourseContent(String courseId) async {
     try {
       if (!isClosed) {
-        emit(const CourseContentLoading(currentIndex: 0));
+        emit(const CourseContentLoading());
       }
 
-      final result = await courseRepository.getCourseContentbyID(id);
+      final result = await courseRepository.getCourseContentbyID(courseId);
+
       if (result.isNotEmpty) {
-        final videoUrl = result.first.courseContentVideoUrl;
-
-        // final videoUrl = '';
-        if (!videoUrl.contains('https://www.youtube.com')) {
-          emit(
-            const CourseContentFailure(
-              'Invalid Video Link',
-              currentIndex: 0,
-            ),
-          );
-          return;
-        }
-        final controller = await fetchAndPlayVideo(videoUrl);
-
-        if (controller != null) {
-          emit(CourseContentSuccess(
-            // remove
-            contentCommentState: ContentCommentState.initial,
-            controller: controller,
-            courseContentModel: result.first,
-            currentIndex: 0,
-          ));
-        } else {
-          emit(
-            const CourseContentFailure(
-              'An Error ccured. please try again',
-              currentIndex: 0,
-            ),
-          );
-        }
-
-        // if (!isClosed) {
-        //   emit(CourseContentSuccess(courseContentModel: result.first, currentIndex: 0,));
-        // }
+        emit(CourseContentSuccess(
+          courseContentModel: result,
+        ));
       } else {
         if (!isClosed) {
           emit(
             const CourseContentFailure(
               'No Course Content Found For The Selected Course',
-              currentIndex: 0,
             ),
           );
         }
       }
     } catch (e) {
       if (!isClosed) {
-        emit(CourseContentFailure(e.toString(), currentIndex: 0));
+        emit(CourseContentFailure(e.toString()));
       }
+    }
+  }
+
+  Future<void> deleteCourseContent(String id) async {
+    if (state is! CourseContentSuccess) return;
+    final current = state as CourseContentSuccess;
+    try {
+      if (!isClosed) {
+        emit(current.copyWith(status: const Status.loading(CrudAction.delete)));
+      }
+
+      await courseRepository.deleteCourseContent(id);
+      emit(current.copyWith(
+        status: const Status.success(CrudAction.delete),
+      ));
+    } catch (e) {
+      emit(
+        current.copyWith(
+          status: Status.failure(
+            action: CrudAction.delete,
+            error: e.toString(),
+          ),
+        ),
+      );
     }
   }
 
@@ -161,14 +156,56 @@ class CourseContentCubit extends Cubit<CourseContentState> {
     if (!isClosed) {
       emit(
         currentState.copyWith(
-          contentNoteState: ContentNoteState.initial,
-          contentCommentState: ContentCommentState.initial,
-          fetchError: '',
-          createSuccess: '',
+          noteStatus: const Status.initial(),
+          commentStatus: const Status.initial(),
           repliesExpanded: const {},
           commentUUID: '',
         ),
       );
+    }
+  }
+
+  Future<void> fetchCoursePlayListContent(String playlistId) async {
+    // if (state is! CourseContentSuccess) return;
+    // final currentState = state as CourseContentSuccess;
+    try {
+      if (!isClosed) {
+        // emit(
+        //   currentState.copyWith(
+        //     contentNoteState: ContentNoteState.fetching,
+        //   ),
+        // );
+      }
+
+      final result = await courseRepository.getYoutubeVideos(playlistId);
+      if (result.isNotEmpty) {
+        if (!isClosed) {
+          // emit(
+          //   currentState.copyWith(
+          //       // contentNoteState: ContentNoteState.fetched,
+          //       // notes: result,
+          //       ),
+          // );
+        }
+      } else {
+        if (!isClosed) {
+          // emit(
+          //   currentState.copyWith(
+          //       // contentNoteState: ContentNoteState.notFetched,
+          //       // fetchError: 'unable to fetch notes',
+          //       ),
+          // );
+        }
+      }
+    } catch (e) {
+      if (!isClosed) {
+        // emit(
+        //   currentState.copyWith(
+        //       // contentNoteState: ContentNoteState.notFetched,
+        //       // fetchError: e.toString(),
+        //       ),
+        // );
+      }
     }
   }
 
@@ -189,9 +226,9 @@ class CourseContentCubit extends Cubit<CourseContentState> {
       if (!isClosed) {
         emit(
           currentState.copyWith(
-            contentCommentState: initialLoading
-                ? ContentCommentState.fetching
-                : ContentCommentState.paginating,
+            commentStatus: initialLoading
+                ? const Status.loading(CrudAction.fetch)
+                : const Status.loading(CrudAction.paginate),
           ),
         );
       }
@@ -216,9 +253,9 @@ class CourseContentCubit extends Cubit<CourseContentState> {
         // pageNumber++;
         emit(
           currentState.copyWith(
-            contentCommentState: initialLoading
-                ? ContentCommentState.fetched
-                : ContentCommentState.paginated,
+            commentStatus: initialLoading
+                ? const Status.success(CrudAction.fetch)
+                : const Status.success(CrudAction.paginate),
             comments: updatedComments,
           ),
         );
@@ -227,10 +264,10 @@ class CourseContentCubit extends Cubit<CourseContentState> {
       if (!isClosed) {
         emit(
           currentState.copyWith(
-            contentCommentState: initialLoading
-                ? ContentCommentState.notFetched
-                : ContentCommentState.notPaginated,
-            fetchError: e.toString(),
+            commentStatus: initialLoading
+                ? Status.failure(action: CrudAction.fetch, error: e.toString())
+                : Status.failure(
+                    action: CrudAction.paginate, error: e.toString()),
           ),
         );
       }
@@ -247,7 +284,7 @@ class CourseContentCubit extends Cubit<CourseContentState> {
       if (!isClosed) {
         emit(
           currentState.copyWith(
-            contentNoteState: ContentNoteState.fetching,
+            noteStatus: const Status.loading(CrudAction.fetch),
           ),
         );
       }
@@ -257,7 +294,7 @@ class CourseContentCubit extends Cubit<CourseContentState> {
         if (!isClosed) {
           emit(
             currentState.copyWith(
-              contentNoteState: ContentNoteState.fetched,
+              noteStatus: const Status.success(CrudAction.fetch),
               notes: result,
             ),
           );
@@ -266,8 +303,10 @@ class CourseContentCubit extends Cubit<CourseContentState> {
         if (!isClosed) {
           emit(
             currentState.copyWith(
-              contentNoteState: ContentNoteState.notFetched,
-              fetchError: 'unable to fetch notes',
+              noteStatus: const Status.failure(
+                action: CrudAction.fetch,
+                error: 'unable to fetch notes',
+              ),
             ),
           );
         }
@@ -276,8 +315,10 @@ class CourseContentCubit extends Cubit<CourseContentState> {
       if (!isClosed) {
         emit(
           currentState.copyWith(
-            contentNoteState: ContentNoteState.notFetched,
-            fetchError: e.toString(),
+            noteStatus: Status.failure(
+              action: CrudAction.fetch,
+              error: e.toString(),
+            ),
           ),
         );
       }
@@ -295,7 +336,7 @@ class CourseContentCubit extends Cubit<CourseContentState> {
       if (!isClosed) {
         emit(
           currentState.copyWith(
-            contentNoteState: ContentNoteState.creating,
+            noteStatus: const Status.loading(CrudAction.create),
           ),
         );
       }
@@ -311,8 +352,7 @@ class CourseContentCubit extends Cubit<CourseContentState> {
       if (!isClosed) {
         emit(
           currentState.copyWith(
-            contentNoteState: ContentNoteState.created,
-            createSuccess: result,
+            noteStatus: const Status.success(CrudAction.create),
             notes: notes,
           ),
         );
@@ -322,8 +362,8 @@ class CourseContentCubit extends Cubit<CourseContentState> {
       if (!isClosed) {
         emit(
           currentState.copyWith(
-            contentNoteState: ContentNoteState.notCreated,
-            fetchError: e.toString(),
+            noteStatus:
+                Status.failure(action: CrudAction.create, error: e.toString()),
           ),
         );
       }
@@ -338,7 +378,7 @@ class CourseContentCubit extends Cubit<CourseContentState> {
       if (!isClosed) {
         emit(
           currentState.copyWith(
-            contentCommentState: ContentCommentState.fetching,
+            commentStatus: const Status.loading(CrudAction.fetch),
           ),
         );
       }
@@ -348,7 +388,7 @@ class CourseContentCubit extends Cubit<CourseContentState> {
         if (!isClosed) {
           emit(
             currentState.copyWith(
-              contentCommentState: ContentCommentState.fetched,
+              commentStatus: const Status.success(CrudAction.fetch),
               comments: result,
             ),
           );
@@ -357,8 +397,8 @@ class CourseContentCubit extends Cubit<CourseContentState> {
         if (!isClosed) {
           emit(
             currentState.copyWith(
-              contentCommentState: ContentCommentState.notFetched,
-              fetchError: 'unable to fetch notes',
+              commentStatus: const Status.failure(
+                  action: CrudAction.fetch, error: 'unable to fetch Comments'),
             ),
           );
         }
@@ -367,8 +407,8 @@ class CourseContentCubit extends Cubit<CourseContentState> {
       if (!isClosed) {
         emit(
           currentState.copyWith(
-            contentCommentState: ContentCommentState.notFetched,
-            fetchError: e.toString(),
+            commentStatus:
+                Status.failure(action: CrudAction.fetch, error: e.toString()),
           ),
         );
       }
@@ -387,7 +427,7 @@ class CourseContentCubit extends Cubit<CourseContentState> {
       if (!isClosed) {
         emit(
           currentState.copyWith(
-            contentCommentState: ContentCommentState.creating,
+            commentStatus: const Status.loading(CrudAction.create),
           ),
         );
       }
@@ -410,8 +450,7 @@ class CourseContentCubit extends Cubit<CourseContentState> {
       if (!isClosed) {
         emit(
           currentState.copyWith(
-            contentCommentState: ContentCommentState.created,
-            createSuccess: result,
+            commentStatus: const Status.success(CrudAction.create),
             comments: comment,
           ),
         );
@@ -421,8 +460,10 @@ class CourseContentCubit extends Cubit<CourseContentState> {
       if (!isClosed) {
         emit(
           currentState.copyWith(
-            contentCommentState: ContentCommentState.notCreated,
-            fetchError: e.toString(),
+            commentStatus: Status.failure(
+              action: CrudAction.create,
+              error: e.toString(),
+            ),
           ),
         );
       }
@@ -443,7 +484,8 @@ class CourseContentCubit extends Cubit<CourseContentState> {
       if (!isClosed) {
         emit(
           currentState.copyWith(
-            contentCommentState: ContentCommentState.replying,
+            commentStatus:
+                const Status.loading(CrudAction.create, subtype: 'reply'),
             commentUUID: parentCommentId,
           ),
         );
@@ -467,8 +509,8 @@ class CourseContentCubit extends Cubit<CourseContentState> {
       if (!isClosed) {
         emit(
           currentState.copyWith(
-            contentCommentState: ContentCommentState.replied,
-            createSuccess: result,
+            commentStatus:
+                const Status.success(CrudAction.create, subtype: 'reply'),
             comments: comment,
             commentUUID: '',
           ),
@@ -479,8 +521,10 @@ class CourseContentCubit extends Cubit<CourseContentState> {
       if (!isClosed) {
         emit(
           currentState.copyWith(
-            contentCommentState: ContentCommentState.notReplied,
-            fetchError: e.toString(),
+            commentStatus: Status.failure(
+                action: CrudAction.create,
+                error: e.toString(),
+                subtype: 'reply'),
             commentUUID: '',
           ),
         );

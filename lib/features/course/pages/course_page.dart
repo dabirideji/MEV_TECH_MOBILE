@@ -8,6 +8,7 @@ import 'package:template/core/utils/colors.dart';
 import 'package:template/features/auth/logic/auth-cubit/auth_cubit.dart';
 import 'package:template/features/course/course-widget/course_card.dart';
 import 'package:template/features/course/logic/course-cubit/course_cubit.dart';
+import 'package:template/features/course/logic/selected_course_cubit.dart';
 import 'package:template/features/presentation/utilities-class/mev_tech_utilities.dart';
 
 class CoursePage extends StatefulWidget {
@@ -67,6 +68,7 @@ class _CoursePageState extends State<CoursePage> {
 
         return Scaffold(
           appBar: AppBar(
+            centerTitle: true,
             automaticallyImplyLeading: false,
             title: Text(
               'Course',
@@ -103,8 +105,13 @@ class _CoursePageState extends State<CoursePage> {
                   backgroundColor: Colors.grey.shade200,
                   child: CourseModelCard(
                     courses: state.courses,
-                    onTap: (id) {
-                      context.pushNamed(AppRouter.courseDetails, extra: id);
+                    onTap: (course) {
+                      context.read<SelectedCourseCubit>().selectCourse(course);
+
+                      context.pushNamed(
+                        AppRouter.courseDetails,
+                        pathParameters: {'id': course.id},
+                      );
                     },
                   ),
                 )
@@ -160,6 +167,13 @@ class _CoursePageState extends State<CoursePage> {
                         ],
                       ),
                     ),
+          // floatingActionButton: FloatingActionButton(
+          //   backgroundColor: AppColor.secondary,
+          //   onPressed: () {
+          //     context.pushNamed(AppRouter.mockTest, extra: 'EerdGm-ehJQ');
+          //   },
+          //   child: const Text('Playlist'),
+          // ),
         );
       },
     );

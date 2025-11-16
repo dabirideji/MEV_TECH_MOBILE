@@ -38,6 +38,13 @@ String? checkNullString(dynamic value) {
   return null;
 }
 
+Map<String, dynamic>? checkNullMap(dynamic value) {
+  if (value != null && value is Map<String, dynamic>) {
+    return value;
+  }
+  return null;
+}
+
 // class NullModel<T> {
 //   T? checkNull(dynamic value) {
 //     if (value != null) {
@@ -46,6 +53,8 @@ String? checkNullString(dynamic value) {
 //     return null;
 //   }
 // }
+
+String youtubeApiKey = 'AIzaSyD3eeJNbQ8fdjn3vmRWW0asUMcJdJccsr0';
 
 class UserType {
   static const instructor = 'instructor';

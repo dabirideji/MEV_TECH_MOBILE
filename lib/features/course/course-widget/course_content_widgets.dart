@@ -8,6 +8,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:template/core/utils/colors.dart';
+import 'package:template/core/utils/multiple_status_states.dart';
 import 'package:template/features/course/course-widget/comment_nodes.dart';
 import 'package:template/features/course/data/models/course-content-models/course_content_model.dart';
 import 'package:template/features/course/logic/course-content-cubit/course_content_cubit.dart';
@@ -190,7 +191,7 @@ class ContentOverview extends StatelessWidget {
 class ContentComment extends StatefulWidget {
   const ContentComment({
     required this.comments,
-    required this.commentState,
+    required this.commentStatus,
     required this.pageNumber,
     required this.totalPages,
     required this.commentUUID,
@@ -202,8 +203,10 @@ class ContentComment extends StatefulWidget {
     this.loadMoreComments,
   });
 
+  // commentStatus Status
+
   final List<CourseContentCommentModel> comments;
-  final ContentCommentState commentState;
+  final Status commentStatus;
   final void Function()? onPostComment;
   final void Function(String, String)? onReply;
   final TextEditingController? txtPostController;
@@ -275,18 +278,15 @@ class _ContentCommentState extends State<ContentComment> {
           Align(
             alignment: Alignment.centerRight,
             child: ElevatedButton.icon(
-              onPressed: widget.commentState == ContentCommentState.creating
-                  ? null
-                  : widget.onPostComment,
+              onPressed:
+                  widget.commentStatus.isCreating ? null : widget.onPostComment,
               label: Text(
-                widget.commentState == ContentCommentState.creating
-                    ? 'Posting..'
-                    : 'Post Comment',
+                widget.commentStatus.isCreating ? 'Posting..' : 'Post Comment',
                 style: const TextStyle(
                   color: Colors.white,
                 ),
               ),
-              icon: widget.commentState == ContentCommentState.creating
+              icon: widget.commentStatus.isCreating
                   ? SizedBox(
                       width: 20.w,
                       height: 20.h,
@@ -299,10 +299,9 @@ class _ContentCommentState extends State<ContentComment> {
                       color: Colors.white,
                     ),
               style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    widget.commentState == ContentCommentState.creating
-                        ? AppColor.primaryFaint
-                        : AppColor.primary,
+                backgroundColor: widget.commentStatus.isCreating
+                    ? AppColor.primaryFaint
+                    : AppColor.primary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -312,12 +311,11 @@ class _ContentCommentState extends State<ContentComment> {
           SizedBox(height: 10.h),
           Builder(
             builder: (context) {
-              if (widget.commentState == ContentCommentState.fetching) {
+              if (widget.commentStatus.isFetching) {
                 return const Center(
                   child: ContentCommentLoading(),
                 );
-              } else if (widget.commentState ==
-                  ContentCommentState.notFetched) {
+              } else if (widget.commentStatus.isFetchFailure) {
                 return const Center(
                   child: Text('Failed to load comments.'),
                 );
@@ -327,7 +325,8 @@ class _ContentCommentState extends State<ContentComment> {
                     child: Text('No comments yet. Be the first to comment!'),
                   );
                 }
-                if (widget.commentState == ContentCommentState.replied) {
+                if (widget.commentStatus.isCreateSuccess &&
+                    widget.commentStatus.hasSubtype) {
                   setState(() {});
                 }
 
@@ -336,21 +335,18 @@ class _ContentCommentState extends State<ContentComment> {
                   shrinkWrap: true,
                   padding: EdgeInsets.only(bottom: 10.h),
                   itemCount: widget.comments.length +
-                      (widget.commentState == ContentCommentState.paginating
-                          ? 1
-                          : 0),
+                      (widget.commentStatus.isPaginating ? 1 : 0),
                   itemBuilder: (context, index) {
                     if (index < widget.comments.length) {
                       final rootComment = widget.comments[index];
                       return ExpandableCommentTree(
                         rootComment: rootComment,
                         onReply: widget.onReply,
-                        commentState: widget.commentState,
+                        commentStatus: widget.commentStatus,
                         commentUUID: widget.commentUUID,
                       );
                     } else {
-                      if (widget.commentState ==
-                          ContentCommentState.paginating) {
+                      if (widget.commentStatus.isPaginating) {
                         return Padding(
                           padding: EdgeInsets.only(bottom: 5.h),
                           child: Center(
@@ -404,7 +400,7 @@ class _ContentCommentState extends State<ContentComment> {
 class ExpandableCommentTree extends StatefulWidget {
   const ExpandableCommentTree({
     required this.rootComment,
-    required this.commentState,
+    required this.commentStatus,
     required this.commentUUID,
     this.onReply,
     this.avatarRootSize = 18,
@@ -422,7 +418,7 @@ class ExpandableCommentTree extends StatefulWidget {
   final EdgeInsetsGeometry? commentTreePadding;
   final double avatarRootFontSize;
   final bool isNestedChild;
-  final ContentCommentState commentState;
+  final Status commentStatus;
   final String commentUUID;
 
   @override
@@ -702,7 +698,8 @@ class _ExpandableCommentTreeState extends State<ExpandableCommentTree> {
             final comment = node.comment;
             final hasNestedReplies = comment.replies?.isNotEmpty ?? false;
             final isReplying = (widget.commentUUID == comment.id) &&
-                (widget.commentState == ContentCommentState.replying);
+                (widget.commentStatus.isCreating &&
+                    widget.commentStatus.hasSubtype);
 
             if (hasNestedReplies) {
               return ExpandableCommentTree(
@@ -712,7 +709,7 @@ class _ExpandableCommentTreeState extends State<ExpandableCommentTree> {
                 avatarRootSize: 12,
                 avatarRootFontSize: 11.sp,
                 isNestedChild: true,
-                commentState: widget.commentState,
+                commentStatus: widget.commentStatus,
                 commentUUID: widget.commentUUID,
               );
             } else {
@@ -836,7 +833,8 @@ class _ExpandableCommentTreeState extends State<ExpandableCommentTree> {
         },
         contentRoot: (context, comment) {
           final isReplying = (widget.commentUUID == comment.id) &&
-              (widget.commentState == ContentCommentState.replying);
+              (widget.commentStatus.isCreating &&
+                  widget.commentStatus.hasSubtype);
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -948,14 +946,14 @@ class _ExpandableCommentTreeState extends State<ExpandableCommentTree> {
 class ContentNote extends StatelessWidget {
   const ContentNote({
     required this.notes,
-    required this.noteState,
+    required this.noteStatus,
     required this.onPressed,
     super.key,
     this.textController,
   });
 
   final List<CourseContentNoteModel> notes;
-  final ContentNoteState noteState;
+  final Status noteStatus;
   final void Function()? onPressed;
   final TextEditingController? textController;
 
@@ -963,11 +961,11 @@ class ContentNote extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget noteListWidget;
 
-    if (noteState == ContentNoteState.fetching) {
+    if (noteStatus.isFetching) {
       noteListWidget = const Center(
         child: ContentNoteLoding(),
       );
-    } else if (noteState == ContentNoteState.notFetched) {
+    } else if (noteStatus.isFetchFailure) {
       noteListWidget = const Center(
         child: Text('Failed to load notes.'),
       );
@@ -1029,17 +1027,14 @@ class ContentNote extends StatelessWidget {
           Align(
             alignment: Alignment.centerRight,
             child: ElevatedButton.icon(
-              onPressed:
-                  noteState == ContentNoteState.creating ? null : onPressed,
+              onPressed: noteStatus.isCreating ? null : onPressed,
               label: Text(
-                noteState == ContentNoteState.creating
-                    ? 'Saving..'
-                    : 'Save Note',
+                noteStatus.isCreating ? 'Saving..' : 'Save Note',
                 style: const TextStyle(
                   color: Colors.white,
                 ),
               ),
-              icon: noteState == ContentNoteState.creating
+              icon: noteStatus.isCreating
                   ? SizedBox(
                       width: 20.w,
                       height: 20.h,
@@ -1051,7 +1046,7 @@ class ContentNote extends StatelessWidget {
                       color: Colors.white,
                     ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: noteState == ContentNoteState.creating
+                backgroundColor: noteStatus.isCreating
                     ? AppColor.primaryFaint
                     : AppColor.primary,
                 shape: RoundedRectangleBorder(

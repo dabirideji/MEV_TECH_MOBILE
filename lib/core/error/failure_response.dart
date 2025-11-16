@@ -47,3 +47,17 @@ class FailureResponse implements Exception {
   @override
   String toString() => message;
 }
+
+// {
+//   "status": false,
+//   "responseCode": "404",
+//   "responseMessage": "COURSE NOT FOUND",
+//   "data": {
+//     "title": "Client Error",
+//     "status": 400,
+//     "detail": "COURSE NOT FOUND",
+//     "instance": "/api/CourseContent/GetByCourseId/course/9a7f7df7-cd16-4edb-8072-8e132bddd090",
+//     "errorCode": "404",
+//     "additionalData": null
+//   }
+// }

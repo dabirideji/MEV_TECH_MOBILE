@@ -16,30 +16,30 @@ class ChangePasswordPage extends StatelessWidget {
         padding: const EdgeInsets.all(8),
         child: SingleChildScrollView(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Center(
                 child: Image.asset(
                   'assets/images/privacy-safety.jpg',
-                  width: 80.w,
+                  width: 60.w,
                 ),
               ),
               SizedBox(height: 10.h),
               Text(
                 'Change password',
-                style: GoogleFonts.poppins(
-                  fontSize: 25.sp,
+                style: TextStyle(
+                  fontSize: 20.sp,
                   fontWeight: FontWeight.w600,
                 ),
               ),
               SizedBox(height: 20.h),
+              // ignore: prefer_const_constructors
               Text(
-                'Your new password must be different from  '
+                'Your new password must be different\nfrom  '
                 'previously used passwords',
-                textAlign: TextAlign.start,
-                style: GoogleFonts.poppins(
-                  // fontSize: 23.sp,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12.sp,
                   fontWeight: FontWeight.w500,
                   color: Colors.black54,
                 ),
@@ -53,7 +53,7 @@ class ChangePasswordPage extends StatelessWidget {
                       'Old Password',
                       style: TextStyle(
                         fontFamily: 'poppins',
-                        fontSize: 14.sp,
+                        fontSize: 13.sp,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -63,11 +63,11 @@ class ChangePasswordPage extends StatelessWidget {
                       // controller: authCubit.txtPassword,
                       obscureText: !isOldPasswordVisible,
                       keyboardType: TextInputType.visiblePassword,
-                      style: GoogleFonts.poppins(),
+                      style: TextStyle(),
                       decoration: InputDecoration(
                         isDense: true,
                         hintText: 'Old Password',
-                        hintStyle: GoogleFonts.poppins(
+                        hintStyle: TextStyle(
                           fontSize: 13.sp,
                           color: Colors.black38,
                         ),
@@ -106,7 +106,7 @@ class ChangePasswordPage extends StatelessWidget {
                       'New Password',
                       style: TextStyle(
                         fontFamily: 'poppins',
-                        fontSize: 14.sp,
+                        fontSize: 13.sp,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -116,12 +116,12 @@ class ChangePasswordPage extends StatelessWidget {
                       // controller: authCubit.txtPassword,
                       obscureText: !isPasswordVisible,
                       keyboardType: TextInputType.visiblePassword,
-                      style: GoogleFonts.poppins(),
+                      style: TextStyle(),
                       decoration: InputDecoration(
                         isDense: true,
                         hintText: 'New Password',
-                        hintStyle: GoogleFonts.poppins(
-                          fontSize: 13.sp,
+                        hintStyle: TextStyle(
+                          fontSize: 12.sp,
                           color: Colors.black38,
                         ),
                         filled: true,
@@ -158,8 +158,7 @@ class ChangePasswordPage extends StatelessWidget {
                     Text(
                       'Confirm New Password',
                       style: TextStyle(
-                        fontFamily: 'poppins',
-                        fontSize: 14.sp,
+                        fontSize: 13.sp,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -169,12 +168,12 @@ class ChangePasswordPage extends StatelessWidget {
                       // controller: authCubit.txtConfirmPassword,
                       obscureText: !isPasswordVisible,
                       keyboardType: TextInputType.visiblePassword,
-                      style: GoogleFonts.poppins(),
+                      style: TextStyle(),
                       decoration: InputDecoration(
                         isDense: true,
                         hintText: 'Confirm New Password',
-                        hintStyle: GoogleFonts.poppins(
-                          fontSize: 13.sp,
+                        hintStyle: TextStyle(
+                          fontSize: 12.sp,
                           color: Colors.black38,
                         ),
                         filled: true,
@@ -221,13 +220,13 @@ class ChangePasswordPage extends StatelessWidget {
                   foregroundColor: Colors.white,
                 ),
                 child: Container(
-                  height: 50.h,
+                  height: 40.h,
                   width: double.infinity,
                   alignment: Alignment.center,
                   child: Text(
                     'Submit',
-                    style: GoogleFonts.poppins(
-                      fontSize: 15.5.sp,
+                    style: TextStyle(
+                      fontSize: 13.sp,
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
                     ),

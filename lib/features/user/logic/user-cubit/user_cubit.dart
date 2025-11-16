@@ -1,7 +1,12 @@
+import 'dart:io';
+
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:injectable/injectable.dart';
+import 'package:template/core/utils/request_states.dart';
 import 'package:template/features/auth/logic/auth-cubit/auth_cubit.dart';
 import 'package:template/features/user/data/models/user_model.dart';
 import 'package:template/features/user/data/models/user_requests.dart.dart';
@@ -11,7 +16,16 @@ part 'user_state.dart';
 
 @injectable
 class UserCubit extends Cubit<UserState> {
-  UserCubit(this.userRepository) : super(UserInitial());
+  UserCubit(this.userRepository) : super(const UserSuccess());
+
+  final UserRepository userRepository;
+
+  TextEditingController txtUsername = TextEditingController();
+  TextEditingController txtFirstName = TextEditingController();
+  TextEditingController txtLastName = TextEditingController();
+  TextEditingController txtPhoneNumber = TextEditingController();
+  TextEditingController txtEmail = TextEditingController();
+  TextEditingController txtPassword = TextEditingController();
 
   void populateData(UserModel? user) {
     if (user != null) {
@@ -24,14 +38,16 @@ class UserCubit extends Cubit<UserState> {
     }
   }
 
-  final UserRepository userRepository;
+  void fetchSavedUserData(UserModel? user) {
+    if (state is! UserSuccess) return;
+    final current = state as UserSuccess;
 
-  TextEditingController txtUsername = TextEditingController();
-  TextEditingController txtFirstName = TextEditingController();
-  TextEditingController txtLastName = TextEditingController();
-  TextEditingController txtPhoneNumber = TextEditingController();
-  TextEditingController txtEmail = TextEditingController();
-  TextEditingController txtPassword = TextEditingController();
+    if (user != null) {
+      emit(current.copyWith(
+        user: user,
+      ));
+    }
+  }
 
   void clearField() {
     txtUsername.clear();
@@ -42,32 +58,146 @@ class UserCubit extends Cubit<UserState> {
     txtPassword.clear();
   }
 
-  Future<void> updateUser(String? id, {required bool isInstructor}) async {
-    final jsonData = UpdateUserRequest(
-      id: id ?? '',
-      username: txtUsername.text,
-      firstName: txtFirstName.text,
-      lastName: txtLastName.text,
-      email: txtEmail.text,
-      phoneNumber: txtPhoneNumber.text,
-      password: txtPassword.text,
-    );
+  Future<void> updateUser(String? id) async {
+    if (state is! UserSuccess) return;
+    final current = state as UserSuccess;
+
     try {
-      emit(const UserLoading(actionType: UserActionType.update));
+      if (id != null) {
+        final jsonData = UpdateUserRequest(
+          id: id,
+          username: txtUsername.text,
+          firstName: txtFirstName.text,
+          lastName: txtLastName.text,
+          email: txtEmail.text,
+          phoneNumber: txtPhoneNumber.text,
+          password: txtPassword.text,
+        );
 
-      final result = isInstructor
-          ? await userRepository.updateInstructor(jsonData, id ?? '')
-          : await userRepository.updateStudent(jsonData, id ?? '');
+        emit(current.copyWith(updateUserStatus: const RequestState.loading()));
 
-      emit(
-        UserSuccess(
+        final result = await userRepository.updateStudent(jsonData, id);
+
+        emit(current.copyWith(
+          updateUserStatus: const RequestState.success(),
           user: result,
-          actionType: UserActionType.update,
           message: 'Update Request Successful',
-        ),
-      );
+        ));
+      } else {
+        emit(current.copyWith(
+          updateUserStatus:
+              const RequestState.failure('Invalid user ID, please re-login'),
+        ));
+      }
     } catch (e) {
-      emit(UserFailure(e.toString(), actionType: UserActionType.update));
+      emit(current.copyWith(
+        updateUserStatus: RequestState.failure(e.toString()),
+      ));
+    }
+  }
+
+  Future<void> uploadProfilePic(File? imageFile) async {
+    if (state is! UserSuccess) return;
+    final current = state as UserSuccess;
+
+    try {
+      if (current.user != null && imageFile != null) {
+        if (!isClosed) {
+          emit(current.copyWith(
+              imageUploadStatus: const RequestState.loading()));
+        }
+
+        final result = await userRepository.uploadProfileImage(
+          userId: current.user!.id,
+          imageFile: imageFile,
+        );
+
+        if (!isClosed) {
+          emit(current.copyWith(
+            imageUploadStatus: const RequestState.success(),
+            user: result,
+            message: 'Image upload successful',
+          ));
+        }
+      }
+    } catch (e) {
+      if (!isClosed) {
+        emit(current.copyWith(
+            imageUploadStatus: RequestState.failure(e.toString())));
+      }
+    }
+  }
+
+  Future<void> compresseAndGetImage() async {
+    resetState();
+
+    if (state is! UserSuccess) return;
+    final current = state as UserSuccess;
+
+    try {
+      final image = await getImageFile();
+
+      if (image != null) {
+        final result = await FlutterImageCompress.compressAndGetFile(
+          image.absolute.path,
+          '${image.path}.jpg',
+          quality: 5,
+        );
+        if (result != null) {
+          final file = File(result.path);
+
+          if (!isClosed) {
+            emit(current.copyWith(file: file));
+          }
+
+          await uploadProfilePic(file);
+        } else {
+          throw Exception('An Error Occured');
+        }
+      } else {
+        return;
+      }
+    } catch (e) {
+      if (!isClosed) {
+        emit(
+          current.copyWith(message: e.toString()),
+        );
+      }
+    }
+  }
+
+  void resetState() {
+    if (state is! UserSuccess) return;
+    final current = state as UserSuccess;
+
+    if (!isClosed) {
+      emit(current.copyWith(
+        imageUploadStatus: const RequestState.initial(),
+        message: '',
+        updateUserStatus: const RequestState.initial(),
+      ));
+    }
+  }
+
+  // Future<void> resetInitialState() async {
+  //   // await Future.delayed(const Duration(seconds: 1), () {});
+
+  //   if (state is! UserSuccess) return;
+  //   final current = state as UserSuccess;
+  //   if (!isClosed) {
+  //     emit(UserSuccess(user: current.user));
+  //   }
+  // }
+
+  Future<File?> getImageFile() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+
+    if (picked != null) {
+      final file = File(picked.path);
+      return file;
+    } else {
+      return null;
     }
   }
 }

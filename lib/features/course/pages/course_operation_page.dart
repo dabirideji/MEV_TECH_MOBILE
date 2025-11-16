@@ -47,6 +47,10 @@ class CourseOperationPage extends StatelessWidget {
             return CourseOperationCard(
               courses: state.courses,
               onTap: (id) {},
+              onTapAddContent: (id) {
+                // context.read<CourseCubit>().populateData(course);
+                context.pushNamed(AppRouter.createCourseContent, extra: id);
+              },
               onTapEdit: (id) {
                 // context.read<CourseCubit>().populateData(course);
                 context.pushNamed(AppRouter.editCourse, extra: id);

@@ -33,6 +33,7 @@ android {
     ndkVersion flutter.ndkVersion
 
     compileOptions {
+        coreLibraryDesugaringEnabled true // whole line new
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
@@ -126,4 +127,5 @@ dependencies {
         implementation 'com.google.android.gms:play-services-auth:20.7.0'
     def multidex_version = "2.0.1"
         implementation "androidx.multidex:multidex:$multidex_version"
+        coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4' // whole line new
 }

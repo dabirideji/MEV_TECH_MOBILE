@@ -3,13 +3,18 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:injectable/injectable.dart';
 import 'package:path/path.dart';
 import 'package:path/path.dart' as path;
+import 'package:template/core/error/failure_response.dart';
 import 'package:template/core/storages/local_storages.dart';
+import 'package:template/core/utils/constants.dart';
 import 'package:template/data/connection_checker.dart';
+import 'package:template/features/chat/data/models/chat_message_model.dart';
+import 'package:template/features/course/data/models/course-content-models/course_content_request.dart';
 import 'package:template/features/course/data/models/course-models/course_request.dart';
 import 'package:template/features/presentation/utilities-class/mev_tech_utilities.dart';
 
@@ -23,9 +28,13 @@ class ApiService {
   final LocalStorage localStorage;
 
   static const baseUrlAddress = 'https://mev-tech-api.onrender.com/api';
-  // 'https://mev-tech-api.onrender.com/api'
+  // 'https://dev-api.virtual360mevtech.com/api';
+
+// switch back to this  // 'https://dev-api.virtual360mevtech.com/api';
+  // 'https://mev-tech-api.onrender.com/api';
+  // 'http://dev-api.virtual360mevtech.com/api'
   // https://mev-tech-temp.codeweborganization.com.ng/swagger/index.html
-  // static const authKey = '';
+  // static const authKey = ''; https://dev-api.virtual360mevtech.com
 
   Future<dynamic> postJsonRequest(
     Map<String, dynamic> jsonData,
@@ -39,12 +48,14 @@ class ApiService {
         return 'Check your Internet Connection';
       }
 
+      final accessToken = await localStorage.getApiKey();
+
       final url = Uri.parse('$baseUrlAddress/$progLink');
 
       final headers = <String, String>{
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Authorization': 'Bearer ${MevTechUtilities.authKey}',
+        'Authorization': 'Bearer ${accessToken ?? MevTechUtilities.authKey}',
       };
 
       final headers2 = <String, String>{
@@ -73,9 +84,10 @@ class ApiService {
         };
 
         response = await http
-            .get(
+            .post(
               url,
               headers: retryHeaders,
+              body: json.encode(jsonData),
             )
             .timeout(const Duration(seconds: 25));
       }
@@ -109,15 +121,15 @@ class ApiService {
         return 'Check your Internet Connection';
       }
 
+      final accessToken = await localStorage.getApiKey();
+
       final url = Uri.parse('$baseUrlAddress/$progLink')
           .replace(queryParameters: queryParams);
       final headers = <String, String>{
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         if (authRequired)
-          'Authorization': MevTechUtilities.authKey.isNotEmpty
-              ? 'Bearer ${MevTechUtilities.authKey}'
-              : 'Bearer $token',
+          'Authorization': 'Bearer ${accessToken ?? MevTechUtilities.authKey}',
       };
 
       // final headers2 = <String, String>{
@@ -138,23 +150,167 @@ class ApiService {
 
       if (response.statusCode == 400 && authRequired) {
         final responseCode = handleNotFoundError(response);
-        if (responseCode == 404) return json.decode(response.body);
 
-        final refreshed = await refreshTokenRequest();
-        if (refreshed == null) return 'Session expired. Please login again.';
+        if (responseCode == 401) {
+          final refreshed = await refreshTokenRequest();
+          if (refreshed == null) return 'Session expired. Please login again.';
 
-        final newToken = await localStorage.getApiKey();
-        final retryHeaders = {
-          ...headers,
-          'Authorization': 'Bearer $newToken',
-        };
+          final newToken = await localStorage.getApiKey();
+          final retryHeaders = {
+            ...headers,
+            'Authorization': 'Bearer $newToken',
+          };
 
-        response = await http
-            .get(
-              url,
-              headers: retryHeaders,
-            )
-            .timeout(const Duration(seconds: 25));
+          response = await http
+              .get(
+                url,
+                headers: retryHeaders,
+              )
+              .timeout(const Duration(seconds: 25));
+        } else {
+          return json.decode(response.body);
+        }
+      }
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        return handleError(response);
+      }
+    } on TimeoutException {
+      return 'Request timed out. Please try again.';
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  Future<dynamic> patchJsonRequest(
+    String progLink, {
+    bool authRequired = true,
+    Map<String, dynamic>? queryParams,
+    String token = '',
+  }) async {
+    try {
+      final hasInternet = await InternetCheck.connectionStatus();
+
+      if (!hasInternet) {
+        return 'Check your Internet Connection';
+      }
+
+      final accessToken = await localStorage.getApiKey();
+
+      final url = Uri.parse('$baseUrlAddress/$progLink')
+          .replace(queryParameters: queryParams);
+      final headers = <String, String>{
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        if (authRequired)
+          'Authorization': 'Bearer ${accessToken ?? MevTechUtilities.authKey}',
+      };
+
+      // final headers2 = <String, String>{
+      //   'Content-Type': 'application/json',
+      //   'Accept': 'application/json',
+      // };
+
+      // log(url.toString());
+
+      var response = await http
+          .patch(
+            url,
+            headers: headers,
+          )
+          .timeout(const Duration(seconds: 25));
+
+      // final jsonTestData = json.encode(jsonData);
+
+      if (response.statusCode == 400 && authRequired) {
+        final responseCode = handleNotFoundError(response);
+
+        if (responseCode == 401) {
+          final refreshed = await refreshTokenRequest();
+          if (refreshed == null) return 'Session expired. Please login again.';
+
+          final newToken = await localStorage.getApiKey();
+          final retryHeaders = {
+            ...headers,
+            'Authorization': 'Bearer $newToken',
+          };
+
+          response = await http
+              .get(
+                url,
+                headers: retryHeaders,
+              )
+              .timeout(const Duration(seconds: 25));
+        } else {
+          return json.decode(response.body);
+        }
+      }
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        return handleError(response);
+      }
+    } on TimeoutException {
+      return 'Request timed out. Please try again.';
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  Future<dynamic> getRequestBool(
+    String progLink, {
+    bool authRequired = true,
+    String token = '',
+  }) async {
+    try {
+      final hasInternet = await InternetCheck.connectionStatus();
+
+      if (!hasInternet) {
+        return 'Check your Internet Connection';
+      }
+
+      final accessToken = await localStorage.getApiKey();
+
+      final url = Uri.parse('$baseUrlAddress/$progLink');
+      final headers = <String, String>{
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        if (authRequired)
+          'Authorization': 'Bearer ${accessToken ?? MevTechUtilities.authKey}',
+      };
+
+      var response = await http
+          .get(
+            url,
+            headers: headers,
+          )
+          .timeout(const Duration(seconds: 25));
+
+      if (response.statusCode == 400 && authRequired) {
+        final responseCode = handleNotFoundError(response);
+
+        if (responseCode == 401) {
+          final refreshed = await refreshTokenRequest();
+          if (refreshed == null) return 'Session expired. Please login again.';
+
+          final newToken = await localStorage.getApiKey();
+          final retryHeaders = {
+            ...headers,
+            'Authorization': 'Bearer $newToken',
+          };
+
+          response = await http
+              .get(
+                url,
+                headers: retryHeaders,
+              )
+              .timeout(const Duration(seconds: 25));
+        } else {
+          return json.decode(response.body);
+        }
       }
 
       if (response.statusCode == 200) {
@@ -228,12 +384,14 @@ class ApiService {
         return 'Check your Internet Connection';
       }
 
+      final accessToken = await localStorage.getApiKey();
+
       final url = Uri.parse('$baseUrlAddress/$progLink');
 
       final headers = <String, String>{
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Authorization': 'Bearer ${MevTechUtilities.authKey}',
+        'Authorization': 'Bearer ${accessToken ?? MevTechUtilities.authKey}',
       };
 
       var response = await http
@@ -257,9 +415,10 @@ class ApiService {
         };
 
         response = await http
-            .get(
+            .put(
               url,
               headers: retryHeaders,
+              body: json.encode(jsonData),
             )
             .timeout(const Duration(seconds: 25));
       }
@@ -291,11 +450,13 @@ class ApiService {
         return 'Check your Internet Connection';
       }
 
+      final accessToken = await localStorage.getApiKey();
+
       final url = Uri.parse('$baseUrlAddress/$progLink');
       final headers = <String, String>{
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Authorization': 'Bearer ${MevTechUtilities.authKey}',
+        'Authorization': 'Bearer ${accessToken ?? MevTechUtilities.authKey}',
       };
 
       final headers2 = <String, String>{
@@ -324,7 +485,7 @@ class ApiService {
         };
 
         response = await http
-            .get(
+            .delete(
               url,
               headers: retryHeaders,
             )
@@ -362,13 +523,13 @@ class ApiService {
         return 'Check your Internet Connection';
       }
 
+      final accessToken = await localStorage.getApiKey();
+
       // final url = Uri.parse('$baseUrlAddress/$progLink');
       final headers = <String, String>{
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Authorization': MevTechUtilities.authKey.isNotEmpty
-            ? 'Bearer ${MevTechUtilities.authKey}'
-            : 'Bearer $token',
+        'Authorization': 'Bearer ${accessToken ?? MevTechUtilities.authKey}',
       };
 
       final headers2 = <String, String>{
@@ -426,10 +587,13 @@ class ApiService {
         return 'Check your Internet Connection';
       }
 
+      final accessToken = await localStorage.getApiKey();
+
       final url = Uri.parse('$baseUrlAddress/$progLink');
 
       final request = http.MultipartRequest('POST', url)
-        ..headers['Authorization'] = 'Bearer ${MevTechUtilities.authKey}'
+        ..headers['Authorization'] =
+            'Bearer ${accessToken ?? MevTechUtilities.authKey}'
         ..fields['CourseName'] = requestModel.courseName
         ..fields['CourseTitle'] = requestModel.courseTitle
         ..fields['Description'] = requestModel.description
@@ -477,6 +641,8 @@ class ApiService {
         return 'Check your Internet Connection';
       }
 
+      final accessToken = await localStorage.getApiKey();
+
       final url = Uri.parse('$baseUrlAddress/$progLink').replace(
         queryParameters: queryParams,
       );
@@ -484,7 +650,8 @@ class ApiService {
       // log(url.toString());
 
       final request = http.MultipartRequest('PUT', url)
-        ..headers['Authorization'] = 'Bearer ${MevTechUtilities.authKey}'
+        ..headers['Authorization'] =
+            'Bearer ${accessToken ?? MevTechUtilities.authKey}'
         ..fields['CourseName'] = requestModel.courseName
         ..fields['CourseTitle'] = requestModel.courseTitle
         ..fields['Description'] = requestModel.description
@@ -524,6 +691,98 @@ class ApiService {
     }
   }
 
+  Future<dynamic> multipartCreateCourseContent(
+      String progLink, CreateCourseContentRequest requestModel) async {
+    try {
+      final hasInternet = await InternetCheck.connectionStatus();
+
+      if (!hasInternet) {
+        return 'Check your Internet Connection';
+      }
+
+      final accessToken = await localStorage.getApiKey();
+
+      final url = Uri.parse('$baseUrlAddress/$progLink');
+
+      final request = http.MultipartRequest('POST', url)
+        ..headers['Authorization'] =
+            'Bearer ${accessToken ?? MevTechUtilities.authKey}'
+        ..fields.addAll(requestModel.toJson());
+
+      final courseContentThumbnailFile =
+          requestModel.courseContentThumbnailFile;
+      if (courseContentThumbnailFile != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'CourseImageFile',
+            courseContentThumbnailFile.path,
+            filename: basename(requestModel.courseContentThumbnailFile!.path),
+          ),
+        );
+      }
+
+      final streamedResponse =
+          await request.send().timeout(const Duration(seconds: 25));
+
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        return handleError(response);
+      }
+    } on TimeoutException {
+      return 'Request timed out. Please try again.';
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  Future<dynamic> multipartRequestUploadImage({
+    required String progLink,
+    required String userId,
+    required File imageFile,
+  }) async {
+    try {
+      final hasInternet = await InternetCheck.connectionStatus();
+
+      if (!hasInternet) {
+        return 'Check your Internet Connection';
+      }
+
+      final accessToken = await localStorage.getApiKey();
+
+      final url = Uri.parse('$baseUrlAddress/$progLink');
+
+      final request = http.MultipartRequest('POST', url)
+        ..headers['Authorization'] =
+            'Bearer ${accessToken ?? MevTechUtilities.authKey}'
+        ..fields['UserId'] = userId
+        ..files.add(
+          await http.MultipartFile.fromPath(
+            'UserProfilePictureFile',
+            imageFile.path,
+            filename: basename(imageFile.path),
+          ),
+        );
+
+      final streamedResponse =
+          await request.send().timeout(const Duration(seconds: 25));
+
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        return handleError(response);
+      }
+    } on TimeoutException {
+      return 'Request timed out. Please try again.';
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
   Future<String?> refreshTokenRequest() async {
     try {
       final accessToken = await localStorage.getApiKey();
@@ -548,9 +807,11 @@ class ApiService {
             }),
           )
           .timeout(const Duration(seconds: 25));
+      // log(response.body);
 
       if (response.statusCode == 200) {
         final result = json.decode(response.body) as Map<String, dynamic>;
+
         if (result['status'] == true && result['data'] != null) {
           final data = result['data'] as Map<String, dynamic>;
 
@@ -571,6 +832,74 @@ class ApiService {
       return null;
     } catch (_) {
       return null;
+    }
+  }
+
+  Future<dynamic> initiateGoogleSignIn() async {
+    try {
+      final hasInternet = await InternetCheck.connectionStatus();
+
+      if (!hasInternet) return 'Check your Internet Connection';
+
+      final redirectUri = getRedirectUri();
+      final url = Uri.parse(
+        'https://mev-tech-api.onrender.com/get-google-auth-url?redirectUri=$redirectUri',
+      );
+      final uri = Uri.parse(redirectUri);
+      final scheme = uri.scheme;
+
+      final response = await http.get(
+        url,
+      );
+
+      if (response.statusCode == 200) {
+        final returnedData = json.decode(response.body) as Map<String, dynamic>;
+
+        if (returnedData['status'] == true && returnedData['data'] != null) {
+          final data = returnedData['data'] as Map<String, dynamic>;
+          final returnedUrl = data['url'] as String;
+
+          final result = await FlutterWebAuth2.authenticate(
+            url: returnedUrl,
+            callbackUrlScheme: scheme,
+          );
+
+          return result;
+        } else {
+          throw FailureResponse.fromResponse(returnedData);
+        }
+      } else {
+        return handleError(response);
+      }
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  Future<dynamic> youtubeVideoRequest({
+    required String baseUrl,
+    required String progLink,
+  }) async {
+    try {
+      final hasInternet = await InternetCheck.connectionStatus();
+
+      if (!hasInternet) return 'Check your Internet Connection';
+
+      final url = Uri.parse('$baseUrl$progLink');
+
+      final response = await http.get(url).timeout(const Duration(seconds: 25));
+
+      // final jsonTestData = json.encode(jsonData);
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        return handleError(response);
+      }
+    } on TimeoutException {
+      return 'Request timed out. Please try again.';
+    } catch (e) {
+      return e.toString();
     }
   }
 
@@ -623,12 +952,14 @@ class ApiService {
         return 'Check your Internet Connection';
       }
 
+      final accessToken = await localStorage.getApiKey();
+
       final url = Uri.parse('$baseUrlAddress/$progLink')
           .replace(queryParameters: queryParams);
       final headers = <String, String>{
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Authorization': 'Bearer ${MevTechUtilities.authKey}',
+        'Authorization': 'Bearer ${accessToken ?? MevTechUtilities.authKey}',
       };
 
       final headers2 = <String, String>{
@@ -651,6 +982,58 @@ class ApiService {
         // return json.decode(response.body);
       } else {
         handleError(response);
+      }
+    } on TimeoutException {
+      return 'Request timed out. Please try again.';
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+// chat functionality
+
+  Future<dynamic> chatMultipartRequestCreate(
+    String progLink,
+    ChatMessageRequest requestModel,
+  ) async {
+    try {
+      final hasInternet = await InternetCheck.connectionStatus();
+
+      if (!hasInternet) {
+        return 'Check your Internet Connection';
+      }
+
+      final accessToken = await localStorage.getApiKey();
+
+      final url = Uri.parse('$baseUrlAddress/$progLink');
+
+      final request = http.MultipartRequest('POST', url)
+        ..headers['Authorization'] =
+            'Bearer ${accessToken ?? MevTechUtilities.authKey}'
+        ..fields['RoomId'] = requestModel.roomId
+        ..fields['Content'] = requestModel.content
+        ..fields['MessageType'] = requestModel.messageType
+        ..fields['ReplyToId'] = requestModel.replyToId;
+
+      if (requestModel.mediaFile != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'MediaFile',
+            requestModel.mediaFile!.path,
+            filename: basename(requestModel.mediaFile!.path),
+          ),
+        );
+      }
+
+      final streamedResponse =
+          await request.send().timeout(const Duration(seconds: 25));
+
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        return handleError(response);
       }
     } on TimeoutException {
       return 'Request timed out. Please try again.';
@@ -709,6 +1092,20 @@ class ApiService {
 //   // Now upload fileToUpload to API as Multipart
 // }
 
+  String getRedirectUri() {
+    const currentFlavor = String.fromEnvironment('FLAVOR');
+    switch (currentFlavor) {
+      case 'production':
+        return 'dev.adryanev.template://auth-callback';
+      case 'staging':
+        return 'dev.adryanev.template.stg://auth-callback';
+      case 'development':
+        return 'dev.adryanev.template.dev://auth-callback';
+      default:
+        throw Exception('Unknown or missing FLAVOR');
+    }
+  }
+
   String getYouTubeVideoId(String url) {
     final uri = Uri.parse(url);
     if (uri.host.contains('youtube.com')) {
@@ -739,6 +1136,59 @@ class ApiService {
       return 0;
     } catch (_) {
       return 0;
+    }
+  }
+
+  Future<dynamic> videoToThumbnailRequest(String videoUrl) async {
+    try {
+      final hasInternet = await InternetCheck.connectionStatus();
+
+      if (!hasInternet) return 'Check your Internet Connection';
+
+      final videoId = MevTechUtilities.extractYoutubeId(videoUrl);
+
+      final url = Uri.parse('https://www.youtube.com/embed/$videoId');
+
+      final response = await http.get(url).timeout(const Duration(seconds: 25));
+
+      // final jsonTestData = json.encode(jsonData);
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        return handleError(response);
+      }
+    } on TimeoutException {
+      return 'Request timed out. Please try again.';
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  Future<dynamic> videoEmbedableRequest(String videoUrl) async {
+    try {
+      final hasInternet = await InternetCheck.connectionStatus();
+
+      if (!hasInternet) return 'Check your Internet Connection';
+
+      final videoId = MevTechUtilities.extractYoutubeId(videoUrl);
+
+      final url = Uri.parse(
+          'https://www.googleapis.com/youtube/v3/videos?part=status&id=$videoId&key=$youtubeApiKey');
+
+      final response = await http.get(url).timeout(const Duration(seconds: 25));
+
+      // final jsonTestData = json.encode(jsonData);
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        return handleError(response);
+      }
+    } on TimeoutException {
+      return 'Request timed out. Please try again.';
+    } catch (e) {
+      return e.toString();
     }
   }
 

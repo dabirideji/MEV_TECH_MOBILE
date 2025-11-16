@@ -12,6 +12,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:injectable/injectable.dart';
 import 'package:template/app/router/app_router.dart';
 import 'package:template/core/network/api_service.dart';
+import 'package:template/core/network/signalr_service.dart';
 import 'package:template/data/odata_query_builder.dart';
 import 'package:template/features/course/data/models/course-models/course_model.dart';
 import 'package:template/features/course/data/repository/course_repository.dart';
@@ -26,16 +27,18 @@ part 'dashboard_state.dart';
 class DashboardCubit extends Cubit<DashboardState> {
   DashboardCubit(this.courseRepository) : super(const DashboardSuccess()) {
     loadDashboardData();
+    // signalRInit();
   }
 
   final picker = ImagePicker();
   final CourseRepository courseRepository;
+  // late SignalRService _signalRService;
 
   YoutubePlayerController? _controller;
 
   List<Map<String, dynamic>> myList = [];
 
-  TextEditingController emailToken = TextEditingController();
+  TextEditingController searchText = TextEditingController();
 
   final List<CarouselSliderController> carouselController =
       List.generate(5, (index) => CarouselSliderController());
@@ -59,6 +62,17 @@ class DashboardCubit extends Cubit<DashboardState> {
   }
 
   int _currentSearchId = 0;
+
+  // Future<void> signalRInit() async {
+  //   try {
+  //     final token = MevTechUtilities.authKey;
+  //     final userId = MevTechUtilities.id;
+  //     _signalRService = SignalRService(userId: userId, token: token);
+  //     await _signalRService.initSignalR();
+  //   } catch (e) {
+  //     log(e.toString());
+  //   }
+  // }
 
   Future<void> loadDashboardData() async {
     emit((state as DashboardSuccess).copyWith(
@@ -375,6 +389,7 @@ class DashboardCubit extends Cubit<DashboardState> {
 
   @override
   Future<void> close() {
+    // _signalRService.dispose();
     _controller?.close();
     _controller = null;
     return super.close();

@@ -46,11 +46,11 @@ class DeleteCourseRequest {
 
 class UpdateCourseRequest {
   UpdateCourseRequest({
-    this.id,
     required this.courseName,
     required this.courseTitle,
     required this.description,
     required this.isFree,
+    this.id,
     this.courseImageFile,
     this.courseImageUrl,
     this.categories = const [],
@@ -79,6 +79,8 @@ class UpdateCourseRequest {
         'Tags': tags,
       };
 }
+
+// course content request
 
 // Course Category Request
 

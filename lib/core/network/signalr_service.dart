@@ -7,57 +7,74 @@ import 'package:logging/logging.dart';
 import 'package:signalr_netcore/http_connection_options.dart';
 import 'package:signalr_netcore/hub_connection.dart';
 import 'package:signalr_netcore/hub_connection_builder.dart';
+import 'package:template/features/presentation/utilities-class/mev_tech_utilities.dart';
+import 'package:template/features/user/data/models/transaction_model.dart';
 
 class SignalRService {
+  SignalRService({required this.userId, required this.token});
+
   final String baseUrl = 'https://mev-tech-api.onrender.com';
-  final String userId = '3a3dfce3-ac47-4526-0218-08ddb94398df';
+  final String userId;
+  final String token;
   final String targetUserId = '70c4e4f6-cba1-4635-5e92-08ddb88cec3b';
 
   HubConnection? _chatHubConnection;
   HubConnection? _notificationHubConnection;
+  HubConnection? _transactionNotifHubConnection;
 
-  final Logger _logger = Logger('SignalR.Hub');
+  final Logger _transportLogger = Logger('SignalR.Transport');
+  final Logger _hubLogger = Logger('SignalR.Hub');
 
   // Method to initialize and connect to all hubs
   Future<void> initSignalR() async {
-    // 1. Initialize Chat Hub
-    _chatHubConnection = _buildHubConnection('chat');
-    _registerChatHubHandlers();
-    await _startHubConnection(_chatHubConnection, 'Chat');
+    // // 1. Initialize Chat Hub
+    // _chatHubConnection = _buildHubConnection('chat', _hubLogger);
+    // _registerChatHubHandlers();
+    // await _startHubConnection(_chatHubConnection, 'Chat');
 
-    // 2. Initialize Notification Hub
-    _notificationHubConnection = _buildHubConnection('notification');
-    _registerNotificationHubHandlers();
-    await _startHubConnection(_notificationHubConnection, 'Notification');
+    // // 2. Initialize Notification Hub
+    // _notificationHubConnection =
+    //     _buildHubConnection('notification', _hubLogger);
+    // _registerNotificationHubHandlers();
+    // await _startHubConnection(_notificationHubConnection, 'Notification');
+
+    // 3. initialize transaction hub
+    _transactionNotifHubConnection =
+        _buildHubConnection('transactionNotification', _hubLogger);
+    _registerTransactionHubHandlers();
+    await _startHubConnection(_transactionNotifHubConnection, 'Transaction');
   }
 
   // Helper to build a HubConnection
-  HubConnection _buildHubConnection(String hubName) {
+  HubConnection _buildHubConnection(String hubName, Logger logger) {
     final hubUrl = Uri.parse('$baseUrl/hubs/$hubName?userId=$userId');
 
     return HubConnectionBuilder()
         .withUrl(
           hubUrl.toString(),
           options: HttpConnectionOptions(
-            logger: _logger, // F
+            logger: _transportLogger,
+            accessTokenFactory: () async => token,
           ),
         )
         .withAutomaticReconnect() // Handles reconnects automatically!
-        .configureLogging(_logger)
+        .configureLogging(logger)
         .build();
   }
 
   // Helper to start a connection
   Future<void> _startHubConnection(
-      HubConnection? hubConnection, String hubName) async {
+    HubConnection? hubConnection,
+    String hubName,
+  ) async {
     if (hubConnection == null) return;
     try {
       await hubConnection.start();
 
-      _logger.info(
+      _hubLogger.info(
           '✅ Connected to $hubName hub. Connection ID: ${hubConnection.connectionId}');
     } catch (e) {
-      _logger.info('💥 Could not connect to $hubName hub: $e');
+      _hubLogger.info('💥 Could not connect to $hubName hub: $e');
     }
   }
 
@@ -70,7 +87,7 @@ class SignalRService {
       if (message != null && message.isNotEmpty) {
         final msgData = message[0]!
             as Map<String, dynamic>; // Assuming the message is a JSON object
-        _logger.info("💬 New chat message: ${msgData['text']}");
+        _hubLogger.info("💬 New chat message: ${msgData['text']}");
       }
     });
   }
@@ -80,15 +97,44 @@ class SignalRService {
     _notificationHubConnection?.on('notificationReceived', (notification) {
       if (notification != null && notification.isNotEmpty) {
         final notifData = notification[0]! as Map<String, dynamic>;
-        _logger.info("🔔 Notification received: ${notifData['title']}");
+        _hubLogger.info("🔔 Notification received: ${notifData['title']}");
       }
     });
 
     // Listen for 'systemPing'
     _notificationHubConnection?.on('systemPing', (arguments) {
-      _logger.info('✅ System ping received.');
+      _hubLogger.info('✅ System ping received.');
+    });
+
+    // Add the new handler for when the notification hub connects
+    _notificationHubConnection?.on('notificationHubConnected', (arguments) {
+      if (arguments != null && arguments.isNotEmpty) {
+        final connectionId = arguments[0];
+        _hubLogger.info(
+            '🔔 Notification Hub Successfully Pinged and Interconnected with server: $connectionId');
+      }
     });
   }
+
+  void _registerTransactionHubHandlers() {
+    // Listen for 'transactionReceived' from the 'notification' hub
+    _transactionNotifHubConnection?.on('incomingTransaction', (data) {
+      if (data != null && data.isNotEmpty) {
+        final transData = data[0]! as Map<String, dynamic>;
+        _hubLogger
+          ..info("🔔 transaction received: ${transData['transaction']}")
+          ..info("🔔 transaction received: ${transData['subscription']}");
+        final transModel = Transaction.fromJson(
+            transData['transaction'] as Map<String, dynamic>);
+        final subModel = Subscription.fromJson(
+            transData['subscription'] as Map<String, dynamic>);
+        log(transModel.toString());
+        log(subModel.toString());
+      }
+    });
+  }
+
+  // transaction, subscription
 
   // ===== INVOKING (Sending messages to the server) =====
 
@@ -97,63 +143,65 @@ class SignalRService {
       // Call the 'SendMessage' method on the server's 'chat' hub
       await _chatHubConnection
           ?.invoke('SendMessage', args: <Object>[targetUserId, text]);
-      _logger.info('🚀 Sent message to $targetUserId');
+      _hubLogger.info('🚀 Sent message to $targetUserId');
     } else {
-      _logger.info('⚠️ Cannot send message. Chat hub is not connected.');
+      _hubLogger.info('⚠️ Cannot send message. Chat hub is not connected.');
     }
+  }
+
+  Future<void> dispose() async {
+    await _chatHubConnection?.stop();
+    await _notificationHubConnection?.stop();
+    await _transactionNotifHubConnection?.stop();
+    _hubLogger.info('🔴 SignalR connections stopped.');
   }
 }
 
-//  // Method to stop all connections when no longer needed
-//   Future<void> dispose() async {
-//     await _chatHubConnection?.stop();
-//     await _notificationHubConnection?.stop();
-//     log('🔴 SignalR connections stopped.');
-//   }
+// Method to stop all connections when no longer needed
 
 // // In your main widget file, e.g., lib/main.dart
 
 // // import 'signalr_service.dart'; // Import your new service
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
+// class MyHomePage extends StatefulWidget {
+//   const MyHomePage({super.key});
 
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
+//   @override
+//   _MyHomePageState createState() => _MyHomePageState();
+// }
 
-class _MyHomePageState extends State<MyHomePage> {
-  final SignalRService _signalRService = SignalRService();
-  final String targetUserId = '70c4e4f6-cba1-4635-5e92-08ddb88cec3b';
+// class _MyHomePageState extends State<MyHomePage> {
+//   final SignalRService _signalRService = SignalRService();
+//   final String targetUserId = '70c4e4f6-cba1-4635-5e92-08ddb88cec3b';
 
-  @override
-  void initState() {
-    super.initState();
-    // Connect to SignalR when the widget is first created
-    _signalRService.initSignalR();
-  }
+//   @override
+//   void initState() {
+//     super.initState();
+//     // Connect to SignalR when the widget is first created
+//     _signalRService.initSignalR();
+//   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Flutter SignalR'),
-      ),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            // Example of sending a message
-            _signalRService.sendChatMessage(
-              targetUserId,
-              'Hello from Austinero, this is a test message to kunle! 👋',
-            );
-          },
-          child: const Text('Send Test Message'),
-        ),
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: const Text('Flutter SignalR'),
+//       ),
+//       body: Center(
+//         child: ElevatedButton(
+//           onPressed: () {
+//             // Example of sending a message
+//             _signalRService.sendChatMessage(
+//               targetUserId,
+//               'Hello from Austinero, this is a test message to kunle! 👋',
+//             );
+//           },
+//           child: const Text('Send Test Message'),
+//         ),
+//       ),
+//     );
+//   }
+// }
 
 // incase there is a connection bug in the latest version
 // this is a manual retry logic after downgrading

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:signalr_netcore/itransport.dart';
 import 'package:template/core/network/signalr_service.dart';
+import 'package:template/features/presentation/utilities-class/mev_tech_utilities.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 class MockTestPage extends StatefulWidget {
   const MockTestPage({super.key});
@@ -8,18 +11,25 @@ class MockTestPage extends StatefulWidget {
   State<MockTestPage> createState() => _MockTestPageState();
 }
 
-class _MockTestPageState extends State<MockTestPage>
-    with TickerProviderStateMixin {
-  late TabController _tabController;
+class _MockTestPageState extends State<MockTestPage> {
+  //  with TickerProviderStateMixin
+  // late TabController _tabController;
 
-  final SignalRService _signalRService = SignalRService();
+  final SignalRService _signalRService = SignalRService(
+      userId: MevTechUtilities.id, token: MevTechUtilities.authKey);
   final String targetUserId = '70c4e4f6-cba1-4635-5e92-08ddb88cec3b';
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    // _tabController = TabController(length: 3, vsync: this);
     _signalRService.initSignalR();
+  }
+
+  @override
+  void dispose() {
+    _signalRService.dispose();
+    super.dispose();
   }
 
   @override
@@ -50,105 +60,93 @@ class _MockTestPageState extends State<MockTestPage>
   }
 }
 
-// class MyHomePage extends StatefulWidget {
+// class CourseYoutubePlayer extends StatefulWidget {
+//   const CourseYoutubePlayer({required this.videoId, super.key});
+//   final String videoId;
+
 //   @override
-//   _MyHomePageState createState() => _MyHomePageState();
+//   State<CourseYoutubePlayer> createState() => _CourseYoutubePlayerState();
 // }
 
-// class _MyHomePageState extends State<MyHomePage> {
-//   final SignalRService _signalRService = SignalRService();
-//   final String targetUserId = '70c4e4f6-cba1-4635-5e92-08ddb88cec3b';
+// class _CourseYoutubePlayerState extends State<CourseYoutubePlayer> {
+//   late YoutubePlayerController _controller;
+//   String? _title;
+//   String? _author;
+//   Duration? _duration;
 
 //   @override
 //   void initState() {
 //     super.initState();
-//     // Connect to SignalR when the widget is first created
-//     _signalRService.initSignalR();
-//   }
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: const Text('Flutter SignalR'),
-//       ),
-//       body: Center(
-//         child: ElevatedButton(
-//           onPressed: () {
-//             // Example of sending a message
-//             _signalRService.sendChatMessage(
-//               targetUserId,
-//               'Hello from Austinero, this is a test message to kunle! 👋',
-//             );
-//           },
-//           child: const Text('Send Test Message'),
-//         ),
+//     // Extract video ID
+//     // final videoId = YoutubePlayer.convertUrlToId(widget.videoUrl) ?? '';
+
+//     _controller = YoutubePlayerController(
+//       initialVideoId: widget.videoId,
+//       flags: const YoutubePlayerFlags(
+//         autoPlay: false,
 //       ),
 //     );
-//   }
-// }
 
-
-
-
-
-// class CourseCubit extends Cubit<CourseState> {
-//   final GenericRepository<Course> repository;
-
-//   CourseCubit(this.repository) : super(CourseState());
-
-//   Future<void> loadCourses() async {
-//     emit(CourseState(isLoading: true));
-//     try {
-//       final data = await repository.getAll();
-//       emit(CourseState(courses: data));
-//     } catch (e) {
-//       emit(CourseState(error: e.toString()));
-//     }
+//     // Listen for metadata updates
+//     _controller.addListener(() {
+//       final metadata = _controller.metadata;
+//       if (metadata.title.isNotEmpty) {
+//         setState(() {
+//           _title = metadata.title;
+//           _author = metadata.author;
+//           _duration = metadata.duration;
+//         });
+//       }
+//     });
 //   }
 
-//   Future<void> createCourse(String title) async {
-//     try {
-//       final newCourse = Course(title: title);
-//       await repository.create(newCourse.toJson());
-//       await loadCourses(); // reload after creating
-//     } catch (e) {
-//       emit(CourseState(error: e.toString()));
-//     }
+//   @override
+//   void dispose() {
+//     _controller.dispose();
+//     super.dispose();
 //   }
 
-//   Future<void> deleteCourse(String id) async {
-//     try {
-//       await repository.delete(id);
-//       await loadCourses(); // reload after delete
-//     } catch (e) {
-//       emit(CourseState(error: e.toString()));
-//     }
+//   String _formatDuration(Duration duration) {
+//     String twoDigits(int n) => n.toString().padLeft(2, '0');
+//     final minutes = twoDigits(duration.inMinutes.remainder(60));
+//     final seconds = twoDigits(duration.inSeconds.remainder(60));
+//     return "${duration.inHours > 0 ? '${twoDigits(duration.inHours)}:' : ''}$minutes:$seconds";
 //   }
-// }
-
-// void main() {
-//   final courseRepository = GenericRepository<Course>(
-//     client: http.Client(),
-//     baseUrl: 'https://yourapi.com/api/courses',
-//     fromJson: (json) => Course.fromJson(json),
-//   );
-
-//   runApp(MyApp(courseRepository));
-// }
-
-// class MyApp extends StatelessWidget {
-//   final GenericRepository<Course> courseRepository;
-
-//   const MyApp(this.courseRepository, {super.key});
 
 //   @override
 //   Widget build(BuildContext context) {
-//     return MaterialApp(
-//       home: BlocProvider(
-//         create: (_) => CourseCubit(courseRepository)..loadCourses(),
-//         child: CoursePage(),
+//     return YoutubePlayerBuilder(
+//       player: YoutubePlayer(
+//         controller: _controller,
+//         showVideoProgressIndicator: true,
 //       ),
+//       builder: (context, player) {
+//         return Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             player,
+//             const SizedBox(height: 8),
+//             if (_title != null) ...[
+//               Text(
+//                 _title!,
+//                 style: Theme.of(context).textTheme.titleMedium,
+//               ),
+//               const SizedBox(height: 4),
+//             ],
+//             if (_author != null)
+//               Text(
+//                 'By $_author',
+//                 style: Theme.of(context).textTheme.bodySmall,
+//               ),
+//             if (_duration != null)
+//               Text(
+//                 'Duration: ${_formatDuration(_duration!)}',
+//                 style: Theme.of(context).textTheme.bodySmall,
+//               ),
+//           ],
+//         );
+//       },
 //     );
 //   }
 // }
@@ -178,93 +176,3 @@ class _MockTestPageState extends State<MockTestPage>
 
 //   // Add as many model-specific repositories as needed
 // }
-
-// class PaginatedResult<T> {
-//   final int pageNumber;
-//   final int pageSize;
-//   final int totalRecords;
-//   final int totalPages;
-//   final List<T> result;
-
-//   PaginatedResult({
-//     required this.pageNumber,
-//     required this.pageSize,
-//     required this.totalRecords,
-//     required this.totalPages,
-//     required this.result,
-//   });
-
-//   factory PaginatedResult.fromJson(
-//     Map<String, dynamic> json,
-//     T Function(Map<String, dynamic>) fromJson,
-//   ) {
-//     return PaginatedResult(
-//       pageNumber: json['pageNumber'],
-//       pageSize: json['pageSize'],
-//       totalRecords: json['totalRecords'],
-//       totalPages: json['totalPages'],
-//       result: (json['result'] as List)
-//           .map((item) => fromJson(item))
-//           .toList(),
-//     );
-//   }
-// }
-
-
-// Future<PaginatedResult<T>> getPaginated({
-//     required int page,
-//     required int pageSize,
-//     Map<String, String>? extraParams,
-//   }) async {
-//     final allParams = {
-//       'pageNumber': page.toString(),
-//       'pageSize': pageSize.toString(),
-//       ...?extraParams,
-//     };
-//     final uri = Uri.parse('$baseUrl/paginate').replace(queryParameters: allParams);
-//     final response = await client.get(uri);
-
-//     if (response.statusCode == 200) {
-//       final Map<String, dynamic> jsonMap = json.decode(response.body);
-//       return PaginatedResult<T>.fromJson(jsonMap, fromJson);
-//     } else {
-//       throw Exception('Failed to fetch paginated data');
-//     }
-//   }
-
-// this is the part i really need as methods apart from the base class GenericRepository<T>
-
-// class CourseRepository {
-//   final http.Client client;
-
-//   CourseRepository(this.client);
-
-//   Future<List<T>> fetchCourseData<T>({
-//     required String endpoint,
-//     Map<String, String>? queryParams,
-//     required T Function(Map<String, dynamic>) fromJson,
-//   }) async {
-//     final repo = GenericRepository<T>(
-//       client: client,
-//       baseUrl: endpoint,
-//       fromJson: fromJson,
-//     );
-
-//     return await repo.getAll(queryParams: queryParams);
-//   }
-// }
-
-// in your cubit, now do this
-
-// final comments = await courseRepository.fetchCourseData<CourseComment>(
-//   endpoint: 'https://yourapi.com/api/CourseComment',
-//   queryParams: {'courseId': courseId.toString()},
-//   fromJson: (json) => CourseComment.fromJson(json),
-// );
-
-// final notes = await courseRepository.fetchCourseData<CourseNote>(
-//   endpoint: 'https://yourapi.com/api/CourseNote',
-//   fromJson: (json) => CourseNote.fromJson(json),
-// );
-
-

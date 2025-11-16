@@ -10,5 +10,5 @@ import 'package:template/bootstrap.dart';
 import 'package:template/core/utils/constants.dart';
 
 void main() {
-  bootstrap(App(), environment: Environment.development);
+  bootstrap(const App(), environment: Environment.development);
 }

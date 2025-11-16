@@ -13,6 +13,7 @@ import 'package:template/app/router/app_router.dart';
 import 'package:template/core/network/api_service.dart';
 import 'package:template/data/odata_query_builder.dart';
 import 'package:template/features/course/data/models/course-content-models/course_content_model.dart';
+import 'package:template/features/course/data/models/course-content-models/course_content_request.dart';
 import 'package:template/features/course/data/models/course-models/course_model.dart';
 import 'package:template/features/course/data/models/course-models/course_request.dart';
 import 'package:template/features/course/data/repository/course_repository.dart';
@@ -404,6 +405,90 @@ class CourseCubit extends Cubit<CourseState> {
     }
   }
 
+  // course content create
+
+  Future<void> createCourseContent({
+    required String courseContentCourseId,
+    required String courseContentTitle,
+    required String courseContentDescription,
+    required String courseContentVideoUrl,
+    required String courseContentSummary,
+    required String courseContentTranscript,
+    required File? courseContentThumbnailFile,
+    required String courseContentThumbnailUrl,
+    required int order,
+    required bool isPreview,
+    required bool isFree,
+  }) async {
+    if (state is! CourseSuccess) return;
+    final current = state as CourseSuccess;
+
+    try {
+      final courseContent = CreateCourseContentRequest(
+        courseContentCourseId: courseContentCourseId,
+        courseContentTitle: courseContentTitle,
+        courseContentDescription: courseContentDescription,
+        courseContentVideoUrl: courseContentVideoUrl,
+        courseContentSummary: courseContentSummary,
+        courseContentTranscript: courseContentTranscript,
+        order: order,
+        isPreview: isPreview,
+        isFree: isFree,
+      );
+      emit(current.copyWith(
+        actionMethod: ActionMethod.creating,
+        routeName: AppRouter.createCourseContent,
+      ));
+
+      final result = await courseRepository.createCourseContent(courseContent);
+
+      emit(current.copyWith(
+        actionMethod: ActionMethod.created,
+        routeName: AppRouter.createCourseContent,
+        message: result,
+      ));
+
+      clearField();
+    } catch (e) {
+      emit(current.copyWith(
+        actionMethod: ActionMethod.notCreated,
+        routeName: AppRouter.createCourseContent,
+        message: e.toString(),
+      ));
+    }
+  }
+
+  Future<void> checkIfEmbedable(String videoUrl) async {
+    if (state is! CourseSuccess) return;
+    final current = state as CourseSuccess;
+    try {
+      emit(current.copyWith(
+        actionMethod: ActionMethod.fetching,
+        routeName: AppRouter.createCourseContent,
+      ));
+
+      final result = await courseRepository.checkEmbeded(videoUrl);
+
+      emit(current.copyWith(
+        isVideoEmbeddable: result,
+        actionMethod: ActionMethod.fetched,
+        routeName: AppRouter.createCourseContent,
+      ));
+    } catch (e) {
+      emit(current.copyWith(
+        actionMethod: ActionMethod.fetched,
+        routeName: AppRouter.createCourseContent,
+      ));
+    }
+  }
+
+  void resetState() {
+    if (state is! CourseSuccess) return;
+    final current = state as CourseSuccess;
+    emit(CourseSuccess(
+        courses: current.courses, isMenuExpanded: current.isMenuExpanded));
+  }
+
   Future<File?> getImageFile() async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery);
@@ -729,6 +814,16 @@ class CourseCubit extends Cubit<CourseState> {
         routeName: AppRouter.courseDetails,
         message: e.toString(),
       ));
+    }
+  }
+
+  void checkState(
+      {List<CourseModel>? courses, List<CourseModel>? categorizedCourses}) {
+    if (state is! CourseSuccess) {
+      emit(CourseSuccess(courses: courses ?? [], isMenuExpanded: const {}));
+    } else {
+      final current = state as CourseSuccess;
+      if (current.courses.isEmpty) {}
     }
   }
 

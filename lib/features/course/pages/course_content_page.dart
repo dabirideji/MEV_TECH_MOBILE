@@ -6,29 +6,42 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:template/core/utils/colors.dart';
 import 'package:template/features/auth/logic/auth-cubit/auth_cubit.dart';
 import 'package:template/features/course/course-widget/course_content_widgets.dart';
+import 'package:template/features/course/data/models/course-content-models/course_content_model.dart';
 import 'package:template/features/course/logic/course-content-cubit/course_content_cubit.dart';
 import 'package:template/features/presentation/utilities-class/mev_tech_utilities.dart';
 import 'package:template/injector.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
 class CourseContentPage extends StatelessWidget {
-  const CourseContentPage({required this.courseId, super.key});
-  final String courseId;
+  const CourseContentPage({required this.id, super.key});
+  final String id;
+
+  // listenWhen: (prev, curr) =>
+  //   prev.noteStatus != curr.noteStatus ||
+  //   prev.commentStatus != curr.commentStatus,
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) =>
-          getIt<CourseContentCubit>()..fetchCourseContent(courseId),
-      child: CourseContentView(courseId: courseId),
-    );
+    final state = context.watch<CourseContentCubit>().state;
+    if (state is CourseContentSuccess) {
+      final courseContent =
+          state.courseContentModel.firstWhere((s) => s.id == id);
+
+      return CourseContentView(courseContent: courseContent);
+    } else {
+      return const Scaffold(
+        body: Center(
+          child: Text('Error loading course content'),
+        ),
+      );
+    }
   }
 }
 
 class CourseContentView extends StatefulWidget {
-  const CourseContentView({required this.courseId, super.key});
+  const CourseContentView({required this.courseContent, super.key});
 
-  final String courseId;
+  final CourseContentModel courseContent;
 
   @override
   State<CourseContentView> createState() => _CourseContentViewState();
@@ -38,15 +51,16 @@ class _CourseContentViewState extends State<CourseContentView>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final _scrollController = ScrollController();
+  late YoutubePlayerController? _controller;
 
-  int tabIndex = 0;
+  // int tabIndex = 0;
 
-  void tabChange(int index) {
-    setState(() {
-      tabIndex = index;
-    });
-    if (index == 2) {}
-  }
+  // void tabChange(int index) {
+  //   setState(() {
+  //     tabIndex = index;
+  //   });
+  //   if (index == 2) {}
+  // }
 
   @override
   void initState() {
@@ -54,6 +68,18 @@ class _CourseContentViewState extends State<CourseContentView>
     _tabController = TabController(length: 3, vsync: this);
 
     _scrollController.addListener(_onScroll);
+
+    final videoId = MevTechUtilities.extractYoutubeId(
+        widget.courseContent.courseContentVideoUrl);
+
+    if (videoId.isNotEmpty) {
+      _controller = YoutubePlayerController.fromVideoId(
+        videoId: videoId,
+        params: const YoutubePlayerParams(showFullscreenButton: true),
+      );
+    } else {
+      throw Exception('Requested Video Not Found');
+    }
   }
 
   void _onScroll() {
@@ -70,6 +96,8 @@ class _CourseContentViewState extends State<CourseContentView>
     _scrollController
       ..removeListener(_onScroll)
       ..dispose();
+    _controller?.close();
+    _controller = null;
     super.dispose();
   }
 
@@ -80,23 +108,17 @@ class _CourseContentViewState extends State<CourseContentView>
     return BlocConsumer<CourseContentCubit, CourseContentState>(
       listener: (context, state) {
         if (state is CourseContentSuccess) {
-          if ((state.contentCommentState == ContentCommentState.created ||
-                  state.contentNoteState == ContentNoteState.created ||
-                  state.contentCommentState == ContentCommentState.replied) &&
-              state.createSuccess.isNotEmpty) {
-            MevTechUtilities.successToast(context, state.createSuccess);
-            context.read<CourseContentCubit>().resetCommentAndNoteState();
-          }
+          // if () {
+          //   MevTechUtilities.successToast(context, state.createSuccess);
+          //   context.read<CourseContentCubit>().resetCommentAndNoteState();
+          // }
 
-          if ((state.contentCommentState == ContentCommentState.notCreated ||
-                  state.contentNoteState == ContentNoteState.notCreated ||
-                  state.contentCommentState == ContentCommentState.notFetched ||
-                  state.contentNoteState == ContentNoteState.notFetched ||
-                  state.contentCommentState == ContentCommentState.notReplied ||
-                  state.contentCommentState ==
-                      ContentCommentState.notPaginated) &&
-              state.fetchError.isNotEmpty) {
-            MevTechUtilities.errorToast(context, state.fetchError);
+          if (state.commentStatus.isFailure || state.noteStatus.isFailure) {
+            MevTechUtilities.errorToast(
+                context,
+                state.commentStatus.error ??
+                    state.noteStatus.error ??
+                    'Unable to complete action. please try again');
             context.read<CourseContentCubit>().resetCommentAndNoteState();
           }
         }
@@ -114,7 +136,7 @@ class _CourseContentViewState extends State<CourseContentView>
           appBar: AppBar(
             centerTitle: true,
             title: Text(
-              'Course Details',
+              'Course Content',
               style: TextStyle(
                 fontSize: 14.sp,
                 fontWeight: FontWeight.w500,
@@ -214,9 +236,9 @@ class _CourseContentViewState extends State<CourseContentView>
                                       height: constraints.maxHeight * 0.3,
                                       child: ClipRRect(
                                         borderRadius: BorderRadius.circular(5),
-                                        child: state.controller != null
+                                        child: _controller != null
                                             ? YoutubePlayer(
-                                                controller: state.controller!,
+                                                controller: _controller!,
                                               )
                                             : Container(
                                                 color: Colors.white,
@@ -239,10 +261,7 @@ class _CourseContentViewState extends State<CourseContentView>
                                         ),
                                       ),
                                       subtitle: Text(
-                                        state.courseContentModel != null
-                                            ? state.courseContentModel!
-                                                .courseContentTitle
-                                            : '',
+                                        widget.courseContent.courseContentTitle,
                                         style: TextStyle(
                                           fontSize: 17.sp,
                                           fontWeight: FontWeight.bold,
@@ -369,9 +388,9 @@ class _CourseContentViewState extends State<CourseContentView>
                                         SizedBox(height: 10.h),
                                         TextButton.icon(
                                           onPressed: () {
-                                            contentCubit.fetchCourseContent(
-                                              widget.courseId,
-                                            );
+                                            // contentCubit.fetchCourseContent(
+                                            //   widget.courseId,
+                                            // );
                                           },
                                           style: TextButton.styleFrom(
                                             backgroundColor:
@@ -495,7 +514,7 @@ class _CourseContentViewState extends State<CourseContentView>
                                         if (state is CourseContentSuccess)
                                           ContentOverview(
                                             courseContentModel:
-                                                state.courseContentModel,
+                                                widget.courseContent,
                                           )
                                         else if (state is CourseContentLoading)
                                           const ContentOverviewLoading()
@@ -506,18 +525,12 @@ class _CourseContentViewState extends State<CourseContentView>
                                             txtPostController:
                                                 contentCubit.txtComment,
                                             comments: state.comments,
-                                            commentState:
-                                                state.contentCommentState,
+                                            commentStatus: state.commentStatus,
                                             onPostComment: () {
                                               contentCubit.createCourseComment(
                                                 userId: MevTechUtilities.id,
                                                 courseContentId:
-                                                    state.courseContentModel !=
-                                                            null
-                                                        ? state
-                                                            .courseContentModel!
-                                                            .id
-                                                        : '',
+                                                    widget.courseContent.id,
                                                 parentCommentId: '',
                                               );
                                             },
@@ -527,12 +540,7 @@ class _CourseContentViewState extends State<CourseContentView>
                                               contentCubit.replyCourseComment(
                                                 userId: MevTechUtilities.id,
                                                 courseContentId:
-                                                    state.courseContentModel !=
-                                                            null
-                                                        ? state
-                                                            .courseContentModel!
-                                                            .id
-                                                        : '',
+                                                    widget.courseContent.id,
                                                 parentCommentId:
                                                     parentCommentId,
                                                 replyMessage: reply,
@@ -551,17 +559,12 @@ class _CourseContentViewState extends State<CourseContentView>
                                             textController:
                                                 contentCubit.txtNotes,
                                             notes: state.notes,
-                                            noteState: state.contentNoteState,
+                                            noteStatus: state.noteStatus,
                                             onPressed: () {
                                               contentCubit.createCourseNotes(
                                                 userId: MevTechUtilities.id,
                                                 courseContentId:
-                                                    state.courseContentModel !=
-                                                            null
-                                                        ? state
-                                                            .courseContentModel!
-                                                            .id
-                                                        : '',
+                                                    widget.courseContent.id,
                                               );
                                             },
                                           )
@@ -583,34 +586,34 @@ class _CourseContentViewState extends State<CourseContentView>
               },
             ),
           ),
-          bottomNavigationBar: SafeArea(
-            child: Padding(
-              padding: EdgeInsets.only(left: 15.w, right: 15.w, bottom: 8.h),
-              child: ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  backgroundColor: AppColor.primary,
-                  foregroundColor: Colors.white,
-                ),
-                child: Container(
-                  height: 45.h,
-                  width: double.infinity,
-                  alignment: Alignment.center,
-                  child: Text(
-                    'Enroll now',
-                    style: GoogleFonts.poppins(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
+          // bottomNavigationBar: SafeArea(
+          //   child: Padding(
+          //     padding: EdgeInsets.only(left: 15.w, right: 15.w, bottom: 8.h),
+          //     child: ElevatedButton(
+          //       onPressed: () {},
+          //       style: ElevatedButton.styleFrom(
+          //         shape: RoundedRectangleBorder(
+          //           borderRadius: BorderRadius.circular(10),
+          //         ),
+          //         backgroundColor: AppColor.primary,
+          //         foregroundColor: Colors.white,
+          //       ),
+          //       child: Container(
+          //         height: 45.h,
+          //         width: double.infinity,
+          //         alignment: Alignment.center,
+          //         child: Text(
+          //           'Enroll now',
+          //           style: GoogleFonts.poppins(
+          //             fontSize: 14.sp,
+          //             fontWeight: FontWeight.w600,
+          //             color: Colors.white,
+          //           ),
+          //         ),
+          //       ),
+          //     ),
+          //   ),
+          // ),
         );
       },
     );

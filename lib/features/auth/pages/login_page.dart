@@ -28,6 +28,12 @@ class _LoginPageState extends State<LoginPage> {
   bool isPasswordVisible = false;
 
   @override
+  void initState() {
+    super.initState();
+    _formKey.currentState?.reset();
+  }
+
+  @override
   Widget build(BuildContext context) {
     // final double screenHeight = MediaQuery.of(context).size.height;
 
@@ -206,7 +212,7 @@ class _LoginPageState extends State<LoginPage> {
                               _autovalidateForm = true;
                             });
                             if (_formKey.currentState!.validate()) {
-                              authCubit.loginUser(widget.userType);
+                              authCubit.loginUser();
                             }
                           },
                           style: ElevatedButton.styleFrom(
@@ -232,10 +238,7 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         SizedBox(height: 20.h),
                         ElevatedButton(
-                          onPressed: () {
-                            // authCubit.signInWithGoogle();
-                            GoogleSigninService.initiateOAuthLogin(context);
-                          },
+                          onPressed: authCubit.signInWithGoogle,
                           style: ElevatedButton.styleFrom(
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),

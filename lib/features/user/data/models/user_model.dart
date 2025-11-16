@@ -1,4 +1,5 @@
 import 'package:template/core/utils/constants.dart';
+import 'package:template/features/user/data/models/subscription_model.dart';
 
 class UserModel {
   UserModel({
@@ -16,6 +17,7 @@ class UserModel {
     required this.isLockedOut,
     required this.isDisabled,
     this.profilePictureUrl,
+    this.userSubscription,
     this.roles,
     this.userType,
     this.password,
@@ -34,6 +36,11 @@ class UserModel {
       isAdmin: (json['isAdmin'] ?? false) as bool,
       isInstructor: (json['isInstructor'] ?? false) as bool,
       profilePictureUrl: checkNullString(json['profilePictureUrl']),
+      userSubscription: json['userSubscription'] != null
+          ? UserSubscription.fromJson(
+              json['userSubscription'] as Map<String, dynamic>,
+            )
+          : null,
       status: (json['status'] ?? '') as String,
       isEmailVerified: (json['isEmailVerified'] ?? false) as bool,
       isPhoneNumberVerified: (json['isPhoneNumberVerified'] ?? false) as bool,
@@ -65,6 +72,41 @@ class UserModel {
   final bool isDisabled;
   final String? createdAt;
   final String? updatedAt;
+  final UserSubscription? userSubscription;
+}
+
+class UserGoogleModel {
+  UserGoogleModel({
+    required this.status,
+    required this.id,
+    required this.accessToken,
+    required this.refreshtoken,
+    required this.email,
+  });
+
+  factory UserGoogleModel.fromJson(String json) {
+    final result = Uri.parse(json);
+
+    final status = result.queryParameters['status'];
+    final id = result.queryParameters['id'];
+    final accessToken = result.queryParameters['auth_token'];
+    final refreshtoken = result.queryParameters['refresh_token'];
+    final email = result.queryParameters['email'];
+
+    return UserGoogleModel(
+      status: status ?? '',
+      id: id ?? '',
+      accessToken: accessToken ?? '',
+      refreshtoken: refreshtoken ?? '',
+      email: email ?? '',
+    );
+  }
+
+  final String status;
+  final String id;
+  final String accessToken;
+  final String refreshtoken;
+  final String email;
 }
 
 // new user data with refresh token

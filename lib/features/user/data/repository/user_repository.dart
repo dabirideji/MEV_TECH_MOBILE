@@ -6,8 +6,12 @@ import 'package:injectable/injectable.dart';
 import 'package:template/core/error/failure_response.dart';
 import 'package:template/core/network/api_service.dart';
 import 'package:template/core/utils/constants.dart';
+import 'package:template/data/generic_repository.dart';
 import 'package:template/data/google_signin.dart';
+import 'package:template/data/paginated_model.dart';
 import 'package:template/features/presentation/utilities-class/mev_tech_utilities.dart';
+import 'package:template/features/quiz/data/models/question_model.dart';
+import 'package:template/features/quiz/data/models/subject_model.dart';
 import 'package:template/features/user/data/models/login_model.dart';
 import 'package:template/features/user/data/models/subscription_model.dart';
 import 'package:template/features/user/data/models/user_model.dart';
@@ -20,15 +24,24 @@ class UserRepository {
   final ApiService apiService;
   final googleSigninService = GoogleSigninService();
 
+  Future<String> refreshToken({
+    required String token,
+    required String refreshToken,
+  }) async {
+    final result = await apiService.refreshTokenRequest();
+    if (result == null) {
+      throw FailureResponse.fromResponse(
+          'Session expired. Please login again.');
+    }
+    return result;
+  }
+
   Future<LoginModel> checkUserSession({
     required String token,
     required String id,
     required String refreshToken,
-    String? userType,
   }) async {
-    final progLink = userType == UserType.instructor
-        ? 'Instructor/GetById/$id'
-        : 'Student/GetById/$id';
+    final progLink = 'Student/GetById/$id';
     final result = await apiService.getJsonRequest(
       progLink,
       token: token,
@@ -44,13 +57,47 @@ class UserRepository {
         final data = <String, dynamic>{
           'accessToken': token,
           'refreshToken': refreshToken,
-          'userSubscription': null,
+          'userSubscription': userInformation['userSubscription'],
           'userInformation': userInformation,
         };
 
         MevTechUtilities.authKey = token;
         MevTechUtilities.refreshToken = refreshToken;
         MevTechUtilities.id = id;
+        // log(id);
+
+        return LoginModel.fromJson(data);
+      } else {
+        throw FailureResponse.fromResponse(result);
+      }
+    } else {
+      throw FailureResponse.fromResponse('Unknown');
+    }
+  }
+
+  Future<LoginModel> googleSignIn() async {
+    final userData = await returnedGoogleData();
+
+    final progLink = 'Student/GetById/${userData.id}';
+    final result = await apiService.getJsonRequest(
+      progLink,
+      token: userData.accessToken,
+    );
+
+    if (result != null) {
+      if (result is Map && result['status'] == true && result['data'] != null) {
+        final userInformation = result['data'] as Map<String, dynamic>;
+
+        final data = <String, dynamic>{
+          'accessToken': userData.accessToken,
+          'refreshToken': userData.refreshtoken,
+          'userSubscription': null,
+          'userInformation': userInformation,
+        };
+
+        MevTechUtilities.authKey = userData.accessToken;
+        MevTechUtilities.refreshToken = userData.refreshtoken;
+        MevTechUtilities.id = userData.id;
         // log(id);
 
         return LoginModel.fromJson(data);
@@ -108,6 +155,30 @@ class UserRepository {
     }
   }
 
+  //  final data = result['data'] as Map<String, dynamic>;
+
+  //       MevTechUtilities.authKey = data['accessToken'].toString();
+  //       MevTechUtilities.refreshToken = data['refreshToken'].toString();
+
+  //       final userInfo = data['userInformation'] as Map<String, dynamic>;
+
+  //       MevTechUtilities.id = userInfo['id'].toString();
+
+  //       return LoginModel.fromJson(data);
+
+  Future<UserGoogleModel> returnedGoogleData() async {
+    final result = await apiService.initiateGoogleSignIn();
+    if (result != null && result is String) {
+      try {
+        return UserGoogleModel.fromJson(result);
+      } catch (e) {
+        throw FailureResponse.fromResponse('$result $e');
+      }
+    } else {
+      throw FailureResponse.fromResponse('Unknown');
+    }
+  }
+
   Future<UserModel> getStudentbyID(String id) async {
     final result = await apiService.getJsonRequest(
       'Student/GetById/$id',
@@ -154,6 +225,68 @@ class UserRepository {
     if (result != null) {
       if (result is Map && result['status'] == true) {
         return result['responseMessage'] as String;
+      } else {
+        throw FailureResponse.fromResponse(result);
+      }
+    } else {
+      throw FailureResponse.fromResponse('Unknown');
+    }
+  }
+
+  Future<bool> markNotifAsread(String id) async {
+    final result = await apiService.patchJsonRequest(
+        'Notification/MarkNotificationAsRead/$id/mark-as-read');
+
+    if (result != null) {
+      if (result is bool && result == true) {
+        return result;
+      } else {
+        throw FailureResponse.fromResponse(result);
+      }
+    } else {
+      throw FailureResponse.fromResponse('Unknown');
+    }
+  }
+
+  // email verify
+
+  Future<String> sendEmailConfirmToken(
+    Map<String, dynamic> jsonData,
+  ) async {
+    final result = await apiService.postJsonRequest(
+      jsonData,
+      'Token/SendToken',
+      authRequired: false,
+    );
+    if (result != null) {
+      if (result is Map && result['status'] == true && result['data'] != null) {
+        final data = result['data'] as Map<String, dynamic>;
+        final message = data['message'] as String;
+
+        return message;
+        // return result['responseMessage'] as String;
+      } else {
+        throw FailureResponse.fromResponse(result);
+      }
+    } else {
+      throw FailureResponse.fromResponse('Unknown');
+    }
+  }
+
+  Future<String> verifyEmailConfirmToken(
+    Map<String, dynamic> jsonData,
+  ) async {
+    final result = await apiService.getJsonRequest(
+      'Token/VerifyToken',
+      queryParams: jsonData,
+      authRequired: false,
+    );
+    if (result != null) {
+      if (result is Map && result['status'] == true && result['data'] != null) {
+        final data = result['data'] as Map<String, dynamic>;
+        final message = data['message'] as String;
+
+        return message;
       } else {
         throw FailureResponse.fromResponse(result);
       }
@@ -288,27 +421,50 @@ class UserRepository {
     }
   }
 
-  Future<void> uploadImage() async {
-    final picker = ImagePicker();
+  Future<UserModel> uploadProfileImage({
+    required String userId,
+    required File imageFile,
+  }) async {
+    final result = await apiService.multipartRequestUploadImage(
+      progLink: 'Student/UploadProfilePicture',
+      userId: userId,
+      imageFile: imageFile,
+    );
 
-    final picked = await picker.pickImage(source: ImageSource.gallery);
-
-    if (picked != null) {
-      final file = File(picked.path);
-      final result = await apiService.uploadFileRequest('File/upload', file);
-
-      if (result != null) {
-        if (result is Map && result['status'] == true) {
-        } else {
-          throw FailureResponse.fromResponse(result);
-        }
+    if (result != null) {
+      if (result is Map && result['status'] == true) {
+        // return result['responseMessage'] as String;
+        final data = result['data'] as Map<String, dynamic>;
+        return UserModel.fromJson(data);
       } else {
-        throw FailureResponse.fromResponse('Unknown');
+        throw FailureResponse.fromResponse(result);
       }
     } else {
-      throw FailureResponse.fromResponse('Image Not Selected');
+      throw FailureResponse.fromResponse('Unknown');
     }
   }
+
+  // Future<void> uploadImage() async {
+  //   final picker = ImagePicker();
+
+  //   final picked = await picker.pickImage(source: ImageSource.gallery);
+
+  //   if (picked != null) {
+  //     final file = File(picked.path);
+  //     final result = await apiService.uploadFileRequest('File/upload', file);
+
+  //     if (result != null) {
+  //       if (result is Map && result['status'] == true) {
+  //       } else {
+  //         throw FailureResponse.fromResponse(result);
+  //       }
+  //     } else {
+  //       throw FailureResponse.fromResponse('Unknown');
+  //     }
+  //   } else {
+  //     throw FailureResponse.fromResponse('Image Not Selected');
+  //   }
+  // }
 
   Future<void> downloadImage() async {
     final queryParams = <String, dynamic>{
@@ -468,6 +624,182 @@ class UserRepository {
     if (result != null) {
       if (result is Map && result['status'] == true) {
         return result['responseMessage'] as String;
+      } else {
+        throw FailureResponse.fromResponse(result);
+      }
+    } else {
+      throw FailureResponse.fromResponse('Unknown');
+    }
+  }
+
+  // wrapper methods
+
+  Future<PaginatedResponse<T>> fetchPaginated<T>({
+    required String endPoint,
+    required int page,
+    required int pageSize,
+    required T Function(Map<String, dynamic>) fromJson,
+    String token = '',
+  }) {
+    final repo = GenericRepository<T>(
+      apiService: apiService,
+      endPoint: endPoint,
+      fromJson: fromJson,
+    );
+    return repo.getPaginated(
+      page: page,
+      pageSize: pageSize,
+      token: token,
+    );
+  }
+
+  Future<List<T>> fetchAll<T>({
+    required String endPoint,
+    required T Function(Map<String, dynamic>) fromJson,
+    bool authRequired = true,
+    String token = '',
+    Map<String, String>? queryParams,
+  }) {
+    final repo = GenericRepository<T>(
+      apiService: apiService,
+      endPoint: endPoint,
+      fromJson: fromJson,
+    );
+    return repo.getAll(
+      queryParams: queryParams,
+      authRequired: authRequired,
+      token: token,
+    );
+  }
+
+  Future<T> fetchById<T>({
+    required String endPoint,
+    required T Function(Map<String, dynamic>) fromJson,
+    required String id,
+    bool authRequired = true,
+    String token = '',
+    Map<String, String>? queryParams,
+  }) {
+    final repo = GenericRepository<T>(
+      apiService: apiService,
+      endPoint: endPoint,
+      fromJson: fromJson,
+    );
+    return repo.getById(
+      id,
+      queryParams: queryParams,
+      authRequired: authRequired,
+      token: token,
+    );
+  }
+
+  Future<String> create<T>({
+    required String endPoint,
+    required Map<String, dynamic> jsonData,
+    required T Function(Map<String, dynamic>) fromJson,
+    bool authRequired = true,
+  }) {
+    final repo = GenericRepository<T>(
+      apiService: apiService,
+      endPoint: endPoint,
+      fromJson: fromJson,
+    );
+    return repo.add(jsonData, authRequired: authRequired);
+  }
+
+  Future<T> createModel<T>({
+    required String endPoint,
+    required Map<String, dynamic> jsonData,
+    required T Function(Map<String, dynamic>) fromJson,
+    bool authRequired = true,
+  }) {
+    final repo = GenericRepository<T>(
+      apiService: apiService,
+      endPoint: endPoint,
+      fromJson: fromJson,
+    );
+    return repo.addModel(jsonData, authRequired: authRequired);
+  }
+
+  Future<T> update<T>({
+    required String endPoint,
+    required Map<String, dynamic> jsonData,
+    required String id,
+    required T Function(Map<String, dynamic>) fromJson,
+  }) {
+    final repo = GenericRepository<T>(
+      apiService: apiService,
+      endPoint: endPoint,
+      fromJson: fromJson,
+    );
+    return repo.edit(jsonData, id);
+  }
+
+  Future<String> delete<T>({
+    required String endPoint,
+    required String id,
+    required T Function(Map<String, dynamic>) fromJson,
+  }) {
+    final repo = GenericRepository<T>(
+      apiService: apiService,
+      endPoint: endPoint,
+      fromJson: fromJson,
+    );
+    return repo.remove(id);
+  }
+
+  Future<List<T>> fetchOdata<T>({
+    required Uri url,
+    required T Function(Map<String, dynamic>) fromJson,
+    bool authRequired = true,
+    String token = '',
+  }) {
+    final repo = GenericRepository<T>(
+      apiService: apiService,
+      endPoint: '',
+      fromJson: fromJson,
+    );
+    return repo.getOdata(
+      url: url,
+      authRequired: authRequired,
+      token: token,
+    );
+  }
+
+  // Quiz Section
+
+  Future<Subject> getSubjects() async {
+    final result = await apiService.getJsonRequest('v1/quiz/subjects');
+    if (result != null) {
+      if (result is Map && result['status'] == true) {
+        final data = result['data'] as Map<String, dynamic>;
+
+        return Subject.fromJson(data);
+      } else {
+        throw FailureResponse.fromResponse(result);
+      }
+    } else {
+      throw FailureResponse.fromResponse('Unknown');
+    }
+  }
+
+  Future<List<QuestionModel>> getQuizQuestions({
+    Map<String, dynamic>? queryParams,
+    String? count,
+  }) async {
+    final result = await apiService.getJsonRequest(
+      // 'v1/quiz/questions/many',
+      'v1/quiz/questions/$count',
+      queryParams: queryParams,
+    );
+    if (result != null) {
+      if (result is Map && result['status'] == true) {
+        final data = result['data'] as Map<String, dynamic>;
+        final actualData = data['data'] as List<dynamic>;
+
+        return actualData
+            .map((e) => QuestionModel.fromJson(e as Map<String, dynamic>))
+            .toList();
       } else {
         throw FailureResponse.fromResponse(result);
       }

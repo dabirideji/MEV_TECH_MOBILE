@@ -80,3 +80,31 @@ class UserPayment {
     };
   }
 }
+
+class Plans {
+  Plans({
+    required this.id,
+    required this.name,
+    required this.price,
+    required this.durationInDays,
+    required this.description,
+    required this.featureTitles,
+  });
+
+  factory Plans.fromJson(Map<String, dynamic> json) {
+    return Plans(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      price: json['price'] as double,
+      durationInDays: json['durationInDays'] as int,
+      description: json['description'] as String,
+      featureTitles: json['featureTitles'] as List<dynamic>,
+    );
+  }
+  final String id;
+  final String name;
+  final double price;
+  final int durationInDays;
+  final String description;
+  final List<dynamic> featureTitles;
+}

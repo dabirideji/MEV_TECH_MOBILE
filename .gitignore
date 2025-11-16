@@ -50,6 +50,7 @@ version
 .pub-cache/
 .pub/
 build/
+.gradle-cache/
 flutter_*.png
 linked_*.ds
 unlinked.ds

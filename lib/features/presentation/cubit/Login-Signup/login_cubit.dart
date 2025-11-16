@@ -32,34 +32,34 @@ class LoginCubit extends Cubit<LoginState> {
     txtConfirmPassword.clear();
   }
 
-  Future<void> signInWithGoogle() async {
-    try {
-      emit(LoginLoading());
+  // Future<void> signInWithGoogle() async {
+  //   try {
+  //     emit(LoginLoading());
 
-      final result = await googleSigninService.initiateGoogleSignIn();
+  //     final result = await googleSigninService.initiateGoogleSignIn();
 
-      if (result != null) {
-        if (result is Map && result['status'] == true) {
-          emit(
-            LoginSuccess(result['responseMessage'] as String),
-          );
-          clearField();
-        } else if (result is Map) {
-          emit(LoginFailure(result['responseMessage'] as String));
-        } else {
-          emit(LoginFailure(result as String));
-          debugPrint(result);
-        }
-      } else {
-        emit(
-          const LoginFailure(
-            'Unable To Unthenticate Your Google Account.\nPlease Try Again',
-          ),
-        );
-        return;
-      }
-    } catch (e) {
-      emit(LoginFailure(e.toString()));
-    }
-  }
+  //     if (result != null) {
+  //       if (result is Map && result['status'] == true) {
+  //         emit(
+  //           LoginSuccess(result['responseMessage'] as String),
+  //         );
+  //         clearField();
+  //       } else if (result is Map) {
+  //         emit(LoginFailure(result['responseMessage'] as String));
+  //       } else {
+  //         emit(LoginFailure(result as String));
+  //         debugPrint(result);
+  //       }
+  //     } else {
+  //       emit(
+  //         const LoginFailure(
+  //           'Unable To Unthenticate Your Google Account.\nPlease Try Again',
+  //         ),
+  //       );
+  //       return;
+  //     }
+  //   } catch (e) {
+  //     emit(LoginFailure(e.toString()));
+  //   }
+  // }
 }

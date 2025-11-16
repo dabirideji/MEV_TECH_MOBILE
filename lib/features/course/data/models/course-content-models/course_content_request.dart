@@ -1,36 +1,44 @@
-class CourseContentCreateRequest {
-  CourseContentCreateRequest({
+import 'dart:io';
+
+class CreateCourseContentRequest {
+  CreateCourseContentRequest({
     required this.courseContentCourseId,
     required this.courseContentTitle,
-    required this.courseContentVideoUrl,
     required this.courseContentDescription,
-    required this.courseContentTranscript,
+    required this.courseContentVideoUrl,
     required this.courseContentSummary,
+    required this.courseContentTranscript,
     required this.order,
     required this.isPreview,
     required this.isFree,
+    this.courseContentThumbnailFile,
+    this.courseContentThumbnailUrl,
   });
 
   final String courseContentCourseId;
   final String courseContentTitle;
-  final String courseContentVideoUrl;
   final String courseContentDescription;
+  final String courseContentVideoUrl;
+  final File? courseContentThumbnailFile;
+  final String? courseContentThumbnailUrl;
   final String courseContentTranscript;
   final String courseContentSummary;
   final int order;
   final bool isPreview;
   final bool isFree;
 
-  Map<String, dynamic> toJson() => {
-        'courseContentCourseId': courseContentCourseId,
-        'courseContentTitle': courseContentTitle,
-        'courseContentVideoUrl': courseContentVideoUrl,
-        'courseContentDescription': courseContentDescription,
-        'courseContentTranscript': courseContentTranscript,
-        'courseContentSummary': courseContentSummary,
-        'order': order,
-        'isPreview': isPreview,
-        'isFree': isFree,
+  Map<String, String> toJson() => {
+        'CourseContentCourseId': courseContentCourseId,
+        'CourseContentTitle': courseContentTitle,
+        'CourseContentDescription': courseContentDescription,
+        'CourseContentVideoUrl': courseContentVideoUrl,
+        // 'CourseContentThumbnailFile': courseContentThumbnailFile,
+        'CourseContentThumbnailUrl': courseContentThumbnailUrl ?? '',
+        'CourseContentTranscript': courseContentTranscript,
+        'CourseContentSummary': courseContentSummary,
+        'Order': order.toString(),
+        'IsPreview': isPreview.toString(),
+        'IsFree': isFree.toString(),
       };
 }
 

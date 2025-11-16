@@ -7,6 +7,7 @@ import 'package:template/core/utils/colors.dart';
 import 'package:template/features/course/course-widget/course_card.dart';
 import 'package:template/features/course/data/models/course-models/course_model.dart';
 import 'package:template/features/course/logic/course-cubit/course_cubit.dart';
+import 'package:template/features/course/logic/selected_course_cubit.dart';
 import 'package:template/features/presentation/utilities-class/mev_tech_utilities.dart';
 import 'package:template/features/presentation/widgets/course.dart';
 
@@ -172,6 +173,16 @@ class _CategoriesViewState extends State<CategoriesView> {
                         onExpansionChanged: (value) {
                           courseCubit.toggleMenu(category.categoryName);
                         },
+                        onTap: (course) {
+                          context
+                              .read<SelectedCourseCubit>()
+                              .selectCourse(course);
+
+                          context.pushNamed(
+                            AppRouter.courseDetails,
+                            pathParameters: {'id': course.id},
+                          );
+                        },
                       );
                     }),
                     SizedBox(height: 10.h),
@@ -190,89 +201,99 @@ class _CategoriesViewState extends State<CategoriesView> {
                         onExpansionChanged: (value) {
                           courseCubit.toggleMenu(Course.all);
                         },
+                        onTap: (course) {
+                          context
+                              .read<SelectedCourseCubit>()
+                              .selectCourse(course);
+
+                          context.pushNamed(
+                            AppRouter.courseDetails,
+                            pathParameters: {'id': course.id},
+                          );
+                        },
                       ),
                   ],
                 ),
               ),
             ),
-            bottomNavigationBar: SafeArea(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 5.h),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    ElevatedButton(
-                      onPressed: () {
-                        optionBottomSheet(
-                          context: context,
-                          viewType: 'CAT',
-                          items: courseCubit.categoryModel ??
-                              <CourseCategoryModel>[],
-                          onDelete: (id) {
-                            Navigator.pop(context);
-                            courseCubit.deleteCourseCategory(id);
-                          },
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        backgroundColor: AppColor.primary,
-                        foregroundColor: Colors.white,
-                      ),
-                      child: Container(
-                        height: 45.h,
-                        // width: double.infinity,
-                        alignment: Alignment.center,
-                        child: Text(
-                          'View Categories',
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        // optionBottomSheet(
-                        //   context: context,
-                        //   viewType: 'CAT',
-                        //   items: courseCubit.categoryModel ??
-                        //       <CourseCategoryModel>[],
-                        //   onDelete: (id) {
-                        //     Navigator.pop(context);
-                        //     courseCubit.deleteCourseCategory(id);
-                        //   },
-                        // );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        backgroundColor: AppColor.primary,
-                        foregroundColor: Colors.white,
-                      ),
-                      child: Container(
-                        height: 45.h,
-                        // width: double.infinity,
-                        alignment: Alignment.center,
-                        child: Text(
-                          '    View Tags    ',
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            // bottomNavigationBar: SafeArea(
+            //   child: Padding(
+            //     padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 5.h),
+            //     child: Row(
+            //       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            //       children: [
+            //         ElevatedButton(
+            //           onPressed: () {
+            //             optionBottomSheet(
+            //               context: context,
+            //               viewType: 'CAT',
+            //               items: courseCubit.categoryModel ??
+            //                   <CourseCategoryModel>[],
+            //               onDelete: (id) {
+            //                 Navigator.pop(context);
+            //                 courseCubit.deleteCourseCategory(id);
+            //               },
+            //             );
+            //           },
+            //           style: ElevatedButton.styleFrom(
+            //             shape: RoundedRectangleBorder(
+            //               borderRadius: BorderRadius.circular(10),
+            //             ),
+            //             backgroundColor: AppColor.primary,
+            //             foregroundColor: Colors.white,
+            //           ),
+            //           child: Container(
+            //             height: 45.h,
+            //             // width: double.infinity,
+            //             alignment: Alignment.center,
+            //             child: Text(
+            //               'View Categories',
+            //               style: TextStyle(
+            //                 fontSize: 12.sp,
+            //                 fontWeight: FontWeight.w600,
+            //                 color: Colors.white,
+            //               ),
+            //             ),
+            //           ),
+            //         ),
+            //         ElevatedButton(
+            //           onPressed: () {
+            //             // optionBottomSheet(
+            //             //   context: context,
+            //             //   viewType: 'CAT',
+            //             //   items: courseCubit.categoryModel ??
+            //             //       <CourseCategoryModel>[],
+            //             //   onDelete: (id) {
+            //             //     Navigator.pop(context);
+            //             //     courseCubit.deleteCourseCategory(id);
+            //             //   },
+            //             // );
+            //           },
+            //           style: ElevatedButton.styleFrom(
+            //             shape: RoundedRectangleBorder(
+            //               borderRadius: BorderRadius.circular(10),
+            //             ),
+            //             backgroundColor: AppColor.primary,
+            //             foregroundColor: Colors.white,
+            //           ),
+            //           child: Container(
+            //             height: 45.h,
+            //             // width: double.infinity,
+            //             alignment: Alignment.center,
+            //             child: Text(
+            //               '    View Tags    ',
+            //               style: TextStyle(
+            //                 fontSize: 12.sp,
+            //                 fontWeight: FontWeight.w600,
+            //                 color: Colors.white,
+            //               ),
+            //             ),
+            //           ),
+            //         ),
+            //       ],
+            //     ),
+            //   ),
+            // ),
             // floatingActionButton: Padding(
             //   padding: const EdgeInsets.only(bottom: 10),
             //   child: FloatingActionButton(

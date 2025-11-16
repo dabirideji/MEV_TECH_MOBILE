@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:template/features/user/data/models/user_notification_model.dart';
 
 abstract class LocalStorage {
   Future<String?> getApiKey();
@@ -18,6 +21,9 @@ abstract class LocalStorage {
 
   Future<String?> getUserID();
   Future<void> setUserID(String id);
+
+  Future<List<String>?> getUserNotifications();
+  Future<void> setUserNotifications(List<NotificationModel> notifications);
 }
 
 @LazySingleton(as: LocalStorage)
@@ -29,6 +35,7 @@ class LocalStorageImpl implements LocalStorage {
   static const _userEmailKey = 'userEmail';
   static const _userTypeKey = 'userType';
   static const _userIDKey = 'userID';
+  static const _usernotificationsKey = 'userNotifications';
 
   @override
   Future<String?> getApiKey() {
@@ -92,10 +99,24 @@ class LocalStorageImpl implements LocalStorage {
       Future.value(_storage.getString(_userTypeKey));
 
   @override
+  Future<List<String>?> getUserNotifications() =>
+      Future.value(_storage.getStringList(_usernotificationsKey));
+
+  @override
+  Future<void> setUserNotifications(
+      List<NotificationModel> notifications) async {
+    final jsonList =
+        notifications.map((notif) => json.encode(notif.toJson())).toList();
+
+    await _storage.setStringList(_usernotificationsKey, jsonList);
+  }
+
+  @override
   Future<void> clearUserData() async {
     await _storage.remove(_userEmailKey);
     await _storage.remove(_userTypeKey);
     await _storage.remove(_apiKeyKey);
     await _storage.remove(_userIDKey);
+    await _storage.remove(_usernotificationsKey);
   }
 }

@@ -1,10 +1,14 @@
+import 'dart:developer';
+
 import 'package:injectable/injectable.dart';
 import 'package:template/core/error/failure_response.dart';
 import 'package:template/core/network/api_service.dart';
+import 'package:template/core/utils/constants.dart';
 import 'package:template/data/generic_repository.dart';
 import 'package:template/data/paginated_model.dart';
 import 'package:template/features/course/data/models/course-content-models/course_content_model.dart';
 import 'package:template/features/course/data/models/course-content-models/course_content_request.dart';
+import 'package:template/features/course/data/models/course-content-models/course_video_model.dart';
 import 'package:template/features/course/data/models/course-models/course_model.dart';
 import 'package:template/features/course/data/models/course-models/course_request.dart';
 
@@ -452,12 +456,34 @@ class CourseRepository {
 
   // Course Contents
 
+  Future<List<CourseVideoModel>> getYoutubeVideos(String playlistId) async {
+    final result = await apiService.youtubeVideoRequest(
+      baseUrl: 'https://www.googleapis.com/youtube/v3/playlistItems',
+      progLink:
+          '?part=snippet&playlistId=$playlistId&key=$youtubeApiKey&maxResults=50',
+    );
+    if (result != null) {
+      if (result is Map) {
+        // final data = result['data'] as List<dynamic>;
+        final items = result['items'] as List<dynamic>;
+
+        return items
+            .map((e) => CourseVideoModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+      } else {
+        throw FailureResponse.fromResponse(result);
+      }
+    } else {
+      throw FailureResponse.fromResponse('Unknown');
+    }
+  }
+
   Future<String> createCourseContent(
-    CourseContentCreateRequest requestModel,
+    CreateCourseContentRequest requestModel,
   ) async {
-    final result = await apiService.postJsonRequest(
-      requestModel.toJson(),
-      'CourseContent/Create',
+    final result = await apiService.multipartCreateCourseContent(
+      'CourseContent/CreateCourseContent',
+      requestModel,
     );
 
     if (result != null) {
@@ -538,6 +564,27 @@ class CourseRepository {
     if (result != null) {
       if (result is Map && result['status'] == true) {
         return result['responseMessage'] as String;
+      } else {
+        throw FailureResponse.fromResponse(result);
+      }
+    } else {
+      throw FailureResponse.fromResponse('Unknown');
+    }
+  }
+
+  // check if video is embededable
+
+  Future<bool> checkEmbeded(String videoUrl) async {
+    final result = await apiService.videoEmbedableRequest(videoUrl);
+    if (result != null) {
+      if (result is Map) {
+        // final data = result['data'] as List<dynamic>;
+        final items = result['items'] as List<dynamic>;
+        final item = items[0] as Map<String, dynamic>;
+        final status = item['status'] as Map<String, dynamic>;
+        final embeddable = status['embeddable'] as bool;
+
+        return embeddable;
       } else {
         throw FailureResponse.fromResponse(result);
       }

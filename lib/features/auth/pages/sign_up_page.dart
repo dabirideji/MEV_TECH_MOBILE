@@ -53,11 +53,12 @@ class _SignUpPageState extends State<SignUpPage> {
           MevTechUtilities.hideProgressIndicator(context);
 
           MevTechUtilities.errorToast(context, state.errorMessage);
-        } else if (state is AuthRegisterSuccess) {
+        } else if (state is AuthRegisterSuccess && state.sendStatus.isInitial) {
           MevTechUtilities.hideProgressIndicator(context);
 
-          MevTechUtilities.successToast(context, state.message);
-          context.goNamed(AppRouter.login);
+          context.pushReplacementNamed(AppRouter.confirmSignupEmail);
+        } else {
+          MevTechUtilities.hideProgressIndicator(context);
         }
       },
       builder: (context, state) {

@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:template/app/router/app_router.dart';
 import 'package:template/core/utils/colors.dart';
 import 'package:template/features/course/course-widget/course_card.dart';
+import 'package:template/features/course/logic/selected_course_cubit.dart';
 import 'package:template/features/presentation/dashboard/dashboard_cubit.dart';
 
 class SearchCourse extends StatefulWidget {
@@ -38,6 +39,8 @@ class _SearchCourseState extends State<SearchCourse> {
     return BlocConsumer<DashboardCubit, DashboardState>(
       listener: (context, state) {},
       builder: (context, state) {
+        final dashboardCubit = context.read<DashboardCubit>();
+
         return Scaffold(
           appBar: AppBar(
             centerTitle: true,
@@ -55,7 +58,7 @@ class _SearchCourseState extends State<SearchCourse> {
               children: [
                 // SizedBox(height: 20.h),
                 TextField(
-                  // controller: dashboardCubit.emailToken,
+                  controller: dashboardCubit.searchText,
                   cursorColor: Colors.black,
                   keyboardType: TextInputType.text,
                   decoration: InputDecoration(
@@ -103,19 +106,37 @@ class _SearchCourseState extends State<SearchCourse> {
                 ),
                 SizedBox(height: 10.h),
                 Expanded(
-                  child: state.searchError != null
+                  // state.searchError != null
+                  child: state.searchedCourses.isEmpty &&
+                          dashboardCubit.searchText.text.isNotEmpty
                       ? Center(
                           child: Text(state.searchError ?? 'No courses found'),
                         )
                       : state.searchedCourses.isEmpty
-                          ? const Center(
-                              child: Text('No courses found'),
+                          ? CourseModelCard(
+                              courses: state.courses,
+                              onTap: (course) {
+                                context
+                                    .read<SelectedCourseCubit>()
+                                    .selectCourse(course);
+
+                                context.pushNamed(
+                                  AppRouter.courseDetails,
+                                  pathParameters: {'id': course.id},
+                                );
+                              },
                             )
                           : CourseModelCard(
                               courses: state.searchedCourses,
-                              onTap: (id) {
-                                context.pushNamed(AppRouter.courseDetails,
-                                    extra: id);
+                              onTap: (course) {
+                                context
+                                    .read<SelectedCourseCubit>()
+                                    .selectCourse(course);
+
+                                context.pushNamed(
+                                  AppRouter.courseDetails,
+                                  pathParameters: {'id': course.id},
+                                );
                               },
                             ),
                 )

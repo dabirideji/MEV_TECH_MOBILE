@@ -97,6 +97,7 @@ final class CourseSuccess extends CourseState {
     this.categories = const [],
     this.tags = const [],
     this.courseEnrollment,
+    this.isVideoEmbeddable = false,
   });
 
   final List<CourseModel> courses;
@@ -119,28 +120,31 @@ final class CourseSuccess extends CourseState {
   final List<CourseCategoryModel> categories;
   final List<CourseTagModel> tags;
   final CourseEnrollmentModel? courseEnrollment;
+  final bool isVideoEmbeddable;
 
-  CourseSuccess copyWith(
-      {List<CourseModel>? courses,
-      Map<String, bool>? isMenuExpanded,
-      String? message,
-      File? file,
-      CourseActionType? actionType,
-      String? imageText,
-      bool? isDeleting,
-      String? deleteErrorMessage,
-      bool? isUpdating,
-      bool? isCreating,
-      String? updateSuccessMessage,
-      String? updateErrorMessage,
-      String? courseRefreshError,
-      Map<CourseCategoryModel, List<CourseModel>>? categorizedCourses,
-      List<CourseModel>? uncategorizedCourses,
-      ActionMethod? actionMethod,
-      String? routeName,
-      List<CourseCategoryModel>? categories,
-      List<CourseTagModel>? tags,
-      CourseEnrollmentModel? courseEnrollment}) {
+  CourseSuccess copyWith({
+    List<CourseModel>? courses,
+    Map<String, bool>? isMenuExpanded,
+    String? message,
+    File? file,
+    CourseActionType? actionType,
+    String? imageText,
+    bool? isDeleting,
+    String? deleteErrorMessage,
+    bool? isUpdating,
+    bool? isCreating,
+    String? updateSuccessMessage,
+    String? updateErrorMessage,
+    String? courseRefreshError,
+    Map<CourseCategoryModel, List<CourseModel>>? categorizedCourses,
+    List<CourseModel>? uncategorizedCourses,
+    ActionMethod? actionMethod,
+    String? routeName,
+    List<CourseCategoryModel>? categories,
+    List<CourseTagModel>? tags,
+    CourseEnrollmentModel? courseEnrollment,
+    bool? isVideoEmbeddable,
+  }) {
     return CourseSuccess(
       courses: courses ?? this.courses,
       isMenuExpanded: isMenuExpanded ?? this.isMenuExpanded,
@@ -162,6 +166,7 @@ final class CourseSuccess extends CourseState {
       categories: categories ?? this.categories,
       tags: tags ?? this.tags,
       courseEnrollment: courseEnrollment ?? this.courseEnrollment,
+      isVideoEmbeddable: isVideoEmbeddable ?? this.isVideoEmbeddable,
     );
   }
 
@@ -187,6 +192,7 @@ final class CourseSuccess extends CourseState {
         categories,
         tags,
         courseEnrollment,
+        isVideoEmbeddable,
       ];
 }
 

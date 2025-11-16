@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -71,7 +73,7 @@ class LandingView extends StatelessWidget {
                   color: Colors.grey.shade200,
                   child: SizedBox(
                     // height: screenHeight * 0.4,
-                    width: screenWith,
+                    width: screenWith * 0.9,
                     // color: Colors.grey.shade200,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -156,6 +158,34 @@ class LandingView extends StatelessWidget {
                           onTap: () {
                             Navigator.pop(context);
                             context.pushNamed(AppRouter.categories);
+                          },
+                        ),
+
+                        SizedBox(height: 10.h),
+                        menuItems(
+                          title: 'Quiz',
+                          leading: const Icon(
+                            Icons.quiz,
+                            color: AppColor.primary,
+                          ),
+                          onTap: () {
+                            Navigator.pop(context);
+                            context.pushNamed(AppRouter.quizMode);
+                          },
+                        ),
+
+                        SizedBox(height: 10.h),
+                        menuItems(
+                          title: 'Chat',
+                          leading: const Icon(
+                            Icons.chat_rounded,
+                            color: AppColor.primary,
+                          ),
+                          onTap: () {
+                            Navigator.pop(context);
+                            context.pushNamed(AppRouter.chat);
+                            // MevTechUtilities.alertDialogBox(
+                            //     context: context, message: 'Coming Soon');
                           },
                         ),
 
@@ -278,7 +308,7 @@ class LandingView extends StatelessWidget {
                                 minWidth: 0,
                                 child: Container(
                                   padding: EdgeInsets.symmetric(
-                                    horizontal: 12.w,
+                                    horizontal: 10.w,
                                     vertical: 4.h,
                                   ),
                                   decoration: BoxDecoration(
@@ -376,7 +406,10 @@ class LandingView extends StatelessWidget {
                                 SizedBox(height: 20.h),
                                 Center(
                                   child: ElevatedButton(
-                                    onPressed: () {},
+                                    // ignore: unnecessary_lambdas
+                                    onPressed: () {
+                                      authCubit.printAccessToken();
+                                    },
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: AppColor.primary,
                                       foregroundColor: AppColor.white,

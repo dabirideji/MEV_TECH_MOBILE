@@ -27,35 +27,24 @@ class EditUserPage extends StatelessWidget {
     }
 
     return BlocConsumer<UserCubit, UserState>(
-      listenWhen: (previous, current) {
-        if (current is UserLoading &&
-            current.actionType == UserActionType.update) {
-          return true;
-        }
-        if (current is UserSuccess &&
-            current.actionType == UserActionType.update) {
-          return true;
-        }
-        if (current is UserFailure &&
-            current.actionType == UserActionType.update) {
-          return true;
-        }
-        return false;
-      },
       listener: (context, state) {
-        if (state is UserLoading) {
-          MevTechUtilities.progressIndicator(context);
-        } else if (state is UserFailure) {
-          context.pop();
+        if (state is UserSuccess && state.updateUserStatus.isLoading) {
+          MevTechUtilities.showProgressIndicator(context);
+        } else if (state is UserSuccess && state.updateUserStatus.isFailure) {
+          MevTechUtilities.hideProgressIndicator(context);
 
-          MevTechUtilities.errorToast(context, state.errorMessage);
-        } else if (state is UserSuccess) {
-          context.pop();
+          MevTechUtilities.errorToast(
+            context,
+            state.updateUserStatus.error ?? 'Unable to update user. try again',
+          );
+        } else if (state is UserSuccess && state.updateUserStatus.isSuccess) {
+          MevTechUtilities.hideProgressIndicator(context);
+
           authCubit.updateUserdata(state.user);
 
           MevTechUtilities.successToast(context, state.message);
-          if (context.canPop()) {
-            context.pop();
+          if (Navigator.canPop(context)) {
+            Navigator.pop(context);
           }
         }
       },
@@ -66,9 +55,9 @@ class EditUserPage extends StatelessWidget {
           appBar: AppBar(
             title: Text(
               'Edit Profile',
-              style: GoogleFonts.poppins(
-                fontSize: 20,
-                fontWeight: FontWeight.w500,
+              style: TextStyle(
+                fontSize: 15.sp,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
@@ -84,7 +73,7 @@ class EditUserPage extends StatelessWidget {
                     'First Name',
                     style: TextStyle(
                       fontFamily: 'poppins',
-                      fontSize: 14.sp,
+                      fontSize: 13.sp,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -98,7 +87,7 @@ class EditUserPage extends StatelessWidget {
                     'Last Name',
                     style: TextStyle(
                       fontFamily: 'poppins',
-                      fontSize: 14.sp,
+                      fontSize: 13.sp,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -112,7 +101,7 @@ class EditUserPage extends StatelessWidget {
                     'UserName',
                     style: TextStyle(
                       fontFamily: 'poppins',
-                      fontSize: 14.sp,
+                      fontSize: 13.sp,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -126,7 +115,7 @@ class EditUserPage extends StatelessWidget {
                     'Email Address',
                     style: TextStyle(
                       fontFamily: 'poppins',
-                      fontSize: 14.sp,
+                      fontSize: 13.sp,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -142,7 +131,7 @@ class EditUserPage extends StatelessWidget {
                     'Phone Number',
                     style: TextStyle(
                       fontFamily: 'poppins',
-                      fontSize: 14.sp,
+                      fontSize: 13.sp,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -167,7 +156,7 @@ class EditUserPage extends StatelessWidget {
                           fontFamily: 'poppins',
                           // color: Colors.grey.shade500,
                           fontWeight: FontWeight.w400,
-                          fontSize: 15.sp,
+                          fontSize: 12.sp,
                         ),
                       ),
                     ),
@@ -176,8 +165,7 @@ class EditUserPage extends StatelessWidget {
                   ElevatedButton(
                     onPressed: () {
                       userCubit.updateUser(
-                        user?.id,
-                        isInstructor: user?.isInstructor ?? false,
+                        state.user?.id ?? user?.id,
                       );
                     },
                     style: ElevatedButton.styleFrom(
@@ -188,13 +176,13 @@ class EditUserPage extends StatelessWidget {
                       foregroundColor: Colors.white,
                     ),
                     child: Container(
-                      height: 45.h,
+                      height: 40.h,
                       width: double.infinity,
                       alignment: Alignment.center,
                       child: Text(
                         'Save',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14.sp,
+                        style: TextStyle(
+                          fontSize: 13.sp,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
                         ),
@@ -218,13 +206,13 @@ class EditUserPage extends StatelessWidget {
                       foregroundColor: AppColor.primary,
                     ),
                     child: Container(
-                      height: 45.h,
+                      height: 40.h,
                       width: double.infinity,
                       alignment: Alignment.center,
                       child: Text(
                         'Cancel',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14.sp,
+                        style: TextStyle(
+                          fontSize: 13.sp,
                           fontWeight: FontWeight.w600,
                           color: Colors.redAccent,
                         ),
@@ -257,15 +245,15 @@ class EditUserPage extends StatelessWidget {
       keyboardType: keyboardType,
       obscureText: obscureText,
       inputFormatters: inputFormatters,
-      style: const TextStyle(
-        fontFamily: 'poppins',
+      style: TextStyle(
+        fontSize: 13.sp,
       ),
       decoration: InputDecoration(
         isDense: true,
         hintText: hintText,
         hintStyle: TextStyle(
           fontFamily: 'poppins',
-          fontSize: 13.sp,
+          fontSize: 12.sp,
           color: Colors.black38,
         ),
         filled: true,

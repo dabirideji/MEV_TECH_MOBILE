@@ -99,10 +99,10 @@ class MevTechUtilities {
   static String formatDateTime(String? time) {
     try {
       final period = DateTime.parse(time!);
-      final result = DateFormat('yyyy/MMM/dd HH:mm:ss').format(period);
+      final result = DateFormat('yyyy-MMM-dd HH:mm:ss').format(period);
       return result;
     } catch (_) {
-      return time ?? '';
+      return time ?? '000:00';
     }
   }
 
@@ -131,6 +131,17 @@ class MevTechUtilities {
         );
       },
     );
+  }
+
+  static void alertDialogBox({
+    required BuildContext context,
+    required String message,
+  }) {
+    showDialog<dynamic>(
+        context: context,
+        builder: (context) {
+          return CustomAlertDialogue(message: message);
+        });
   }
 
   static Future<dynamic> progressIndicator(BuildContext context) async {
@@ -377,5 +388,26 @@ class MevTechUtilities {
         );
       },
     );
+  }
+
+  static String extractYoutubeId(String url) {
+    final uri = Uri.parse(url);
+
+    // Standard YouTube watch link
+    if (uri.host.contains('youtube.com') &&
+        uri.queryParameters.containsKey('v')) {
+      return uri.queryParameters['v']!;
+    }
+    // Short youtu.be link
+    else if (uri.host.contains('youtu.be')) {
+      return uri.pathSegments.first;
+    }
+    // Embed link
+    else if (uri.host.contains('youtube.com') &&
+        uri.pathSegments.contains('embed')) {
+      return uri.pathSegments.last;
+    }
+
+    throw ArgumentError('Invalid YouTube URL');
   }
 }

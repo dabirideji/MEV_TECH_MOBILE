@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -10,9 +12,11 @@ import 'package:template/core/utils/colors.dart';
 import 'package:template/features/auth/logic/auth-cubit/auth_cubit.dart';
 import 'package:template/features/course/course-widget/course_card.dart';
 import 'package:template/features/course/logic/course-cubit/course_cubit.dart';
+import 'package:template/features/course/logic/selected_course_cubit.dart';
 import 'package:template/features/home/home_cubit.dart';
 import 'package:template/features/presentation/dashboard/dashboard_cubit.dart';
 import 'package:template/features/user/data/models/user_model.dart';
+import 'package:template/features/user/user-widget/user_image.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -35,7 +39,9 @@ class _DashboardPageState extends State<DashboardPage> {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
 
-    final authState = context.watch<AuthCubit>().state;
+    // final authState = context.watch<AuthCubit>().state as AuthLoginSuccess;
+    final user = context.watch<AuthCubit>().currentUser;
+    final notifications = context.watch<AuthCubit>().currentNotifications;
     final homeCubit = context.read<HomeCubit>();
 
     return BlocConsumer<DashboardCubit, DashboardState>(
@@ -53,10 +59,11 @@ class _DashboardPageState extends State<DashboardPage> {
       builder: (context, state) {
         final dashboardCubit = context.read<DashboardCubit>();
 
-        UserModel? user;
-        if (authState is AuthLoginSuccess) {
-          user = authState.model.user;
-        }
+        // UserModel? user;
+        // user = authState.model.user;
+        final notifCount = notifications
+            .where((notification) => notification.isRead == false)
+            .toList();
 
         return RefreshIndicator(
           onRefresh: () async {
@@ -89,18 +96,38 @@ class _DashboardPageState extends State<DashboardPage> {
                         children: [
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            // crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
                                 children: [
-                                  CircleAvatar(
-                                    radius: 20,
-                                    backgroundColor: AppColor.primary,
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(360),
-                                      child: Image.asset(
-                                          'assets/images/avatar.jpg'),
+                                  if (user?.profilePictureUrl != null)
+                                    GestureDetector(
+                                      onTap: () => homeCubit.navigateToPage(4),
+                                      child: SizedBox(
+                                        width: 40.w,
+                                        height: 40.h,
+                                        child: ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(360),
+                                          child: UserImage(
+                                              user?.profilePictureUrl ?? ''),
+                                        ),
+                                      ),
+                                    )
+                                  else
+                                    GestureDetector(
+                                      onTap: () => homeCubit.navigateToPage(4),
+                                      child: SizedBox(
+                                        width: 40.w,
+                                        height: 40.h,
+                                        child: ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(360),
+                                          child: Image.asset(
+                                              'assets/images/avatar.jpg'),
+                                        ),
+                                      ),
                                     ),
-                                  ),
                                   SizedBox(width: 5.w),
                                   Column(
                                     crossAxisAlignment:
@@ -108,7 +135,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Text(
-                                        'Hi, ${user?.firstName ?? ''}',
+                                        'Hi, ${user?.firstName.toUpperCase() ?? ''}',
                                         style: GoogleFonts.poppins(
                                           color: Colors.black87,
                                           fontWeight: FontWeight.w600,
@@ -127,6 +154,55 @@ class _DashboardPageState extends State<DashboardPage> {
                                   ),
                                 ],
                               ),
+                              IconButton(
+                                onPressed: () {
+                                  context.pushNamed(AppRouter.notification);
+                                  // log('Bearer ${(context.read<AuthCubit>().state as AuthLoginSuccess).model.accessToken}');
+                                },
+                                icon: Stack(
+                                  alignment: AlignmentDirectional.topEnd,
+                                  children: [
+                                    const Icon(
+                                      Icons.notifications_outlined,
+                                      color: Colors.black54,
+                                    ),
+                                    if (notifCount.isNotEmpty)
+                                      Container(
+                                        width:
+                                            notifCount.length <= 99 ? 15 : 20,
+                                        height:
+                                            notifCount.length <= 99 ? 15 : 20,
+                                        alignment: Alignment.center,
+                                        decoration: BoxDecoration(
+                                          color: Colors.red,
+                                          borderRadius:
+                                              BorderRadius.circular(360),
+                                        ),
+                                        child: Text(
+                                          notifCount.length > 99
+                                              ? '99+'
+                                              : '${notifCount.length}',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 10.h,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                                style: IconButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  visualDensity: const VisualDensity(
+                                    horizontal: -1.5,
+                                    vertical: -1.5,
+                                  ),
+                                  backgroundColor: Colors.white,
+                                  side: BorderSide(
+                                    color: Colors.grey.shade500,
+                                  ),
+                                ),
+                              )
                             ],
                           ),
                           SizedBox(height: 20.h),
@@ -170,6 +246,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     ),
                   ),
                 ),
+                SizedBox(height: 5.h),
                 Expanded(
                   child: CustomScrollView(
                     physics: const ClampingScrollPhysics(
@@ -182,6 +259,7 @@ class _DashboardPageState extends State<DashboardPage> {
                           padding: const EdgeInsets.all(15),
                           decoration: BoxDecoration(
                             color: Colors.white,
+                            borderRadius: BorderRadius.circular(8.r),
                             border: Border.all(
                               width: 0.5,
                               color: Colors.black26,
@@ -215,7 +293,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                     iconAlignment: IconAlignment.end,
                                     icon: const Icon(
                                       Icons.input,
-                                      color: Colors.black,
+                                      color: AppColor.secondary,
                                       size: 22,
                                     ),
                                     label: Text(
@@ -272,10 +350,14 @@ class _DashboardPageState extends State<DashboardPage> {
                                     failureMessage: state.courseError ??
                                         'Error fetching courses',
                                     onRetry: dashboardCubit.loadCourses,
-                                    onClick: (id) {
+                                    onClick: (course) {
+                                      context
+                                          .read<SelectedCourseCubit>()
+                                          .selectCourse(course);
+
                                       context.pushNamed(
                                         AppRouter.courseDetails,
-                                        extra: id,
+                                        pathParameters: {'id': course.id},
                                       );
                                     },
                                   ),
@@ -296,10 +378,14 @@ class _DashboardPageState extends State<DashboardPage> {
                                     failureMessage: state.courseError ??
                                         'Error fetching courses',
                                     onRetry: dashboardCubit.loadCourses,
-                                    onClick: (id) {
+                                    onClick: (course) {
+                                      context
+                                          .read<SelectedCourseCubit>()
+                                          .selectCourse(course);
+
                                       context.pushNamed(
                                         AppRouter.courseDetails,
-                                        extra: id,
+                                        pathParameters: {'id': course.id},
                                       );
                                     },
                                   ),
@@ -319,10 +405,14 @@ class _DashboardPageState extends State<DashboardPage> {
                                     failureMessage: state.courseError ??
                                         'Error fetching courses',
                                     onRetry: dashboardCubit.loadCourses,
-                                    onClick: (id) {
+                                    onClick: (course) {
+                                      context
+                                          .read<SelectedCourseCubit>()
+                                          .selectCourse(course);
+
                                       context.pushNamed(
                                         AppRouter.courseDetails,
-                                        extra: id,
+                                        pathParameters: {'id': course.id},
                                       );
                                     },
                                   ),

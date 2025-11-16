@@ -115,6 +115,29 @@ class GenericRepository<T> {
     }
   }
 
+  Future<T> addModel(
+    Map<String, dynamic> jsonData, {
+    bool authRequired = true,
+  }) async {
+    final result = await apiService.postJsonRequest(
+      jsonData,
+      endPoint,
+      authRequired: authRequired,
+    );
+
+    if (result != null) {
+      if (result is Map && result['status'] == true && result['data'] != null) {
+        final data = result['data'] as Map<String, dynamic>;
+
+        return fromJson(data);
+      } else {
+        throw FailureResponse.fromResponse(result);
+      }
+    } else {
+      throw FailureResponse.fromResponse('Unknown');
+    }
+  }
+
   Future<T> edit(Map<String, dynamic> jsonData, String id) async {
     final result = await apiService.updateJsonRequest(
       jsonData,
