@@ -1,5 +1,9 @@
 import 'package:formz/formz.dart';
-import 'package:template/l10n/l10n.dart';
+// import 'package:mevtech/l10n/app_localizations.dart';
+
+
+
+// import 'package:mevtech/l10n/l10n.dart';
 
 enum EmailValidationError { invalid }
 
@@ -17,12 +21,12 @@ class EmailInput extends FormzInput<String, EmailValidationError> {
   }
 }
 
-extension on EmailValidationError {
-  // ignore: unused_element
-  String errorMessage(AppLocalizations i10n) {
-    switch (this) {
-      case EmailValidationError.invalid:
-        return i10n.invalidEmail;
-    }
-  }
-}
+// extension on EmailValidationError {
+//   // ignore: unused_element
+//   String errorMessage(AppLocalizations i10n) {
+//     switch (this) {
+//       case EmailValidationError.invalid:
+//         return i10n.invalidEmail;
+//     }
+//   }
+// }

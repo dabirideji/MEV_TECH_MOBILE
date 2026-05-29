@@ -3,6 +3,10 @@ linter:
   rules:
     public_member_api_docs: false
 analyzer:
+
+  additional-content:
+    - l10n_gen
+
   exclude:
     - "**/*.g.dart"
     - "**/*.freezed.dart"

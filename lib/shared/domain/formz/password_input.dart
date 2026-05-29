@@ -1,5 +1,8 @@
 import 'package:formz/formz.dart';
-import 'package:template/l10n/l10n.dart';
+// import 'package:mevtech/l10n/app_localizations.dart';
+
+
+// import 'package:mevtech/l10n/l10n.dart';
 
 enum PasswordValidationError { invalid }
 
@@ -18,12 +21,12 @@ class PasswordInput extends FormzInput<String, PasswordValidationError> {
   }
 }
 
-extension on PasswordValidationError {
-  // ignore: unused_element
-  String errorMessage(AppLocalizations i10n) {
-    switch (this) {
-      case PasswordValidationError.invalid:
-        return i10n.invalidPassword;
-    }
-  }
-}
+// extension on PasswordValidationError {
+//   // ignore: unused_element
+//   String errorMessage(AppLocalizations i10n) {
+//     switch (this) {
+//       case PasswordValidationError.invalid:
+//         return i10n.invalidPassword;
+//     }
+//   }
+// }

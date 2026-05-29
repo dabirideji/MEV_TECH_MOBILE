@@ -1,4 +1,12 @@
+import 'package:http/http.dart' as http;
 import 'package:injectable/injectable.dart';
+import 'package:mevtech/core/network/api_service.dart';
 
 @module
-abstract class AppModule {}
+abstract class AppModule {
+  @lazySingleton
+  http.Client get client => http.Client();
+
+  // @lazySingleton
+  // ApiService apiService(http.Client client) => ApiService(client);
+}
