@@ -496,11 +496,11 @@
 // String getRedirectUri() {
 //   switch (currentFlavor) {
 //     case 'production':
-//       return 'dev.adryanev.template:/auth-callback';
+//       return 'com.mevtech.app:/auth-callback';
 //     case 'staging':
-//       return 'dev.adryanev.template.stg:/auth-callback';
+//       return 'com.mevtech.app.stg:/auth-callback';
 //     case 'development':
-//       return 'dev.adryanev.template.dev:/auth-callback';
+//       return 'com.mevtech.app.dev:/auth-callback';
 //     default:
 //       throw Exception('Unknown or missing FLAVOR');
 //   }

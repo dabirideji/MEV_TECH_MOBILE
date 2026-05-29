@@ -6,8 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
-import 'package:template/data/connection_checker.dart';
-import 'package:template/features/auth/pages/google_login_web_view_page.dart';
+import 'package:mevtech/data/connection_checker.dart';
+import 'package:mevtech/features/auth/pages/google_login_web_view_page.dart';
 
 class GoogleSigninService {
   static const baseUrlAddress = 'https://mev-tech-api.onrender.com/api';
@@ -71,11 +71,11 @@ class GoogleSigninService {
   //   const currentFlavor = String.fromEnvironment('FLAVOR');
   //   switch (currentFlavor) {
   //     case 'production':
-  //       return 'dev.adryanev.template';
+  //       return 'com.mevtech.app';
   //     case 'staging':
-  //       return 'dev.adryanev.template.stg';
+  //       return 'com.mevtech.app.stg';
   //     case 'development':
-  //       return 'dev.adryanev.template.dev';
+  //       return 'com.mevtech.app.dev';
   //     default:
   //       throw Exception('Unknown or missing FLAVOR');
   //   }

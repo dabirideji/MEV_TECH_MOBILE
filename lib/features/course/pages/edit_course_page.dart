@@ -5,14 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:template/app/router/app_router.dart';
-import 'package:template/core/utils/colors.dart';
-import 'package:template/features/course/data/models/course-models/course_model.dart';
-import 'package:template/features/course/logic/course-cubit/course_cubit.dart';
-import 'package:template/features/presentation/utilities-class/mev_tech_utilities.dart';
-import 'package:template/features/presentation/widgets/course.dart';
+import 'package:mevtech/app/router/app_router.dart';
+import 'package:mevtech/core/utils/colors.dart';
+import 'package:mevtech/features/course/data/models/course-models/course_model.dart';
+import 'package:mevtech/features/course/logic/course-cubit/course_cubit.dart';
+import 'package:mevtech/features/presentation/utilities-class/mev_tech_utilities.dart';
+import 'package:mevtech/features/presentation/widgets/course.dart';
 
 class EditCoursePage extends StatefulWidget {
   const EditCoursePage({required this.courseId, super.key});
@@ -40,13 +41,14 @@ class _EditCoursePageState extends State<EditCoursePage> {
     super.initState();
     final state = context.read<CourseCubit>().state;
     if (state is CourseSuccess) {
-      final course =
-          state.courses.firstWhere((course) => course.id == widget.courseId);
+      final course = state.courses.firstWhere(
+        (course) => course.id == widget.courseId,
+      );
       context.read<CourseCubit>().populateData(
-            course: course,
-            tags: selectedTagItems,
-            categories: selectedCategoryItems,
-          );
+        course: course,
+        tags: selectedTagItems,
+        categories: selectedCategoryItems,
+      );
     }
   }
 
@@ -88,7 +90,9 @@ class _EditCoursePageState extends State<EditCoursePage> {
             MevTechUtilities.hideProgressIndicator(context);
 
             MevTechUtilities.successToast(
-                context, state.message ?? 'Request Successful');
+              context,
+              state.message ?? 'Request Successful',
+            );
 
             context.read<CourseCubit>().resetRoute();
             context.goNamed(AppRouter.course);
@@ -172,10 +176,7 @@ class _EditCoursePageState extends State<EditCoursePage> {
                           padding: EdgeInsets.all(10.r),
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
-                            border: Border.all(
-                              width: 0.3,
-                              color: Colors.grey,
-                            ),
+                            border: Border.all(width: 0.3, color: Colors.grey),
                           ),
                           child: TextFormField(
                             controller: courseCubit.imageUrl,
@@ -226,8 +227,8 @@ class _EditCoursePageState extends State<EditCoursePage> {
                               onTap: state.categories.isNotEmpty
                                   ? null
                                   : courseCubit.fetchAllCourseCategory,
-                              trailing: state.actionMethod ==
-                                      ActionMethod.fetching
+                              trailing:
+                                  state.actionMethod == ActionMethod.fetching
                                   ? SizedBox(
                                       height: 20.h,
                                       width: 20.w,
@@ -252,11 +253,13 @@ class _EditCoursePageState extends State<EditCoursePage> {
                                   spCategory = newValue ?? spCategory;
 
                                   if (newValue != null &&
-                                      !selectedCategoryItems
-                                          .contains(newValue)) {
+                                      !selectedCategoryItems.contains(
+                                        newValue,
+                                      )) {
                                     if (tempValue != null &&
-                                        selectedCategoryItems
-                                            .contains(tempValue)) {
+                                        selectedCategoryItems.contains(
+                                          tempValue,
+                                        )) {
                                       selectedCategoryItems.remove(tempValue);
                                     }
                                     selectedCategoryItems.add(newValue);
@@ -307,16 +310,18 @@ class _EditCoursePageState extends State<EditCoursePage> {
                         ),
                         SizedBox(height: 10.h),
                         Wrap(
-                          children:
-                              List.generate(selectedTagItems.length, (index) {
+                          children: List.generate(selectedTagItems.length, (
+                            index,
+                          ) {
                             final tag = selectedTagItems[index];
                             return tagWidget(
                               tag: tag,
                               onPressed: () {
                                 setState(() {
                                   selectedTagItems.removeAt(index);
-                                  toggleTagMap
-                                      .removeWhere((key, value) => key == tag);
+                                  toggleTagMap.removeWhere(
+                                    (key, value) => key == tag,
+                                  );
                                 });
                               },
                             );
@@ -333,14 +338,18 @@ class _EditCoursePageState extends State<EditCoursePage> {
               ),
               bottomNavigationBar: SafeArea(
                 child: Padding(
-                  padding:
-                      EdgeInsets.only(left: 15.w, right: 15.w, bottom: 8.h),
+                  padding: EdgeInsets.only(
+                    left: 15.w,
+                    right: 15.w,
+                    bottom: 8.h,
+                  ),
                   child: ElevatedButton(
                     onPressed: () {
                       courseCubit.updateCourse(
                         id: widget.courseId,
-                        categoryId:
-                            categoryModel != null ? categoryModel?.id : '',
+                        categoryId: categoryModel != null
+                            ? categoryModel?.id
+                            : '',
                       );
                     },
                     style: ElevatedButton.styleFrom(
@@ -373,11 +382,7 @@ class _EditCoursePageState extends State<EditCoursePage> {
             ),
           );
         }
-        return const Scaffold(
-          body: Center(
-            child: Text('course not found'),
-          ),
-        );
+        return const Scaffold(body: Center(child: Text('course not found')));
       },
     );
   }
@@ -398,9 +403,7 @@ class _EditCoursePageState extends State<EditCoursePage> {
       keyboardType: keyboardType,
       obscureText: obscureText,
       inputFormatters: inputFormatters,
-      style: const TextStyle(
-        fontFamily: 'poppins',
-      ),
+      style: const TextStyle(fontFamily: 'poppins'),
       maxLines: maxLines,
       decoration: InputDecoration(
         hintText: hintText,
@@ -415,15 +418,11 @@ class _EditCoursePageState extends State<EditCoursePage> {
         border: const OutlineInputBorder(),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
-          borderSide: const BorderSide(
-            color: Colors.black26,
-          ),
+          borderSide: const BorderSide(color: Colors.black26),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
-          borderSide: const BorderSide(
-            color: Colors.black26,
-          ),
+          borderSide: const BorderSide(color: Colors.black26),
         ),
       ),
     );
@@ -438,18 +437,12 @@ class _EditCoursePageState extends State<EditCoursePage> {
           padding: EdgeInsets.only(left: 7.w),
           child: Text(
             tag,
-            style: TextStyle(
-              fontSize: 11.sp,
-              color: Colors.black87,
-            ),
+            style: TextStyle(fontSize: 11.sp, color: Colors.black87),
           ),
         ),
         icon: IconButton(
           onPressed: onPressed,
-          icon: const Icon(
-            Icons.close,
-            color: Colors.red,
-          ),
+          icon: const Icon(Icons.close, color: Colors.red),
           visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
         ),
         iconAlignment: IconAlignment.end,
@@ -483,10 +476,7 @@ class _EditCoursePageState extends State<EditCoursePage> {
           items: items.map((String value) {
             return DropdownMenuItem<String>(
               value: value,
-              child: Text(
-                value,
-                style: TextStyle(fontSize: 13.sp),
-              ),
+              child: Text(value, style: TextStyle(fontSize: 13.sp)),
             );
           }).toList(),
           onChanged: onChanged,
@@ -571,8 +561,9 @@ class _EditCoursePageState extends State<EditCoursePage> {
                               Padding(
                                 padding: EdgeInsets.only(left: 8.w),
                                 child: Wrap(
-                                  children:
-                                      List.generate(tags.length, (subIndex) {
+                                  children: List.generate(tags.length, (
+                                    subIndex,
+                                  ) {
                                     final tag = tags[subIndex];
                                     return myCheckBox(
                                       tag: tag,
@@ -583,8 +574,9 @@ class _EditCoursePageState extends State<EditCoursePage> {
 
                                           if (newValue != null &&
                                               newValue == true) {
-                                            if (!selectedTagItems
-                                                .contains(tag)) {
+                                            if (!selectedTagItems.contains(
+                                              tag,
+                                            )) {
                                               selectedTagItems.add(tag);
                                             }
                                           }
@@ -640,19 +632,13 @@ class _EditCoursePageState extends State<EditCoursePage> {
       padding: EdgeInsets.only(left: 5.w),
       decoration: BoxDecoration(
         color: Colors.grey.shade300,
-        border: Border.all(
-          color: Colors.grey.shade400,
-          width: 0.5,
-        ),
+        border: Border.all(color: Colors.grey.shade400, width: 0.5),
         borderRadius: BorderRadius.circular(5.r),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            tag,
-            style: TextStyle(fontSize: 12.sp),
-          ),
+          Text(tag, style: TextStyle(fontSize: 12.sp)),
           Checkbox(
             value: value,
             checkColor: Colors.white,
@@ -788,8 +774,8 @@ class EditCoursePageOld extends StatelessWidget {
                                   hintText: 'Enter Price',
                                   keyboardType:
                                       const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
+                                        decimal: true,
+                                      ),
                                   inputFormatters: [
                                     FilteringTextInputFormatter.allow(
                                       RegExp(r'^\d*\.?\d*'),
@@ -836,7 +822,8 @@ class EditCoursePageOld extends StatelessWidget {
                                               ),
                                             )
                                           else if (courseCubit
-                                              .courseImageUrl.isNotEmpty)
+                                              .courseImageUrl
+                                              .isNotEmpty)
                                             SizedBox(
                                               height: 110.h,
                                               width: double.infinity,
@@ -846,23 +833,23 @@ class EditCoursePageOld extends StatelessWidget {
                                                 child: CachedNetworkImage(
                                                   imageUrl: courseCubit
                                                       .courseImageUrl,
-                                                  placeholder: (_, url) =>
-                                                      const Center(
+                                                  placeholder: (_, url) => Center(
                                                     child: SizedBox(
-                                                      width: 30,
-                                                      height: 30,
+                                                      width: 30.w,
+                                                      height: 30.h,
                                                       child:
-                                                          CircularProgressIndicator(
-                                                        color:
-                                                            AppColor.secondary,
-                                                        backgroundColor:
-                                                            AppColor.primary,
-                                                      ),
+                                                          MevTechUtilities.customLoader(
+                                                            scale: 1.5,
+                                                          ),
                                                     ),
                                                   ),
-                                                  errorWidget: (context, url,
-                                                          error) =>
-                                                      const Icon(Icons.error),
+                                                  errorWidget:
+                                                      (context, url, error) =>
+                                                          Icon(
+                                                            FIcons.imageOff,
+                                                            color: Colors.red,
+                                                            size: 25.sp,
+                                                          ),
                                                   fit: BoxFit.fill,
                                                 ),
                                               ),
@@ -985,9 +972,7 @@ class EditCoursePageOld extends StatelessWidget {
       keyboardType: keyboardType,
       obscureText: obscureText,
       inputFormatters: inputFormatters,
-      style: const TextStyle(
-        fontFamily: 'poppins',
-      ),
+      style: const TextStyle(fontFamily: 'poppins'),
       maxLines: maxLines,
       decoration: InputDecoration(
         hintText: hintText,
@@ -1002,15 +987,11 @@ class EditCoursePageOld extends StatelessWidget {
         border: const OutlineInputBorder(),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
-          borderSide: const BorderSide(
-            color: Colors.black26,
-          ),
+          borderSide: const BorderSide(color: Colors.black26),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
-          borderSide: const BorderSide(
-            color: Colors.black26,
-          ),
+          borderSide: const BorderSide(color: Colors.black26),
         ),
       ),
     );

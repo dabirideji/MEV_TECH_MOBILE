@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:template/core/utils/colors.dart';
+import 'package:mevtech/core/utils/colors.dart';
 
 // class CustomAlertDialog extends StatelessWidget {
 //   const CustomAlertDialog({
@@ -118,6 +118,7 @@ class AnimatedAlertDialog extends StatefulWidget {
     this.cancelText = 'Cancel',
     this.confirmText = 'Confirm',
     this.alignment,
+    this.showCancelButton = true,
   });
   final String title;
   final String message;
@@ -126,6 +127,7 @@ class AnimatedAlertDialog extends StatefulWidget {
   final VoidCallback onCancel;
   final VoidCallback onConfirm;
   final AlignmentGeometry? alignment;
+  final bool showCancelButton;
 
   @override
   _AnimatedAlertDialogState createState() => _AnimatedAlertDialogState();
@@ -145,13 +147,15 @@ class _AnimatedAlertDialogState extends State<AnimatedAlertDialog>
       vsync: this,
     );
 
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 0.8,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
 
-    _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
 
     _controller.forward();
   }
@@ -187,7 +191,7 @@ class _AnimatedAlertDialogState extends State<AnimatedAlertDialog>
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
         // shape: BoxShape.rectangle,
-        color: AppColor.primaryLight2,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: const [
           BoxShadow(
@@ -197,45 +201,45 @@ class _AnimatedAlertDialogState extends State<AnimatedAlertDialog>
           ),
         ],
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Text(
-            widget.title,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            widget.message,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Colors.black54,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              AnimatedButton(
-                text: widget.cancelText,
-                onPressed: widget.onCancel,
-                color: Colors.red,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Text(
+              widget.title,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
               ),
-              const SizedBox(width: 10),
-              AnimatedButton(
-                text: widget.confirmText,
-                onPressed: widget.onConfirm,
-                color: AppColor.primary,
-                isPrimary: true,
-              ),
-            ],
-          ),
-        ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              widget.message,
+              style: const TextStyle(fontSize: 12, color: Colors.black54),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (widget.showCancelButton)
+                  AnimatedButton(
+                    text: widget.cancelText,
+                    onPressed: widget.onCancel,
+                    color: Colors.red,
+                  ),
+                const SizedBox(width: 10),
+                AnimatedButton(
+                  text: widget.confirmText,
+                  onPressed: widget.onConfirm,
+                  color: AppColor.primary,
+                  isPrimary: true,
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -274,10 +278,7 @@ class _AnimatedButtonState extends State<AnimatedButton>
     _offsetAnimation = Tween<Offset>(
       begin: Offset.zero,
       end: const Offset(0, 0.05),
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -383,13 +384,12 @@ class _AnimatedSlideAlertDialogState extends State<AnimatedSlideAlertDialog>
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, -0.5),
       end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
 
-    _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
 
     _controller.forward();
   }
@@ -441,11 +441,7 @@ class _AnimatedSlideAlertDialogState extends State<AnimatedSlideAlertDialog>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Icon(
-            widget.icon,
-            size: 40,
-            color: Colors.white.withOpacity(0.9),
-          ),
+          Icon(widget.icon, size: 40, color: Colors.white.withOpacity(0.9)),
           const SizedBox(height: 12),
           Text(
             widget.title,
@@ -521,10 +517,7 @@ class _AnimatedButtonSlideState extends State<AnimatedButtonSlide>
     _offsetAnimation = Tween<Offset>(
       begin: Offset.zero,
       end: const Offset(0, 0.05),
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -623,13 +616,15 @@ class _CustomAlertDialogueState extends State<CustomAlertDialogue>
       vsync: this,
     );
 
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 0.8,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
 
-    _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
 
     _controller.forward();
   }
@@ -681,10 +676,7 @@ class _CustomAlertDialogueState extends State<CustomAlertDialogue>
           const SizedBox(height: 12),
           Text(
             widget.message,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Colors.black87,
-            ),
+            style: const TextStyle(fontSize: 12, color: Colors.black87),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 10),
@@ -707,4 +699,95 @@ class _CustomAlertDialogueState extends State<CustomAlertDialogue>
       ),
     );
   }
+}
+
+/////
+
+class DynamicDialog extends StatefulWidget {
+  const DynamicDialog({
+    required this.child,
+    required this.onCancel,
+    super.key,
+    this.alignment = Alignment.center,
+  });
+  final Widget child;
+
+  final VoidCallback onCancel;
+  final AlignmentGeometry? alignment;
+
+  @override
+  _DynamicDialogState createState() => _DynamicDialogState();
+}
+
+class _DynamicDialogState extends State<DynamicDialog>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+
+    _scaleAnimation = Tween<double>(
+      begin: 0.8,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
+
+    _fadeAnimation = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: Dialog(
+          alignment: widget.alignment,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          child: Column(mainAxisSize: .min, children: [widget.child]),
+        ),
+      ),
+    );
+  }
+
+  // Widget contentBox(BuildContext context) {
+  //   return Container(
+  //     width: 300, // Compact width
+  //     padding: const EdgeInsets.all(15),
+  //     decoration: BoxDecoration(
+  //       // shape: BoxShape.rectangle,
+  //       color: Colors.white,
+  //       borderRadius: BorderRadius.circular(12),
+  //       boxShadow: const [
+  //         BoxShadow(
+  //           color: Colors.black26,
+  //           offset: Offset(0, 10),
+  //           blurRadius: 15,
+  //         ),
+  //       ],
+  //     ),
+  //     child: widget.child,
+  //   );
+  // }
 }

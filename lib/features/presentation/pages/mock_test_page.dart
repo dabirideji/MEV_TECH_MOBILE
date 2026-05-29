@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:signalr_netcore/itransport.dart';
-import 'package:template/core/network/signalr_service.dart';
-import 'package:template/features/presentation/utilities-class/mev_tech_utilities.dart';
+import 'package:mevtech/core/network/signalr_service.dart';
+import 'package:mevtech/features/presentation/utilities-class/mev_tech_utilities.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 class MockTestPage extends StatefulWidget {

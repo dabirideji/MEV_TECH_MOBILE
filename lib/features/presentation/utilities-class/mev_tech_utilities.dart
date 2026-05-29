@@ -1,9 +1,12 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:template/core/utils/colors.dart';
-import 'package:template/features/presentation/widgets/custom_alert_dialog.dart';
+import 'package:mevtech/core/utils/background_toast.dart';
+import 'package:mevtech/core/utils/colors.dart';
+import 'package:mevtech/features/presentation/widgets/custom_alert_dialog.dart';
 import 'package:toastification/toastification.dart';
 
 class MevTechUtilities {
@@ -24,8 +27,9 @@ class MevTechUtilities {
     return stringValue;
   }
 
-  static String nairaSymbol =
-      NumberFormat.simpleCurrency(locale: 'en_NG').currencySymbol;
+  static String nairaSymbol = NumberFormat.simpleCurrency(
+    locale: 'en_NG',
+  ).currencySymbol;
 
   static String getNigerianNairaSymbol() {
     final nairaFormat = NumberFormat.currency(
@@ -37,6 +41,24 @@ class MevTechUtilities {
   }
 
   static bool _isShowingProgress = false;
+
+  static Widget customLoader({double scale = 2}) {
+    return Center(
+      child: SizedBox(
+        height: 30.h,
+        width: 30.h,
+        child: Transform.scale(
+          scale: scale,
+          child: const FCircularProgress.loader(),
+        ),
+      ),
+    );
+  }
+
+  //  style: (style) => style.copyWith(
+  //           iconStyle: IconThemeData(size: 40.sp),
+  //           motion: (motion) => FCircularProgressMotion(),
+  //         ),
 
   static void showProgressIndicator(BuildContext context) {
     if (_isShowingProgress) return;
@@ -106,6 +128,16 @@ class MevTechUtilities {
     }
   }
 
+  static String formatDate(String? date) {
+    try {
+      final period = DateTime.parse(date!);
+      final result = DateFormat('dd-MMM-yyyy').format(period);
+      return result;
+    } catch (_) {
+      return date ?? '000:00';
+    }
+  }
+
   static void showAnimatedAlert({
     required BuildContext context,
     required String message,
@@ -126,7 +158,10 @@ class MevTechUtilities {
           onCancel: () {
             Navigator.of(context).pop();
           },
-          onConfirm: onConfirm,
+          onConfirm: () {
+            Navigator.of(context).pop();
+            onConfirm.call();
+          },
           alignment: alignment,
         );
       },
@@ -138,10 +173,11 @@ class MevTechUtilities {
     required String message,
   }) {
     showDialog<dynamic>(
-        context: context,
-        builder: (context) {
-          return CustomAlertDialogue(message: message);
-        });
+      context: context,
+      builder: (context) {
+        return CustomAlertDialogue(message: message);
+      },
+    );
   }
 
   static Future<dynamic> progressIndicator(BuildContext context) async {
@@ -188,26 +224,17 @@ class MevTechUtilities {
       style: ToastificationStyle.flatColored,
       title: const Text(
         'Success',
-        style: TextStyle(
-          fontWeight: FontWeight.w500,
-          fontSize: 15,
-        ),
+        style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15),
       ),
       description: Text(
         message,
-        style: const TextStyle(
-          fontWeight: FontWeight.w500,
-          fontSize: 12,
-        ),
+        style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
       ),
       alignment: Alignment.topRight,
       autoCloseDuration: const Duration(seconds: 3),
       dragToClose: true,
       showIcon: true,
-      icon: const Icon(
-        Icons.check_circle_outline,
-        color: Colors.green,
-      ),
+      icon: const Icon(Icons.check_circle_outline, color: Colors.green),
     );
   }
 
@@ -218,26 +245,17 @@ class MevTechUtilities {
       style: ToastificationStyle.flatColored,
       title: const Text(
         'Failed',
-        style: TextStyle(
-          fontWeight: FontWeight.w500,
-          fontSize: 15,
-        ),
+        style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15),
       ),
       description: Text(
         message,
-        style: const TextStyle(
-          fontWeight: FontWeight.w500,
-          fontSize: 12,
-        ),
+        style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
       ),
       alignment: Alignment.topRight,
       autoCloseDuration: const Duration(seconds: 5),
       dragToClose: true,
       showIcon: true,
-      icon: const Icon(
-        Icons.error_outline,
-        color: Colors.red,
-      ),
+      icon: const Icon(Icons.error_outline, color: Colors.red),
     );
   }
 
@@ -248,26 +266,17 @@ class MevTechUtilities {
       style: ToastificationStyle.flatColored,
       title: const Text(
         'Warning',
-        style: TextStyle(
-          fontWeight: FontWeight.w500,
-          fontSize: 15,
-        ),
+        style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15),
       ),
       description: Text(
         message,
-        style: const TextStyle(
-          fontWeight: FontWeight.w500,
-          fontSize: 12,
-        ),
+        style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
       ),
       alignment: Alignment.topRight,
       autoCloseDuration: const Duration(seconds: 4),
       dragToClose: true,
       showIcon: true,
-      icon: const Icon(
-        Icons.warning_amber_outlined,
-        color: Colors.orange,
-      ),
+      icon: const Icon(Icons.warning_amber_outlined, color: Colors.orange),
     );
   }
 
@@ -278,33 +287,65 @@ class MevTechUtilities {
       style: ToastificationStyle.flatColored,
       title: const Text(
         'Info',
-        style: TextStyle(
-          fontWeight: FontWeight.w500,
-          fontSize: 15,
-        ),
+        style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15),
       ),
       description: Text(
         message,
-        style: const TextStyle(
-          fontWeight: FontWeight.w500,
-          fontSize: 12,
-        ),
+        style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 12),
       ),
       alignment: Alignment.topRight,
       autoCloseDuration: const Duration(seconds: 4),
       dragToClose: true,
       showIcon: true,
-      icon: const Icon(
-        Icons.info_outline,
-        color: Colors.blue,
+      icon: const Icon(Icons.info_outline, color: Colors.blue),
+    );
+  }
+
+  static void backgroundToast(String message, BuildContext context) {
+    showCustomToast(
+      context: context,
+      alignment: Alignment.center,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 40),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.black,
+          // Colors.black.withOpacity(0.6),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.check_circle_outline_outlined,
+              color: Colors.white,
+              size: 27,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  static dynamic customToast(BuildContext context, String message) {
+  static dynamic customToast(
+    BuildContext context,
+    String message, {
+    bool isFailure = false,
+  }) {
     toastification.showCustom(
       context: context,
-      // autoCloseDuration: const Duration(seconds: 5),
+      autoCloseDuration: const Duration(seconds: 3),
       alignment: Alignment.topRight,
       dismissDirection: DismissDirection.none,
       animationBuilder: (context, animation, alignment, child) {
@@ -319,7 +360,9 @@ class MevTechUtilities {
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.green.withAlpha(100),
+                color: isFailure
+                    ? Colors.red.withAlpha(100)
+                    : Colors.green.withAlpha(100),
                 blurRadius: 40,
                 spreadRadius: 15,
               ),
@@ -330,9 +373,9 @@ class MevTechUtilities {
             onTapUp: (_) => holder.start(), // Resume dismiss timer on release
             dragStartBehavior: DragStartBehavior.down,
             child: DecoratedBox(
-              decoration: const BoxDecoration(
-                color: Colors.green,
-                borderRadius: BorderRadius.only(
+              decoration: BoxDecoration(
+                color: isFailure ? Colors.red : Colors.green,
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(10),
                   topRight: Radius.circular(10),
                   bottomLeft: Radius.circular(10),
@@ -350,21 +393,23 @@ class MevTechUtilities {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            ' Custom Title',
+                          Text(
+                            isFailure ? '❕ Fail' : '☑️ Success',
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w600,
-                              fontSize: 14,
+                              fontSize: 14.sp,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
+                            overflow: TextOverflow.ellipsis,
                             message,
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontWeight: FontWeight.w400,
-                              fontSize: 12,
+                            maxLines: 3,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 12.sp,
                             ),
                           ),
                         ],

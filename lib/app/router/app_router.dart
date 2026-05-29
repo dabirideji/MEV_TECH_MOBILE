@@ -4,57 +4,62 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:template/app/router/app_router_notifier.dart';
-import 'package:template/core/utils/constants.dart';
-import 'package:template/features/auth/logic/auth-cubit/auth_cubit.dart';
-import 'package:template/features/auth/pages/confirm_signup_email_page.dart';
-import 'package:template/features/auth/pages/login_entry_page.dart';
-import 'package:template/features/auth/pages/login_page.dart';
-import 'package:template/features/auth/pages/password_reset_token_page.dart';
-import 'package:template/features/auth/pages/reset_password_page.dart';
-import 'package:template/features/auth/pages/sign_up_page.dart';
-import 'package:template/features/auth/pages/splash_page.dart';
-import 'package:template/features/auth/pages/verify_password_reset_page.dart';
-import 'package:template/features/chat/logic/chat_cubit.dart';
-import 'package:template/features/chat/pages/chat_page.dart';
-import 'package:template/features/course/logic/course-content-cubit/course_content_cubit.dart';
-import 'package:template/features/course/logic/course-cubit/course_cubit.dart';
-import 'package:template/features/course/pages/course_content_page.dart';
-import 'package:template/features/course/pages/course_contentlist_page.dart';
-import 'package:template/features/course/pages/course_detail_page.dart';
-import 'package:template/features/course/pages/course_operation_page.dart';
-import 'package:template/features/course/pages/course_page.dart';
-import 'package:template/features/course/pages/create_course_content_page.dart';
-import 'package:template/features/course/pages/create_course_page.dart';
-import 'package:template/features/course/pages/edit_course_page.dart';
-import 'package:template/features/home/home_page.dart';
-import 'package:template/features/presentation/dashboard/dashboard_cours_category.dart';
-import 'package:template/features/presentation/dashboard/dashboard_cubit.dart';
-import 'package:template/features/presentation/dashboard/dashboard_page.dart';
-import 'package:template/features/presentation/dashboard/search_course.dart';
-import 'package:template/features/presentation/landing/landing_page.dart';
-import 'package:template/features/presentation/pages/categories_page.dart';
-import 'package:template/features/presentation/pages/category_view_more_page.dart';
-import 'package:template/features/presentation/pages/course_category_settings.dart';
-import 'package:template/features/presentation/pages/mock_test_page.dart';
-import 'package:template/features/quiz/logic/quiz_cubit.dart';
-import 'package:template/features/quiz/pages/quiz_mode.dart';
-import 'package:template/features/quiz/pages/quiz_page.dart';
-import 'package:template/features/user/logic/user-cubit/user_cubit.dart';
-import 'package:template/features/user/pages/change_password_page.dart';
-import 'package:template/features/user/pages/edit_user_page.dart';
-import 'package:template/features/user/pages/payment_page.dart';
-import 'package:template/features/user/pages/subscription_page.dart';
-import 'package:template/features/user/pages/user_notification_page.dart';
-import 'package:template/features/user/pages/user_page.dart';
-import 'package:template/features/user/pages/view_notification_page.dart';
-import 'package:template/features/user/pages/view_profile_page.dart';
-import 'package:template/injector.dart';
+import 'package:mevtech/app/router/app_router_notifier.dart';
+import 'package:mevtech/core/utils/constants.dart';
+import 'package:mevtech/features/auth/logic/auth-cubit/auth_cubit.dart';
+import 'package:mevtech/features/auth/pages/confirm_signup_email_page.dart';
+import 'package:mevtech/features/auth/pages/login_entry_page.dart';
+import 'package:mevtech/features/auth/pages/login_page.dart';
+import 'package:mevtech/features/auth/pages/password_reset_token_page.dart';
+import 'package:mevtech/features/auth/pages/reset_password_page.dart';
+import 'package:mevtech/features/auth/pages/sign_up_page.dart';
+import 'package:mevtech/features/auth/pages/splash_page.dart';
+import 'package:mevtech/features/auth/pages/verify_password_reset_page.dart';
+import 'package:mevtech/features/chat/data/chat-data/chat_data_cubit.dart';
+import 'package:mevtech/features/chat/logic/chat_cubit.dart';
+import 'package:mevtech/features/chat/pages/chat_page.dart';
+import 'package:mevtech/features/course/logic/course-content-cubit/course_content_cubit.dart';
+import 'package:mevtech/features/course/logic/course-cubit/course_cubit.dart';
+import 'package:mevtech/features/course/logic/selected_course_cubit.dart';
+import 'package:mevtech/features/course/pages/course_content_page.dart';
+import 'package:mevtech/features/course/pages/course_contentlist_page.dart';
+import 'package:mevtech/features/course/pages/course_detail_page.dart';
+import 'package:mevtech/features/course/pages/course_operation_page.dart';
+import 'package:mevtech/features/course/pages/course_page.dart';
+import 'package:mevtech/features/course/pages/create_course_content_page.dart';
+import 'package:mevtech/features/course/pages/create_course_page.dart';
+import 'package:mevtech/features/course/pages/edit_course_page.dart';
+import 'package:mevtech/features/home/home_cubit.dart';
+import 'package:mevtech/features/home/home_page.dart';
+import 'package:mevtech/features/presentation/dashboard/dashboard_cours_category.dart';
+import 'package:mevtech/features/presentation/dashboard/dashboard_cubit.dart';
+import 'package:mevtech/features/presentation/dashboard/dashboard_page.dart';
+import 'package:mevtech/features/presentation/dashboard/search_course.dart';
+import 'package:mevtech/features/presentation/landing/landing_page.dart';
+import 'package:mevtech/features/presentation/pages/categories_page.dart';
+import 'package:mevtech/features/presentation/pages/category_view_more_page.dart';
+import 'package:mevtech/features/presentation/pages/course_category_settings.dart';
+import 'package:mevtech/features/presentation/pages/mock_test_page.dart';
+import 'package:mevtech/features/quiz/logic/quiz_cubit.dart';
+import 'package:mevtech/features/quiz/pages/quiz_mode.dart';
+import 'package:mevtech/features/quiz/pages/quiz_page.dart';
+import 'package:mevtech/features/quiz/pages/quiz_result_page.dart';
+import 'package:mevtech/features/user/logic/user-cubit/user_cubit.dart';
+import 'package:mevtech/features/user/pages/change_password_page.dart';
+import 'package:mevtech/features/user/pages/edit_user_page.dart';
+import 'package:mevtech/features/user/pages/payment_page.dart';
+import 'package:mevtech/features/user/pages/subscription_page.dart';
+import 'package:mevtech/features/user/pages/user_notification_page.dart';
+import 'package:mevtech/features/user/pages/user_page.dart';
+import 'package:mevtech/features/user/pages/view_notification_page.dart';
+import 'package:mevtech/features/user/pages/view_profile_page.dart';
+import 'package:mevtech/injector.dart';
 
 class AppRouter extends Equatable {
   static const landing = 'landing';
   static const quizMode = 'quizMode';
   static const quiz = 'quiz';
+  static const quizResult = 'quizResult';
   static const chat = 'chat';
 
   // auth related
@@ -104,23 +109,24 @@ class AppRouter extends Equatable {
 
   @override
   List<Object?> get props => [
-        landing,
-        loginEntry,
-        login,
-        signUp,
-        confirmSignupEmail,
-        course,
-        createCourse,
-        courseDetails,
-        courseContentlist,
-        courseContent,
-        editCourse,
-        createCourseContent,
-        categories,
-        quizMode,
-        quiz,
-        chat,
-      ];
+    landing,
+    loginEntry,
+    login,
+    signUp,
+    confirmSignupEmail,
+    course,
+    createCourse,
+    courseDetails,
+    courseContentlist,
+    courseContent,
+    editCourse,
+    createCourseContent,
+    categories,
+    quizMode,
+    quiz,
+    quizResult,
+    chat,
+  ];
 }
 
 final publicRoutes = <String>[
@@ -209,10 +215,22 @@ GoRouter _createRouter() {
         name: AppRouter.confirmSignupEmail,
         builder: (context, state) => const ConfirmSignupEmailPage(),
       ),
+
+      // main shell
       ShellRoute(
         builder: (context, state, child) {
-          return BlocProvider(
-            create: (context) => getIt<DashboardCubit>(),
+          // return BlocProvider(
+          //   create: (context) => getIt<DashboardCubit>(),
+          //   child: HomePage(child: child),
+          // );
+
+          return MultiBlocProvider(
+            providers: [
+              BlocProvider(create: (_) => getIt<DashboardCubit>()),
+              BlocProvider(create: (_) => getIt<HomeCubit>()),
+              BlocProvider(create: (_) => getIt<SelectedCourseCubit>()),
+              BlocProvider(create: (_) => getIt<ChatDataCubit>()),
+            ],
             child: HomePage(child: child),
           );
         },
@@ -224,7 +242,6 @@ GoRouter _createRouter() {
             builder: (context, state) => const DashboardPage(),
             routes: [
               // dashboardCoursCategory
-
               GoRoute(
                 path: 'dashboardCoursCategory',
                 name: AppRouter.dashboardCoursCategory,
@@ -323,7 +340,6 @@ GoRouter _createRouter() {
               //     return CourseDetailsPage(courseId: id);
               //   },
               // ),
-
               GoRoute(
                 path: '/course-details/:id',
                 name: AppRouter.courseDetails,
@@ -441,9 +457,22 @@ GoRouter _createRouter() {
                   final data = state.extra as String?;
                   final mode = state.pathParameters['mode'];
 
-                  return QuizPage(
+                  return QuizPage(selectedSubject: data, mode: mode ?? '');
+                },
+              ),
+              GoRoute(
+                path: '/quizResult:mode',
+                name: AppRouter.quizResult,
+                builder: (context, state) {
+                  final data = state.extra as String?;
+                  final mode = state.pathParameters['mode'];
+                  final isAutoSubmit =
+                      state.uri.queryParameters['auto_submit'] == 'true';
+
+                  return QuizResultPage(
                     selectedSubject: data,
                     mode: mode ?? '',
+                    showReasonDialog: isAutoSubmit,
                   );
                 },
               ),
@@ -451,15 +480,16 @@ GoRouter _createRouter() {
           ),
 
           GoRoute(
-              path: '/chat', // :channelId
-              name: AppRouter.chat,
-              builder: (context, state) {
-                // final channelId = state.pathParameters['channelId'];
-                return BlocProvider(
-                  create: (_) => getIt<ChatCubit>(),
-                  child: const ChatPage(),
-                );
-              }),
+            path: '/chat', // :channelId
+            name: AppRouter.chat,
+            builder: (context, state) {
+              // final channelId = state.pathParameters['channelId'];
+              return BlocProvider(
+                create: (_) => getIt<ChatCubit>(),
+                child: const ChatPage(),
+              );
+            },
+          ),
 
           // user
           ShellRoute(
@@ -521,9 +551,7 @@ GoRouter _createRouter() {
             name: AppRouter.viewNotification,
             builder: (context, state) {
               final data = state.extra as String?;
-              return ViewNotificationPage(
-                id: data ?? '',
-              );
+              return ViewNotificationPage(id: data ?? '');
             },
           ),
         ],

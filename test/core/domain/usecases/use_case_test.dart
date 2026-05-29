@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:template/core/domain/failures/failure.dart';
-import 'package:template/core/domain/usecases/use_case.dart';
+import 'package:mevtech/core/domain/failures/failure.dart';
+import 'package:mevtech/core/domain/usecases/use_case.dart';
 
 class TestUseCase implements UseCase<String, NoParams> {
   @override

@@ -2,6 +2,8 @@ part of 'quiz_cubit.dart';
 
 enum ResultState { none, loading, success, failure }
 
+enum QuizMode { practice, test }
+
 class QuizState extends Equatable {
   const QuizState({
     this.subjects = const [],

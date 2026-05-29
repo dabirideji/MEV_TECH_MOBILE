@@ -1,6 +1,8 @@
-import 'package:template/core/utils/constants.dart';
-import 'package:template/features/course/data/models/course-models/course_model.dart';
-import 'package:template/features/user/data/models/user_model.dart';
+import 'dart:convert';
+
+import 'package:mevtech/core/utils/constants.dart';
+import 'package:mevtech/features/course/data/models/course-models/course_model.dart';
+import 'package:mevtech/features/user/data/models/user_model.dart';
 
 class CourseContentModel {
   CourseContentModel({
@@ -82,10 +84,12 @@ class CourseContentCommentModel {
       message: json['message'] as String,
       isDeleted: json['isDeleted'] as bool,
       createdAt: json['createdAt'] as String,
-      replies: (json['replies'] as List<dynamic>?)
+      replies:
+          (json['replies'] as List<dynamic>?)
               ?.map(
                 (e) => CourseContentCommentModel.fromJson(
-                    e as Map<String, dynamic>),
+                  e as Map<String, dynamic>,
+                ),
               )
               .toList() ??
           [],
@@ -129,27 +133,27 @@ class CourseContentCommentModel {
   final List<CourseContentCommentModel>? replies;
 
   // comment create
-//   {
-//   "status": true,
-//   "responseCode": "200",
-//   "responseMessage": "Request was successful.",
-//   "data": {
-//     "courseContentId": "2a532062-e919-40a8-8874-2f47b3ab330a",
-//     "userId": "78862329-6df3-4217-9201-08ddb81acddf",
-//     "parentCommentId": null,
-//     "message": "Testing the comment endpoint",
-//     "isDeleted": false,
-//     "user": null,
-//     "courseContent": CourseContentModel.fromJson(json),
-//     "parentComment": null,
-//     "replies": null,
-//     "reports": null,
-//     "likes": null,
-//     "id": "f712dace-900b-4260-a50f-d0c3db003843",
-//     "createdAt": "2025-07-13T09:59:38.0204111+00:00",
-//     "updatedAt": "2025-07-13T09:59:38.0204118+00:00"
-//   }
-// }
+  //   {
+  //   "status": true,
+  //   "responseCode": "200",
+  //   "responseMessage": "Request was successful.",
+  //   "data": {
+  //     "courseContentId": "2a532062-e919-40a8-8874-2f47b3ab330a",
+  //     "userId": "78862329-6df3-4217-9201-08ddb81acddf",
+  //     "parentCommentId": null,
+  //     "message": "Testing the comment endpoint",
+  //     "isDeleted": false,
+  //     "user": null,
+  //     "courseContent": CourseContentModel.fromJson(json),
+  //     "parentComment": null,
+  //     "replies": null,
+  //     "reports": null,
+  //     "likes": null,
+  //     "id": "f712dace-900b-4260-a50f-d0c3db003843",
+  //     "createdAt": "2025-07-13T09:59:38.0204111+00:00",
+  //     "updatedAt": "2025-07-13T09:59:38.0204118+00:00"
+  //   }
+  // }
 }
 
 // Student CourseContent Note
@@ -204,40 +208,40 @@ class CourseContentNoteModel {
   final String? userEmail;
   final String? courseContentTitle;
 
-// create
-//   {
-//   "status": true,
-//   "responseCode": "200",
-//   "responseMessage": "Request was successful.",
-//   "data": {
-//     "userId": "78862329-6df3-4217-9201-08ddb81acddf",
-//     "courseContentId": "2a532062-e919-40a8-8874-2f47b3ab330a",
-//     "user": null,
-//     "courseContent": null,
-//     "note": "Example Note for testing",
-//     "id": "3dbe8ae1-c72f-4f62-9989-c5bc2baeaa95",
-//     "createdAt": "2025-07-13T09:10:32.9586144+00:00",
-//     "updatedAt": "2025-07-13T09:10:32.9586168+00:00"
-//   }
-// }
+  // create
+  //   {
+  //   "status": true,
+  //   "responseCode": "200",
+  //   "responseMessage": "Request was successful.",
+  //   "data": {
+  //     "userId": "78862329-6df3-4217-9201-08ddb81acddf",
+  //     "courseContentId": "2a532062-e919-40a8-8874-2f47b3ab330a",
+  //     "user": null,
+  //     "courseContent": null,
+  //     "note": "Example Note for testing",
+  //     "id": "3dbe8ae1-c72f-4f62-9989-c5bc2baeaa95",
+  //     "createdAt": "2025-07-13T09:10:32.9586144+00:00",
+  //     "updatedAt": "2025-07-13T09:10:32.9586168+00:00"
+  //   }
+  // }
 
-// get all
-// {
-//   "status": true,
-//   "responseCode": "200",
-//   "responseMessage": "Request was successful.",
-//   "data": [
-//     {
-//       "id": "3dbe8ae1-c72f-4f62-9989-c5bc2baeaa95",
-//       "userId": "78862329-6df3-4217-9201-08ddb81acddf",
-//       "userEmail": null,
-//       "courseContentId": "2a532062-e919-40a8-8874-2f47b3ab330a",
-//       "courseContentTitle": null,
-//       "note": "Example Note for testing",
-//       "createdAt": "2025-07-13T09:10:32.9586144"
-//     }
-//   ]
-// }
+  // get all
+  // {
+  //   "status": true,
+  //   "responseCode": "200",
+  //   "responseMessage": "Request was successful.",
+  //   "data": [
+  //     {
+  //       "id": "3dbe8ae1-c72f-4f62-9989-c5bc2baeaa95",
+  //       "userId": "78862329-6df3-4217-9201-08ddb81acddf",
+  //       "userEmail": null,
+  //       "courseContentId": "2a532062-e919-40a8-8874-2f47b3ab330a",
+  //       "courseContentTitle": null,
+  //       "note": "Example Note for testing",
+  //       "createdAt": "2025-07-13T09:10:32.9586144"
+  //     }
+  //   ]
+  // }
 }
 
 class CourseEnrollmentModel {
@@ -259,15 +263,35 @@ class CourseEnrollmentModel {
       courseId: json['courseId'] as String,
       studentId: json['studentId'] as String,
       enrolledAt: json['enrolledAt'] as String,
-      completedAt: checkNullString(json['completedAt']),
+      completedAt: json['completedAt'] as String?,
       isCompleted: json['isCompleted'] as bool,
       course: json['course'] != null
           ? CourseModel.fromJson(json['course'] as Map<String, dynamic>)
           : null,
-      studentName: checkNullString(json['studentName']),
+      studentName: json['studentName'] as String?,
       courseTitle: json['courseTitle'] as String,
     );
   }
+
+  factory CourseEnrollmentModel.fromMap(Map<String, dynamic> map) {
+    return CourseEnrollmentModel(
+      id: map['id'] as String,
+      courseId: map['courseId'] as String,
+      studentId: map['studentId'] as String,
+      enrolledAt: map['enrolledAt'] as String,
+      completedAt: map['completedAt'] as String?,
+      isCompleted: map['isCompleted'] == 1,
+      course: map['course'] != null
+          ? CourseModel.fromMap(
+              jsonDecode(map['course'] as String) as Map<String, dynamic>,
+            )
+          : null,
+
+      studentName: map['studentName'] as String?,
+      courseTitle: map['courseTitle'] as String,
+    );
+  }
+
   final String id;
   final String courseId;
   final String studentId;
@@ -283,91 +307,93 @@ class CourseEnrollmentModel {
   //       'studentId': studentId,
   //     };
 
-  // Map<String, dynamic> toJson() {
-  //   return {
-  //     'id': id,
-  //     'courseId': courseId,
-  //     'studentId': studentId,
-  //     'enrolledAt': enrolledAt.toIso8601String(),
-  //     'completedAt': completedAt?.toIso8601String(),
-  //     'isCompleted': isCompleted,
-  //     'course': course.toJson(),
-  //     'studentName': studentName,
-  //     'courseTitle': courseTitle,
-  //   };
-  // }
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'courseId': courseId,
+      'studentId': studentId,
+      'enrolledAt': enrolledAt,
+      'completedAt': completedAt,
+      'isCompleted': isCompleted ? 1 : 0,
+      'course': course != null ? jsonEncode(course!.toMap()) : null,
+      'studentName': studentName,
+      'courseTitle': courseTitle,
+    };
+  }
 }
+
+// 'course': course != null ? jsonEncode(course!.toMap()) : null,
 
 class CourseEnrollmentOld {
   // create response
 
-//  {
-//   "status": true,
-//   "responseCode": "200",
-//   "responseMessage": "Request was successful.",
-//   "data": {
-//     "courseId": "9a7f7df7-cd16-4edb-8072-8e132bddd076",
-//     "course": {
-//       "courseName": "Python Tutorial",
-//       "courseTitle": "Python Full Course",
-//       "description": "Python Full Course for Beginners [2025]",
-//       "isFree": true,
-//       "courseImageUrl": "https://img.youtube.com/vi/K5KVEU3aaeQ/default.jpg",
-//       "instructorId": "3a3dfce3-ac47-4526-0218-08ddb94398df",
-//       "instructor": null,
-//       "contents": [],
-//       "categories": [],
-//       "tags": [],
-//       "lessons": [],
-//       "quizzes": [],
-//       "id": "9a7f7df7-cd16-4edb-8072-8e132bddd076",
-//       "createdAt": "2025-07-05T18:23:10.3895498",
-//       "updatedAt": "2025-07-05T18:23:10.3895507"
-//     },
-//     "studentId": "70c4e4f6-cba1-4635-5e92-08ddb88cec3b",
-//     "student": {
-//       "oAuthProfilePictureUrl": null,
-//       "oAuthProvider": null,
-//       "oAuthProviderUserId": null,
-//       "firstName": "kunle",
-//       "lastName": "kelani",
-//       "isAdmin": false,
-//       "isSuperAdmin": false,
-//       "isDeleted": false,
-//       "isActive": true,
-//       "isInstructor": true,
-//       "profilePictureUrl": null,
-//       "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJTdWJqZWN0IjoiQkFTRV9BVVRIRU5USUNBVElPTiIsIlVzZXJJZCI6IjcwYzRlNGY2LWNiYTEtNDYzNS01ZTkyLTA4ZGRiODhjZWMzYiIsIkVtYWlsQWRkcmVzcyI6Imt1bmxlQGdtYWlsLmNvbSIsIlVzZXJOYW1lIjoia3VubGU3IiwibmJmIjoxNzU0NjU3MTI4LCJleHAiOjE3NTQ2NjA3MjgsImlhdCI6MTc1NDY1NzEyOCwiaXNzIjoiTUVWIFRFQ0gifQ.JgROsJE7hn0P-ZNNxmSr1s22JkJrVd1X6tlhtAbSlBo",
-//       "refreshToken": "RYPAwDEiSYvq5g7pgsWw3z0fVnVbNeMf1GrNZASiP9U=",
-//       "refreshTokenExpiryTime": "2025-08-18T12:45:28.992455",
-//       "userWallet": null,
-//       "userRoles": [],
-//       "studentCourseContentNotes": [],
-//       "wishlistCourses": [],
-//       "createdAt": "2025-07-01T10:49:15.2842169",
-//       "updatedAt": "2025-07-01T10:49:15.2842172",
-//       "id": "70c4e4f6-cba1-4635-5e92-08ddb88cec3b",
-//       "userName": "kunle7",
-//       "normalizedUserName": "KUNLE7",
-//       "email": "kunle@gmail.com",
-//       "normalizedEmail": "KUNLE@GMAIL.COM",
-//       "emailConfirmed": false,
-//       "passwordHash": "AQAAAAIAAYagAAAAEIs8qRTpa482tlP7P/pTnrRm+QXGxD6jFZQN0X7hJvdh4Zkl66m+kUFNqR56Y1Ysyg==",
-//       "securityStamp": "QEKQYWE5QUYJT5QB4YPR66WFCLWDHJ5E",
-//       "concurrencyStamp": "593e4db3-211b-4fd0-8bf2-91b2ea1afe2e",
-//       "phoneNumber": "08023456721",
-//       "phoneNumberConfirmed": false,
-//       "twoFactorEnabled": false,
-//       "lockoutEnd": null,
-//       "lockoutEnabled": true,
-//       "accessFailedCount": 0
-//     },
-//     "enrolledAt": "2025-08-08T12:56:56.1470187Z",
-//     "completedAt": null,
-//     "isCompleted": false,
-//     "id": "23494448-ea3e-4451-aa0a-a906d316877f",
-//     "createdAt": "2025-08-08T12:56:56.1470256+00:00",
-//     "updatedAt": "2025-08-08T12:56:56.147028+00:00"
-//   }
-// }
+  //  {
+  //   "status": true,
+  //   "responseCode": "200",
+  //   "responseMessage": "Request was successful.",
+  //   "data": {
+  //     "courseId": "9a7f7df7-cd16-4edb-8072-8e132bddd076",
+  //     "course": {
+  //       "courseName": "Python Tutorial",
+  //       "courseTitle": "Python Full Course",
+  //       "description": "Python Full Course for Beginners [2025]",
+  //       "isFree": true,
+  //       "courseImageUrl": "https://img.youtube.com/vi/K5KVEU3aaeQ/default.jpg",
+  //       "instructorId": "3a3dfce3-ac47-4526-0218-08ddb94398df",
+  //       "instructor": null,
+  //       "contents": [],
+  //       "categories": [],
+  //       "tags": [],
+  //       "lessons": [],
+  //       "quizzes": [],
+  //       "id": "9a7f7df7-cd16-4edb-8072-8e132bddd076",
+  //       "createdAt": "2025-07-05T18:23:10.3895498",
+  //       "updatedAt": "2025-07-05T18:23:10.3895507"
+  //     },
+  //     "studentId": "70c4e4f6-cba1-4635-5e92-08ddb88cec3b",
+  //     "student": {
+  //       "oAuthProfilePictureUrl": null,
+  //       "oAuthProvider": null,
+  //       "oAuthProviderUserId": null,
+  //       "firstName": "kunle",
+  //       "lastName": "kelani",
+  //       "isAdmin": false,
+  //       "isSuperAdmin": false,
+  //       "isDeleted": false,
+  //       "isActive": true,
+  //       "isInstructor": true,
+  //       "profilePictureUrl": null,
+  //       "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJTdWJqZWN0IjoiQkFTRV9BVVRIRU5USUNBVElPTiIsIlVzZXJJZCI6IjcwYzRlNGY2LWNiYTEtNDYzNS01ZTkyLTA4ZGRiODhjZWMzYiIsIkVtYWlsQWRkcmVzcyI6Imt1bmxlQGdtYWlsLmNvbSIsIlVzZXJOYW1lIjoia3VubGU3IiwibmJmIjoxNzU0NjU3MTI4LCJleHAiOjE3NTQ2NjA3MjgsImlhdCI6MTc1NDY1NzEyOCwiaXNzIjoiTUVWIFRFQ0gifQ.JgROsJE7hn0P-ZNNxmSr1s22JkJrVd1X6tlhtAbSlBo",
+  //       "refreshToken": "RYPAwDEiSYvq5g7pgsWw3z0fVnVbNeMf1GrNZASiP9U=",
+  //       "refreshTokenExpiryTime": "2025-08-18T12:45:28.992455",
+  //       "userWallet": null,
+  //       "userRoles": [],
+  //       "studentCourseContentNotes": [],
+  //       "wishlistCourses": [],
+  //       "createdAt": "2025-07-01T10:49:15.2842169",
+  //       "updatedAt": "2025-07-01T10:49:15.2842172",
+  //       "id": "70c4e4f6-cba1-4635-5e92-08ddb88cec3b",
+  //       "userName": "kunle7",
+  //       "normalizedUserName": "KUNLE7",
+  //       "email": "kunle@gmail.com",
+  //       "normalizedEmail": "KUNLE@GMAIL.COM",
+  //       "emailConfirmed": false,
+  //       "passwordHash": "AQAAAAIAAYagAAAAEIs8qRTpa482tlP7P/pTnrRm+QXGxD6jFZQN0X7hJvdh4Zkl66m+kUFNqR56Y1Ysyg==",
+  //       "securityStamp": "QEKQYWE5QUYJT5QB4YPR66WFCLWDHJ5E",
+  //       "concurrencyStamp": "593e4db3-211b-4fd0-8bf2-91b2ea1afe2e",
+  //       "phoneNumber": "08023456721",
+  //       "phoneNumberConfirmed": false,
+  //       "twoFactorEnabled": false,
+  //       "lockoutEnd": null,
+  //       "lockoutEnabled": true,
+  //       "accessFailedCount": 0
+  //     },
+  //     "enrolledAt": "2025-08-08T12:56:56.1470187Z",
+  //     "completedAt": null,
+  //     "isCompleted": false,
+  //     "id": "23494448-ea3e-4451-aa0a-a906d316877f",
+  //     "createdAt": "2025-08-08T12:56:56.1470256+00:00",
+  //     "updatedAt": "2025-08-08T12:56:56.147028+00:00"
+  //   }
+  // }
 }

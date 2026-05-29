@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:template/features/chat/chat-constant/chat_color_scheme.dart';
+import 'package:mevtech/features/chat/chat-constant/chat_color_scheme.dart';
 
 class MyChatTheme extends StatelessWidget {
   const MyChatTheme({required this.child, super.key});

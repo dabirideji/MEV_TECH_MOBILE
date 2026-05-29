@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:template/app/router/app_router.dart';
-import 'package:template/core/utils/colors.dart';
-import 'package:template/features/course/course-widget/course_card.dart';
-import 'package:template/features/course/logic/course-cubit/course_cubit.dart';
-import 'package:template/features/presentation/utilities-class/mev_tech_utilities.dart';
+import 'package:mevtech/app/router/app_router.dart';
+import 'package:mevtech/core/utils/colors.dart';
+import 'package:mevtech/features/course/course-widget/course_card.dart';
+import 'package:mevtech/features/course/logic/course-cubit/course_cubit.dart';
+import 'package:mevtech/features/presentation/utilities-class/mev_tech_utilities.dart';
 
 class CourseOperationPage extends StatelessWidget {
   const CourseOperationPage({super.key});
@@ -18,10 +18,7 @@ class CourseOperationPage extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           'Course Operations',
-          style: TextStyle(
-            fontSize: 15.sp,
-            fontWeight: FontWeight.w500,
-          ),
+          style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w500),
         ),
         actions: [
           Padding(
@@ -37,7 +34,7 @@ class CourseOperationPage extends StatelessWidget {
                 color: AppColor.secondary,
               ),
             ),
-          )
+          ),
         ],
       ),
       body: BlocConsumer<CourseCubit, CourseState>(
@@ -60,9 +57,7 @@ class CourseOperationPage extends StatelessWidget {
               },
             );
           }
-          return const Center(
-            child: Text('Error Fetching Course'),
-          );
+          return const Center(child: Text('Error Fetching Course'));
         },
       ),
     );
@@ -76,7 +71,6 @@ class CourseOperationPage extends StatelessWidget {
       confirmText: 'Confirm',
       alignment: Alignment.bottomCenter,
       onConfirm: () {
-        context.pop();
         context.read<CourseCubit>().deleteCourse(id);
       },
     );

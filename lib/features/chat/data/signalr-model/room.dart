@@ -1,4 +1,7 @@
-import 'package:template/core/utils/constants.dart';
+import 'dart:convert';
+import 'dart:developer';
+
+import 'package:mevtech/core/utils/constants.dart';
 
 class Room {
   Room({
@@ -79,44 +82,85 @@ class RoomMain {
       members: (json['members'] ?? <dynamic>[]) as List<dynamic>,
       settings: Setting.fromJson(json['settings'] as Map<String, dynamic>),
       isPrivate: (json['isPrivate'] ?? false) as bool,
-      password: checkNullString(json['password']),
-      lastMessageAt: checkNullString(json['lastMessageAt']),
+      password: json['password'] as String?,
+      lastMessageAt: json['lastMessageAt'] as String?,
       maxMembers: (json['maxMembers'] ?? 0) as int,
       isArchived: (json['isArchived'] ?? false) as bool,
-      createdAt: (json['createdAt'] ?? '') as String,
-      updatedAt: (json['updatedAt'] ?? '') as String,
+      createdAt: normalizeApiTimestamp((json['createdAt'] ?? '') as String),
+      updatedAt: normalizeApiTimestamp((json['updatedAt'] ?? '') as String),
     );
   }
 
-//   {
-//   "id": "group_elite_club_638970821999777481",
-//   "name": "👥 Elite Club",
-//   "description": "",
-//   "createdBy": "a1d238c7-286f-4dfe-3caa-08de13e02cfa",
-//   "members": [],
-//   "settings": {
-//     "memberCount": 1,
-//     "otherRoomMembers": [],
-//     "mostRecentMessage": null,
-//     "unreadRoomMessagesCount": 0
-//   },
-//   "isPrivate": false,
-//   "password": null,
-//   "lastMessageAt": null,
-//   "maxMembers": 1000,
-//   "createdAt": "2025-10-26T13:30:00.2776357",
-//   "updatedAt": "2025-10-26T13:30:00.27759",
-//   "rowVersion": "AAAAAAAAGzo=",
-//   "updatedBy": null,
-//   "isDeleted": false,
-//   "deletedAt": null,
-//   "deletedBy": null,
-//   "isArchived": false,
-//   "archivedAt": null,
-//   "archivedBy": null,
-//   "physicallyArchivedAt": null,
-//   "archiveReason": null
-// }
+  factory RoomMain.fromMap(Map<String, dynamic> map) {
+    return RoomMain(
+      id: map['id'] as String,
+      name: map['name'] as String,
+      description: map['description'] as String,
+      createdBy: map['createdBy'] as String,
+
+      members: listFromDbMap(map['members']),
+
+      settings: Setting.fromMap(
+        jsonDecode(map['settings'] as String) as Map<String, dynamic>,
+      ),
+
+      isPrivate: map['isPrivate'] == 1,
+      password: map['password'] as String?,
+      lastMessageAt: map['lastMessageAt'] as String?,
+      maxMembers: map['maxMembers'] as int,
+      isArchived: map['isArchived'] == 1,
+      createdAt: map['createdAt'] as String,
+      updatedAt: map['updatedAt'] as String,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'createdBy': createdBy,
+      'members': jsonEncode(members),
+      'settings': jsonEncode(settings.toMap()),
+      'isPrivate': isPrivate ? 1 : 0,
+      'password': password,
+      'lastMessageAt': lastMessageAt,
+      'maxMembers': maxMembers,
+      'isArchived': isArchived ? 1 : 0,
+      'createdAt': createdAt,
+      'updatedAt': updatedAt,
+    };
+  }
+
+  //   {
+  //   "id": "group_elite_club_638970821999777481",
+  //   "name": "👥 Elite Club",
+  //   "description": "",
+  //   "createdBy": "a1d238c7-286f-4dfe-3caa-08de13e02cfa",
+  //   "members": [],
+  //   "settings": {
+  //     "memberCount": 1,
+  //     "otherRoomMembers": [],
+  //     "mostRecentMessage": null,
+  //     "unreadRoomMessagesCount": 0
+  //   },
+  //   "isPrivate": false,
+  //   "password": null,
+  //   "lastMessageAt": null,
+  //   "maxMembers": 1000,
+  //   "createdAt": "2025-10-26T13:30:00.2776357",
+  //   "updatedAt": "2025-10-26T13:30:00.27759",
+  //   "rowVersion": "AAAAAAAAGzo=",
+  //   "updatedBy": null,
+  //   "isDeleted": false,
+  //   "deletedAt": null,
+  //   "deletedBy": null,
+  //   "isArchived": false,
+  //   "archivedAt": null,
+  //   "archivedBy": null,
+  //   "physicallyArchivedAt": null,
+  //   "archiveReason": null
+  // }
 
   final String id;
   final String name;
@@ -142,16 +186,62 @@ class Setting {
   });
 
   factory Setting.fromJson(Map<String, dynamic> json) {
+    // if (json.isNotEmpty) log(json['otherRoomMembers'].toString());
+    // var otherRoomMembers = <dynamic>[];
+    // Map<String, dynamic>? mostRecentMessage;
+    // if (json.isNotEmpty && json['otherRoomMembers'] is String) {
+    //   otherRoomMembers =
+    //       jsonDecode(json['otherRoomMembers'] as String) as List<dynamic>;
+    // } else if (json.isNotEmpty) {
+    //   otherRoomMembers =
+    //       (json['otherRoomMembers'] ?? <dynamic>[]) as List<dynamic>;
+    // }
+    // if (json.isNotEmpty &&
+    //     json['mostRecentMessage'] != null &&
+    //     json['mostRecentMessage'] is String) {
+    //   mostRecentMessage =
+    //       jsonDecode(json['mostRecentMessage'] as String)
+    //           as Map<String, dynamic>;
+    // } else if (json.isNotEmpty && json['mostRecentMessage'] != null) {
+    //   mostRecentMessage = (json['mostRecentMessage']) as Map<String, dynamic>;
+    // }
+
     return Setting(
       memberCount: json.isNotEmpty ? (json['memberCount'] ?? 0) as int : 0,
       otherRoomMembers: json.isNotEmpty
           ? (json['otherRoomMembers'] ?? <dynamic>[]) as List<dynamic>
           : [],
-      mostRecentMessage:
-          json.isNotEmpty ? checkNullMap(json['mostRecentMessage']) : null,
-      unreadRoomMessagesCount:
-          json.isNotEmpty ? (json['unreadRoomMessagesCount'] ?? 0) as int : 0,
+      mostRecentMessage: json.isNotEmpty
+          ? checkNullMap(json['mostRecentMessage'])
+          : null,
+      unreadRoomMessagesCount: json.isNotEmpty
+          ? (json['unreadRoomMessagesCount'] ?? 0) as int
+          : 0,
     );
+  }
+
+  factory Setting.fromMap(Map<String, dynamic> map) {
+    return Setting(
+      memberCount: map.isNotEmpty ? (map['memberCount'] ?? 0) as int : 0,
+      otherRoomMembers: map.isNotEmpty
+          ? listFromDbMap(map['otherRoomMembers'])
+          : [],
+      mostRecentMessage: map.isNotEmpty
+          ? mapFromDbMap(map['mostRecentMessage'])
+          : null,
+      unreadRoomMessagesCount: map.isNotEmpty
+          ? (map['unreadRoomMessagesCount'] ?? 0) as int
+          : 0,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'memberCount': memberCount,
+      'otherRoomMembers': jsonEncode(otherRoomMembers),
+      'mostRecentMessage': jsonEncode(mostRecentMessage ?? {}),
+      'unreadRoomMessagesCount': unreadRoomMessagesCount,
+    };
   }
 
   final int memberCount;

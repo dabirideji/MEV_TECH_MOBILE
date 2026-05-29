@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:template/features/presentation/favourite/cubit/favourite_cubit.dart';
+import 'package:mevtech/features/presentation/favourite/cubit/favourite_cubit.dart';
 
 class FavouritePage extends StatelessWidget {
   const FavouritePage({super.key});

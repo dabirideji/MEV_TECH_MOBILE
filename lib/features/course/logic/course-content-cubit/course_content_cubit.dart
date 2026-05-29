@@ -4,12 +4,12 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
-import 'package:template/core/utils/multiple_status_states.dart';
-import 'package:template/core/utils/request_states.dart';
-import 'package:template/features/course/course-widget/course_content_widgets.dart';
-import 'package:template/features/course/data/models/course-content-models/course_content_model.dart';
-import 'package:template/features/course/data/models/course-content-models/course_video_model.dart';
-import 'package:template/features/course/data/repository/course_repository.dart';
+import 'package:mevtech/core/utils/multiple_status_states.dart';
+import 'package:mevtech/core/utils/request_states.dart';
+import 'package:mevtech/features/course/course-widget/course_content_widgets.dart';
+import 'package:mevtech/features/course/data/models/course-content-models/course_content_model.dart';
+import 'package:mevtech/features/course/data/models/course-content-models/course_video_model.dart';
+import 'package:mevtech/features/course/data/repository/course_repository.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
 part 'course_content_state.dart';
@@ -17,7 +17,7 @@ part 'course_content_state.dart';
 @injectable
 class CourseContentCubit extends Cubit<CourseContentState> {
   CourseContentCubit(this.courseRepository)
-      : super(const CourseContentInitial());
+    : super(const CourseContentInitial());
 
   final CourseRepository courseRepository;
   YoutubePlayerController? _controller;
@@ -38,16 +38,18 @@ class CourseContentCubit extends Cubit<CourseContentState> {
     txtComment.clear();
   }
 
-  Future<void> tabChange(int index) async {
+  Future<void> tabChange(
+    int index, {
+    String? courseContentId,
+    String? studentId,
+  }) async {
     clearField();
     resetCommentAndNoteState();
     if (state is! CourseContentSuccess) return;
     final currentState = state as CourseContentSuccess;
 
     if (!isClosed) {
-      emit(
-        currentState.copyWith(currentIndex: index),
-      );
+      emit(currentState.copyWith(currentIndex: index));
     }
 
     if (currentState.currentIndex == index) return;
@@ -55,13 +57,16 @@ class CourseContentCubit extends Cubit<CourseContentState> {
     if (index == 1) {
       if (currentState.comments.isNotEmpty) return;
       await Future.delayed(const Duration(seconds: 1), () {});
-      await fetchCourseCommentPagination();
+      await fetchContentsCommentByContentId(courseContentId ?? '');
     }
 
     if (index == 2) {
       if (currentState.notes.isNotEmpty) return;
       await Future.delayed(const Duration(seconds: 1), () {});
-      await fetchCourseNotes();
+      await fetchContentNoteByCourseIdStudentId(
+        courseContentId: courseContentId ?? '',
+        studentId: studentId ?? '',
+      );
     }
   }
 
@@ -74,9 +79,7 @@ class CourseContentCubit extends Cubit<CourseContentState> {
       final result = await courseRepository.getCourseContentbyID(courseId);
 
       if (result.isNotEmpty) {
-        emit(CourseContentSuccess(
-          courseContentModel: result,
-        ));
+        emit(CourseContentSuccess(courseContentModel: result));
       } else {
         if (!isClosed) {
           emit(
@@ -102,9 +105,7 @@ class CourseContentCubit extends Cubit<CourseContentState> {
       }
 
       await courseRepository.deleteCourseContent(id);
-      emit(current.copyWith(
-        status: const Status.success(CrudAction.delete),
-      ));
+      emit(current.copyWith(status: const Status.success(CrudAction.delete)));
     } catch (e) {
       emit(
         current.copyWith(
@@ -209,6 +210,49 @@ class CourseContentCubit extends Cubit<CourseContentState> {
     }
   }
 
+  // getContentsCommentByContentId
+
+  Future<void> fetchContentsCommentByContentId(String courseContentId) async {
+    resetCommentAndNoteState();
+    if (state is! CourseContentSuccess) return;
+    final currentState = state as CourseContentSuccess;
+
+    try {
+      if (!isClosed) {
+        emit(
+          currentState.copyWith(
+            commentStatus: const Status.loading(CrudAction.fetch),
+          ),
+        );
+      }
+
+      final result = await courseRepository.getContentsCommentByContentId(
+        courseContentId,
+      );
+
+      if (!isClosed) {
+        // pageNumber++;
+        emit(
+          currentState.copyWith(
+            commentStatus: const Status.success(CrudAction.fetch),
+            comments: result,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!isClosed) {
+        emit(
+          currentState.copyWith(
+            commentStatus: Status.failure(
+              action: CrudAction.fetch,
+              error: e.toString(),
+            ),
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> fetchCourseCommentPagination() async {
     if (isLoading) return;
     if (pageNumber > totalPages && totalPages > 0) {
@@ -245,9 +289,9 @@ class CourseContentCubit extends Cubit<CourseContentState> {
       pageNumber = paginationResponse.pageNumber + 1;
       totalPages = paginationResponse.totalPages;
 
-      final updatedComments =
-          List<CourseContentCommentModel>.from(currentState.comments)
-            ..addAll(paginationResponse.result);
+      final updatedComments = List<CourseContentCommentModel>.from(
+        currentState.comments,
+      )..addAll(paginationResponse.result);
 
       if (!isClosed) {
         // pageNumber++;
@@ -267,7 +311,9 @@ class CourseContentCubit extends Cubit<CourseContentState> {
             commentStatus: initialLoading
                 ? Status.failure(action: CrudAction.fetch, error: e.toString())
                 : Status.failure(
-                    action: CrudAction.paginate, error: e.toString()),
+                    action: CrudAction.paginate,
+                    error: e.toString(),
+                  ),
           ),
         );
       }
@@ -276,7 +322,60 @@ class CourseContentCubit extends Cubit<CourseContentState> {
     }
   }
 
-  Future<void> fetchCourseNotes() async {
+  // Future<void> fetchCourseNotes() async {
+  //   resetCommentAndNoteState();
+  //   if (state is! CourseContentSuccess) return;
+  //   final currentState = state as CourseContentSuccess;
+  //   try {
+  //     if (!isClosed) {
+  //       emit(
+  //         currentState.copyWith(
+  //           noteStatus: const Status.loading(CrudAction.fetch),
+  //         ),
+  //       );
+  //     }
+  //     final result = await courseRepository.getContentsNotes();
+  //     if (result.isNotEmpty) {
+  //       if (!isClosed) {
+  //         emit(
+  //           currentState.copyWith(
+  //             noteStatus: const Status.success(CrudAction.fetch),
+  //             notes: result,
+  //           ),
+  //         );
+  //       }
+  //     } else {
+  //       if (!isClosed) {
+  //         emit(
+  //           currentState.copyWith(
+  //             noteStatus: const Status.failure(
+  //               action: CrudAction.fetch,
+  //               error: 'unable to fetch notes',
+  //             ),
+  //           ),
+  //         );
+  //       }
+  //     }
+  //   } catch (e) {
+  //     if (!isClosed) {
+  //       emit(
+  //         currentState.copyWith(
+  //           noteStatus: Status.failure(
+  //             action: CrudAction.fetch,
+  //             error: e.toString(),
+  //           ),
+  //         ),
+  //       );
+  //     }
+  //   }
+  // }
+
+  // getContentNoteByCourseIdStudentId
+
+  Future<void> fetchContentNoteByCourseIdStudentId({
+    required String courseContentId,
+    required String studentId,
+  }) async {
     resetCommentAndNoteState();
     if (state is! CourseContentSuccess) return;
     final currentState = state as CourseContentSuccess;
@@ -289,28 +388,41 @@ class CourseContentCubit extends Cubit<CourseContentState> {
         );
       }
 
-      final result = await courseRepository.getContentsNotes();
-      if (result.isNotEmpty) {
-        if (!isClosed) {
-          emit(
-            currentState.copyWith(
-              noteStatus: const Status.success(CrudAction.fetch),
-              notes: result,
-            ),
-          );
-        }
-      } else {
-        if (!isClosed) {
-          emit(
-            currentState.copyWith(
-              noteStatus: const Status.failure(
-                action: CrudAction.fetch,
-                error: 'unable to fetch notes',
-              ),
-            ),
-          );
-        }
+      final result = await courseRepository.getContentNoteByCourseIdStudentId(
+        courseContentId: courseContentId,
+        studentId: studentId,
+      );
+
+      if (!isClosed) {
+        emit(
+          currentState.copyWith(
+            noteStatus: const Status.success(CrudAction.fetch),
+            notes: result,
+          ),
+        );
       }
+
+      // if (result.isNotEmpty) {
+      //   if (!isClosed) {
+      //     emit(
+      //       currentState.copyWith(
+      //         noteStatus: const Status.success(CrudAction.fetch),
+      //         notes: result,
+      //       ),
+      //     );
+      //   }
+      // } else {
+      //   if (!isClosed) {
+      //     emit(
+      //       currentState.copyWith(
+      //         noteStatus: const Status.failure(
+      //           action: CrudAction.fetch,
+      //           error: 'unable to fetch notes',
+      //         ),
+      //       ),
+      //     );
+      //   }
+      // }
     } catch (e) {
       if (!isClosed) {
         emit(
@@ -347,8 +459,12 @@ class CourseContentCubit extends Cubit<CourseContentState> {
         'note': txtNotes.text,
       };
 
-      final result = await courseRepository.createContentNote(jsonData);
-      final notes = await courseRepository.getContentsNotes();
+      await courseRepository.createContentNote(jsonData);
+
+      final notes = await courseRepository.getContentNoteByCourseIdStudentId(
+        courseContentId: courseContentId,
+        studentId: userId,
+      );
       if (!isClosed) {
         emit(
           currentState.copyWith(
@@ -362,8 +478,10 @@ class CourseContentCubit extends Cubit<CourseContentState> {
       if (!isClosed) {
         emit(
           currentState.copyWith(
-            noteStatus:
-                Status.failure(action: CrudAction.create, error: e.toString()),
+            noteStatus: Status.failure(
+              action: CrudAction.create,
+              error: e.toString(),
+            ),
           ),
         );
       }
@@ -398,7 +516,9 @@ class CourseContentCubit extends Cubit<CourseContentState> {
           emit(
             currentState.copyWith(
               commentStatus: const Status.failure(
-                  action: CrudAction.fetch, error: 'unable to fetch Comments'),
+                action: CrudAction.fetch,
+                error: 'unable to fetch Comments',
+              ),
             ),
           );
         }
@@ -407,8 +527,10 @@ class CourseContentCubit extends Cubit<CourseContentState> {
       if (!isClosed) {
         emit(
           currentState.copyWith(
-            commentStatus:
-                Status.failure(action: CrudAction.fetch, error: e.toString()),
+            commentStatus: Status.failure(
+              action: CrudAction.fetch,
+              error: e.toString(),
+            ),
           ),
         );
       }
@@ -484,8 +606,10 @@ class CourseContentCubit extends Cubit<CourseContentState> {
       if (!isClosed) {
         emit(
           currentState.copyWith(
-            commentStatus:
-                const Status.loading(CrudAction.create, subtype: 'reply'),
+            commentStatus: const Status.loading(
+              CrudAction.create,
+              subtype: 'reply',
+            ),
             commentUUID: parentCommentId,
           ),
         );
@@ -509,8 +633,10 @@ class CourseContentCubit extends Cubit<CourseContentState> {
       if (!isClosed) {
         emit(
           currentState.copyWith(
-            commentStatus:
-                const Status.success(CrudAction.create, subtype: 'reply'),
+            commentStatus: const Status.success(
+              CrudAction.create,
+              subtype: 'reply',
+            ),
             comments: comment,
             commentUUID: '',
           ),
@@ -522,9 +648,10 @@ class CourseContentCubit extends Cubit<CourseContentState> {
         emit(
           currentState.copyWith(
             commentStatus: Status.failure(
-                action: CrudAction.create,
-                error: e.toString(),
-                subtype: 'reply'),
+              action: CrudAction.create,
+              error: e.toString(),
+              subtype: 'reply',
+            ),
             commentUUID: '',
           ),
         );

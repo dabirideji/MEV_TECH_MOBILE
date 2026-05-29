@@ -9,16 +9,16 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:injectable/injectable.dart';
-import 'package:template/app/router/app_router.dart';
-import 'package:template/core/network/api_service.dart';
-import 'package:template/data/odata_query_builder.dart';
-import 'package:template/features/course/data/models/course-content-models/course_content_model.dart';
-import 'package:template/features/course/data/models/course-content-models/course_content_request.dart';
-import 'package:template/features/course/data/models/course-models/course_model.dart';
-import 'package:template/features/course/data/models/course-models/course_request.dart';
-import 'package:template/features/course/data/repository/course_repository.dart';
-import 'package:template/features/presentation/utilities-class/mev_tech_utilities.dart';
-import 'package:template/features/presentation/widgets/course.dart';
+import 'package:mevtech/app/router/app_router.dart';
+import 'package:mevtech/core/network/api_service.dart';
+import 'package:mevtech/data/odata_query_builder.dart';
+import 'package:mevtech/features/course/data/models/course-content-models/course_content_model.dart';
+import 'package:mevtech/features/course/data/models/course-content-models/course_content_request.dart';
+import 'package:mevtech/features/course/data/models/course-models/course_model.dart';
+import 'package:mevtech/features/course/data/models/course-models/course_request.dart';
+import 'package:mevtech/features/course/data/repository/course_repository.dart';
+import 'package:mevtech/features/presentation/utilities-class/mev_tech_utilities.dart';
+import 'package:mevtech/features/presentation/widgets/course.dart';
 
 part 'course_state.dart';
 
@@ -67,9 +67,7 @@ class CourseCubit extends Cubit<CourseState> {
       final currentMap = Map<String, bool>.from(current.isMenuExpanded);
       currentMap[category] = !(currentMap[category] ?? false);
 
-      emit(
-        current.copyWith(isMenuExpanded: currentMap),
-      );
+      emit(current.copyWith(isMenuExpanded: currentMap));
     }
   }
 
@@ -125,8 +123,9 @@ class CourseCubit extends Cubit<CourseState> {
       } else {
         if (!isClosed) {
           emit(
-            (state as CourseSuccess)
-                .copyWith(courseRefreshError: 'unable to fetch course'),
+            (state as CourseSuccess).copyWith(
+              courseRefreshError: 'unable to fetch course',
+            ),
           );
         }
       }
@@ -142,11 +141,37 @@ class CourseCubit extends Cubit<CourseState> {
   Future<void> testGetCourse() async {
     // 84507269-f31b-4e82-8483-1002c464df7b
     // 1c146df3-a881-4c7b-b59c-224df103a5a3
-    final result = await courseRepository
-        .getCoursebyID('84507269-f31b-4e82-8483-1002c464df7b');
-    log(result.categoryNames.isNotEmpty
-        ? result.categoryNames.first
-        : 'not category found');
+    final result = await courseRepository.getCoursebyID(
+      '84507269-f31b-4e82-8483-1002c464df7b',
+    );
+    log(
+      result.categoryNames.isNotEmpty
+          ? result.categoryNames.first
+          : 'not category found',
+    );
+  }
+
+  Future<void> fetchLocalCourses() async {
+    try {
+      final courses = await courseRepository.getLocalCourses();
+      if (courses.isEmpty) {
+        await fetchCourses();
+      } else {
+        if (!isClosed) {
+          emit(CourseSuccess(courses: courses, isMenuExpanded: const {}));
+          if (state is CourseSuccess) {
+            successState = state as CourseSuccess;
+          }
+        }
+        final remoteCourses = await courseRepository.getCourses();
+        if (!isClosed) {
+          emit(CourseSuccess(courses: remoteCourses, isMenuExpanded: const {}));
+          if (state is CourseSuccess) {
+            successState = state as CourseSuccess;
+          }
+        }
+      }
+    } catch (e) {}
   }
 
   Future<void> fetchCourses() async {
@@ -180,8 +205,10 @@ class CourseCubit extends Cubit<CourseState> {
     try {
       if (state is! CourseSuccess) return;
       emit(
-        (state as CourseSuccess)
-            .copyWith(isDeleting: true, deleteErrorMessage: ''),
+        (state as CourseSuccess).copyWith(
+          isDeleting: true,
+          deleteErrorMessage: '',
+        ),
       );
 
       final result = await courseRepository.deleteCourses(id);
@@ -210,10 +237,12 @@ class CourseCubit extends Cubit<CourseState> {
   Future<void> updateCourse({required String id, String? categoryId}) async {
     if (state is! CourseSuccess) return;
     final current = state as CourseSuccess;
-    emit(current.copyWith(
-      actionMethod: ActionMethod.updating,
-      routeName: AppRouter.editCourse,
-    ));
+    emit(
+      current.copyWith(
+        actionMethod: ActionMethod.updating,
+        routeName: AppRouter.editCourse,
+      ),
+    );
 
     try {
       final jsonData = UpdateCourseRequest(
@@ -240,18 +269,18 @@ class CourseCubit extends Cubit<CourseState> {
       );
       clearField();
     } catch (e) {
-      emit(current.copyWith(
-        actionMethod: ActionMethod.notUpdated,
-        routeName: AppRouter.editCourse,
-        message: e.toString(),
-      ));
+      emit(
+        current.copyWith(
+          actionMethod: ActionMethod.notUpdated,
+          routeName: AppRouter.editCourse,
+          message: e.toString(),
+        ),
+      );
     }
   }
 
-// 41c59c61-46a6-43eb-995d-8978dc667e07
-  Future<void> updateCourseOld({
-    required String id,
-  }) async {
+  // 41c59c61-46a6-43eb-995d-8978dc667e07
+  Future<void> updateCourseOld({required String id}) async {
     if (state is! CourseSuccess) return;
     try {
       emit(
@@ -435,26 +464,32 @@ class CourseCubit extends Cubit<CourseState> {
         isPreview: isPreview,
         isFree: isFree,
       );
-      emit(current.copyWith(
-        actionMethod: ActionMethod.creating,
-        routeName: AppRouter.createCourseContent,
-      ));
+      emit(
+        current.copyWith(
+          actionMethod: ActionMethod.creating,
+          routeName: AppRouter.createCourseContent,
+        ),
+      );
 
       final result = await courseRepository.createCourseContent(courseContent);
 
-      emit(current.copyWith(
-        actionMethod: ActionMethod.created,
-        routeName: AppRouter.createCourseContent,
-        message: result,
-      ));
+      emit(
+        current.copyWith(
+          actionMethod: ActionMethod.created,
+          routeName: AppRouter.createCourseContent,
+          message: result,
+        ),
+      );
 
       clearField();
     } catch (e) {
-      emit(current.copyWith(
-        actionMethod: ActionMethod.notCreated,
-        routeName: AppRouter.createCourseContent,
-        message: e.toString(),
-      ));
+      emit(
+        current.copyWith(
+          actionMethod: ActionMethod.notCreated,
+          routeName: AppRouter.createCourseContent,
+          message: e.toString(),
+        ),
+      );
     }
   }
 
@@ -462,31 +497,41 @@ class CourseCubit extends Cubit<CourseState> {
     if (state is! CourseSuccess) return;
     final current = state as CourseSuccess;
     try {
-      emit(current.copyWith(
-        actionMethod: ActionMethod.fetching,
-        routeName: AppRouter.createCourseContent,
-      ));
+      emit(
+        current.copyWith(
+          actionMethod: ActionMethod.fetching,
+          routeName: AppRouter.createCourseContent,
+        ),
+      );
 
       final result = await courseRepository.checkEmbeded(videoUrl);
 
-      emit(current.copyWith(
-        isVideoEmbeddable: result,
-        actionMethod: ActionMethod.fetched,
-        routeName: AppRouter.createCourseContent,
-      ));
+      emit(
+        current.copyWith(
+          isVideoEmbeddable: result,
+          actionMethod: ActionMethod.fetched,
+          routeName: AppRouter.createCourseContent,
+        ),
+      );
     } catch (e) {
-      emit(current.copyWith(
-        actionMethod: ActionMethod.fetched,
-        routeName: AppRouter.createCourseContent,
-      ));
+      emit(
+        current.copyWith(
+          actionMethod: ActionMethod.fetched,
+          routeName: AppRouter.createCourseContent,
+        ),
+      );
     }
   }
 
   void resetState() {
     if (state is! CourseSuccess) return;
     final current = state as CourseSuccess;
-    emit(CourseSuccess(
-        courses: current.courses, isMenuExpanded: current.isMenuExpanded));
+    emit(
+      CourseSuccess(
+        courses: current.courses,
+        isMenuExpanded: current.isMenuExpanded,
+      ),
+    );
   }
 
   Future<File?> getImageFile() async {
@@ -570,8 +615,9 @@ class CourseCubit extends Cubit<CourseState> {
   Future<void> loadCoursesAndCategories() async {
     try {
       if (!isClosed) {
-        emit(const CourseLoading(
-            actionType: CourseActionType.getCourseCategory));
+        emit(
+          const CourseLoading(actionType: CourseActionType.getCourseCategory),
+        );
       }
 
       final categories = await courseRepository.fetchAll<CourseCategoryModel>(
@@ -599,7 +645,8 @@ class CourseCubit extends Cubit<CourseState> {
       }
 
       for (final course in courses) {
-        final hasCategory = course.categoryNames.isNotEmpty &&
+        final hasCategory =
+            course.categoryNames.isNotEmpty &&
             course.categoryNames.any(
               (catName) =>
                   categories.map((cat) => cat.categoryName).contains(catName),
@@ -618,11 +665,12 @@ class CourseCubit extends Cubit<CourseState> {
       if (!isClosed) {
         emit(
           CourseSuccess(
-              courses: const [],
-              isMenuExpanded: const {},
-              categorizedCourses: categorized,
-              uncategorizedCourses: uncategorized,
-              actionType: CourseActionType.getCourseCategory),
+            courses: const [],
+            isMenuExpanded: const {},
+            categorizedCourses: categorized,
+            uncategorizedCourses: uncategorized,
+            actionType: CourseActionType.getCourseCategory,
+          ),
         );
         if (state is CourseSuccess) {
           successState = state as CourseSuccess;
@@ -630,8 +678,12 @@ class CourseCubit extends Cubit<CourseState> {
       }
     } catch (e) {
       if (!isClosed) {
-        emit(CourseFailure(e.toString(),
-            actionType: CourseActionType.getCourseCategory));
+        emit(
+          CourseFailure(
+            e.toString(),
+            actionType: CourseActionType.getCourseCategory,
+          ),
+        );
       }
     }
   }
@@ -642,10 +694,12 @@ class CourseCubit extends Cubit<CourseState> {
   }) async {
     if (state is! CourseSuccess) return;
     final current = state as CourseSuccess;
-    emit(current.copyWith(
-      actionMethod: ActionMethod.creating,
-      routeName: AppRouter.courseCategorySettings,
-    ));
+    emit(
+      current.copyWith(
+        actionMethod: ActionMethod.creating,
+        routeName: AppRouter.courseCategorySettings,
+      ),
+    );
 
     try {
       final model = CourseCategoryModel(
@@ -660,27 +714,33 @@ class CourseCubit extends Cubit<CourseState> {
         fromJson: CourseCategoryModel.fromJson,
       );
 
-      emit(current.copyWith(
-        actionMethod: ActionMethod.created,
-        routeName: AppRouter.courseCategorySettings,
-        message: result,
-      ));
+      emit(
+        current.copyWith(
+          actionMethod: ActionMethod.created,
+          routeName: AppRouter.courseCategorySettings,
+          message: result,
+        ),
+      );
     } catch (e) {
-      emit(current.copyWith(
-        actionMethod: ActionMethod.notCreated,
-        routeName: AppRouter.courseCategorySettings,
-        message: e.toString(),
-      ));
+      emit(
+        current.copyWith(
+          actionMethod: ActionMethod.notCreated,
+          routeName: AppRouter.courseCategorySettings,
+          message: e.toString(),
+        ),
+      );
     }
   }
 
   Future<void> deleteCourseCategory(String id) async {
     if (state is! CourseSuccess) return;
     final current = state as CourseSuccess;
-    emit(current.copyWith(
-      actionMethod: ActionMethod.deleting,
-      routeName: AppRouter.courseCategorySettings,
-    ));
+    emit(
+      current.copyWith(
+        actionMethod: ActionMethod.deleting,
+        routeName: AppRouter.courseCategorySettings,
+      ),
+    );
 
     try {
       final result = await courseRepository.delete<CourseCategoryModel>(
@@ -689,17 +749,21 @@ class CourseCubit extends Cubit<CourseState> {
         fromJson: CourseCategoryModel.fromJson,
       );
 
-      emit(current.copyWith(
-        actionMethod: ActionMethod.deleted,
-        routeName: AppRouter.courseCategorySettings,
-        message: result,
-      ));
+      emit(
+        current.copyWith(
+          actionMethod: ActionMethod.deleted,
+          routeName: AppRouter.courseCategorySettings,
+          message: result,
+        ),
+      );
     } catch (e) {
-      emit(current.copyWith(
-        actionMethod: ActionMethod.notDeleted,
-        routeName: AppRouter.courseCategorySettings,
-        message: e.toString(),
-      ));
+      emit(
+        current.copyWith(
+          actionMethod: ActionMethod.notDeleted,
+          routeName: AppRouter.courseCategorySettings,
+          message: e.toString(),
+        ),
+      );
     }
   }
 
@@ -708,10 +772,12 @@ class CourseCubit extends Cubit<CourseState> {
     final current = state as CourseSuccess;
 
     try {
-      emit(current.copyWith(
-        actionMethod: ActionMethod.fetching,
-        routeName: AppRouter.editCourse,
-      ));
+      emit(
+        current.copyWith(
+          actionMethod: ActionMethod.fetching,
+          routeName: AppRouter.editCourse,
+        ),
+      );
 
       final result = await courseRepository.fetchAll<CourseCategoryModel>(
         endPoint: 'CourseCategory/GetAllAsQueryable',
@@ -744,10 +810,12 @@ class CourseCubit extends Cubit<CourseState> {
   }) async {
     if (state is! CourseSuccess) return;
     final current = state as CourseSuccess;
-    emit(current.copyWith(
-      actionMethod: ActionMethod.creating,
-      routeName: AppRouter.courseCategorySettings,
-    ));
+    emit(
+      current.copyWith(
+        actionMethod: ActionMethod.creating,
+        routeName: AppRouter.courseCategorySettings,
+      ),
+    );
 
     try {
       final model = CourseTagModel(
@@ -761,17 +829,21 @@ class CourseCubit extends Cubit<CourseState> {
         fromJson: CourseTagModel.fromJson,
       );
 
-      emit(current.copyWith(
-        actionMethod: ActionMethod.created,
-        routeName: AppRouter.courseCategorySettings,
-        message: result,
-      ));
+      emit(
+        current.copyWith(
+          actionMethod: ActionMethod.created,
+          routeName: AppRouter.courseCategorySettings,
+          message: result,
+        ),
+      );
     } catch (e) {
-      emit(current.copyWith(
-        actionMethod: ActionMethod.notCreated,
-        routeName: AppRouter.courseCategorySettings,
-        message: e.toString(),
-      ));
+      emit(
+        current.copyWith(
+          actionMethod: ActionMethod.notCreated,
+          routeName: AppRouter.courseCategorySettings,
+          message: e.toString(),
+        ),
+      );
     }
   }
 
@@ -783,10 +855,12 @@ class CourseCubit extends Cubit<CourseState> {
   }) async {
     if (state is! CourseSuccess) return;
     final current = state as CourseSuccess;
-    emit(current.copyWith(
-      actionMethod: ActionMethod.creating,
-      routeName: AppRouter.courseDetails,
-    ));
+    emit(
+      current.copyWith(
+        actionMethod: ActionMethod.creating,
+        routeName: AppRouter.courseDetails,
+      ),
+    );
 
     try {
       final jsonData = <String, dynamic>{
@@ -800,25 +874,32 @@ class CourseCubit extends Cubit<CourseState> {
         fromJson: CourseEnrollmentModel.fromJson,
       );
 
-      emit(current.copyWith(
-        actionMethod: ActionMethod.created,
-        routeName: AppRouter.courseDetails,
-        message: result,
-      ));
+      emit(
+        current.copyWith(
+          actionMethod: ActionMethod.created,
+          routeName: AppRouter.courseDetails,
+          message: result,
+        ),
+      );
 
       unawaited(
-          fetchCourseEnrollment(courseId: courseId, studentId: studentId));
+        fetchCourseEnrollment(courseId: courseId, studentId: studentId),
+      );
     } catch (e) {
-      emit(current.copyWith(
-        actionMethod: ActionMethod.notCreated,
-        routeName: AppRouter.courseDetails,
-        message: e.toString(),
-      ));
+      emit(
+        current.copyWith(
+          actionMethod: ActionMethod.notCreated,
+          routeName: AppRouter.courseDetails,
+          message: e.toString(),
+        ),
+      );
     }
   }
 
-  void checkState(
-      {List<CourseModel>? courses, List<CourseModel>? categorizedCourses}) {
+  void checkState({
+    List<CourseModel>? courses,
+    List<CourseModel>? categorizedCourses,
+  }) {
     if (state is! CourseSuccess) {
       emit(CourseSuccess(courses: courses ?? [], isMenuExpanded: const {}));
     } else {
@@ -839,18 +920,21 @@ class CourseCubit extends Cubit<CourseState> {
     try {
       const endPoint = 'CourseEnrollment/GetOData/odata';
 
-      final queryBuilder =
-          ODataQueryBuilder(baseUrl: '${ApiService.baseUrlAddress}/$endPoint');
+      final queryBuilder = ODataQueryBuilder(
+        baseUrl: '${ApiService.baseUrlAddress}/$endPoint',
+      );
 
       final uri = queryBuilder
           .filter('studentId eq $studentId and courseId eq $courseId')
           .build();
 
       if (!isClosed) {
-        emit(current.copyWith(
-          actionMethod: ActionMethod.fetching,
-          routeName: AppRouter.courseDetails,
-        ));
+        emit(
+          current.copyWith(
+            actionMethod: ActionMethod.fetching,
+            routeName: AppRouter.courseDetails,
+          ),
+        );
       }
 
       final result = await courseRepository.fetchOdata<CourseEnrollmentModel>(
@@ -859,11 +943,13 @@ class CourseCubit extends Cubit<CourseState> {
       );
 
       if (!isClosed) {
-        emit(current.copyWith(
-          actionMethod: ActionMethod.fetched,
-          routeName: AppRouter.courseDetails,
-          courseEnrollment: result.first,
-        ));
+        emit(
+          current.copyWith(
+            actionMethod: ActionMethod.fetched,
+            routeName: AppRouter.courseDetails,
+            courseEnrollment: result.first,
+          ),
+        );
       }
 
       // if (searchId == _currentSearchId) {
@@ -871,11 +957,13 @@ class CourseCubit extends Cubit<CourseState> {
       // }
     } catch (e) {
       if (!isClosed) {
-        emit(current.copyWith(
-          actionMethod: ActionMethod.notFetched,
-          routeName: AppRouter.courseDetails,
-          message: e.toString(),
-        ));
+        emit(
+          current.copyWith(
+            actionMethod: ActionMethod.notFetched,
+            routeName: AppRouter.courseDetails,
+            message: e.toString(),
+          ),
+        );
       }
     }
   }
@@ -883,10 +971,12 @@ class CourseCubit extends Cubit<CourseState> {
   void resetRoute() {
     if (state is! CourseSuccess) return;
     final current = state as CourseSuccess;
-    emit(current.copyWith(
-      actionMethod: ActionMethod.initial,
-      routeName: AppRouter.course,
-      message: '',
-    ));
+    emit(
+      current.copyWith(
+        actionMethod: ActionMethod.initial,
+        routeName: AppRouter.course,
+        message: '',
+      ),
+    );
   }
 }

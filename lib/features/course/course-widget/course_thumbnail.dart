@@ -1,6 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:template/features/presentation/utilities-class/mev_tech_utilities.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:forui/assets.dart';
+import 'package:mevtech/features/presentation/utilities-class/mev_tech_utilities.dart';
 
 class CourseThumbnail extends StatelessWidget {
   const CourseThumbnail({
@@ -25,27 +27,24 @@ class CourseThumbnail extends StatelessWidget {
       width: width,
       height: height,
       fit: fit,
-      placeholder: (context, url) => const Center(
-        child: CircularProgressIndicator(strokeWidth: 2),
-      ),
+      placeholder: (context, url) =>
+          const Center(child: CircularProgressIndicator(strokeWidth: 2)),
       errorWidget: (context, error, stackTrace) => CachedNetworkImage(
         imageUrl: 'https://img.youtube.com/vi/$videoId/hqdefault.jpg',
         width: width,
         height: height,
         fit: fit,
-        placeholder: (context, url) => const Center(
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
+        placeholder: (context, url) =>
+            const Center(child: CircularProgressIndicator(strokeWidth: 2)),
         errorWidget: (context, error, stackTrace) => CachedNetworkImage(
           imageUrl: 'https://img.youtube.com/vi/$videoId/default.jpg',
           width: width,
           height: height,
           fit: fit,
-          placeholder: (context, url) => const Center(
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
+          placeholder: (context, url) =>
+              Center(child: MevTechUtilities.customLoader(scale: 1.5)),
           errorWidget: (context, error, stackTrace) =>
-              const Icon(Icons.broken_image, size: 40),
+              Icon(FIcons.imageOff, color: Colors.red, size: 25.sp),
         ),
       ),
     );

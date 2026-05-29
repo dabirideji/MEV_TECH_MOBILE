@@ -5,12 +5,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:template/app/router/app_router.dart';
-import 'package:template/core/utils/colors.dart';
-import 'package:template/features/course/course-widget/dropdown_btn.dart';
-import 'package:template/features/course/logic/course-cubit/course_cubit.dart';
-import 'package:template/features/presentation/utilities-class/form_validator.dart';
-import 'package:template/features/presentation/utilities-class/mev_tech_utilities.dart';
+import 'package:mevtech/app/router/app_router.dart';
+import 'package:mevtech/core/utils/colors.dart';
+import 'package:mevtech/features/course/course-widget/dropdown_btn.dart';
+import 'package:mevtech/features/course/logic/course-cubit/course_cubit.dart';
+import 'package:mevtech/features/presentation/utilities-class/form_validator.dart';
+import 'package:mevtech/features/presentation/utilities-class/mev_tech_utilities.dart';
 
 class CreateCourseContentPage extends StatefulWidget {
   const CreateCourseContentPage({required this.courseId, super.key});

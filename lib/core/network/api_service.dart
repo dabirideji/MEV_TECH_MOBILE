@@ -2,21 +2,20 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
-import 'package:flutter/material.dart';
+
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:injectable/injectable.dart';
+import 'package:mevtech/core/error/failure_response.dart';
+import 'package:mevtech/core/storages/local_storages.dart';
+import 'package:mevtech/core/utils/constants.dart';
+import 'package:mevtech/data/connection_checker.dart';
+import 'package:mevtech/features/chat/data/models/chat_message_model.dart';
+import 'package:mevtech/features/course/data/models/course-content-models/course_content_request.dart';
+import 'package:mevtech/features/course/data/models/course-models/course_request.dart';
+import 'package:mevtech/features/presentation/utilities-class/mev_tech_utilities.dart';
 import 'package:path/path.dart';
-import 'package:path/path.dart' as path;
-import 'package:template/core/error/failure_response.dart';
-import 'package:template/core/storages/local_storages.dart';
-import 'package:template/core/utils/constants.dart';
-import 'package:template/data/connection_checker.dart';
-import 'package:template/features/chat/data/models/chat_message_model.dart';
-import 'package:template/features/course/data/models/course-content-models/course_content_request.dart';
-import 'package:template/features/course/data/models/course-models/course_request.dart';
-import 'package:template/features/presentation/utilities-class/mev_tech_utilities.dart';
 
 @singleton
 class ApiService {
@@ -27,14 +26,100 @@ class ApiService {
   // final http.Client client;
   final LocalStorage localStorage;
 
-  static const baseUrlAddress = 'https://mev-tech-api.onrender.com/api';
-  // 'https://dev-api.virtual360mevtech.com/api';
+  // static const baseUrlAddress = 'https://mev-tech-api.onrender.com';
+  // static const baseUrlAddress = 'https://dev-api.virtual360mevtech.com';
 
-// switch back to this  // 'https://dev-api.virtual360mevtech.com/api';
-  // 'https://mev-tech-api.onrender.com/api';
-  // 'http://dev-api.virtual360mevtech.com/api'
+  //   dev server : https://dev-api.virtual360mevtech.com/swagger
+  // production server : api.virtual360mevtech.com/swagger
+
+  static String baseUrlAddress = 'https://dev-api.virtual360mevtech.com';
+  // static String baseUrlAddress =
+  //     'https://api.virtual360mevtech.com'; // production
+  // static const baseUrlAddress =
+  //     'https://staging-api.virtual360mevtech.com'; // staging-api
+
+  // switch back to this  // 'https://dev-api.virtual360mevtech.com';
+  // 'https://mev-tech-api.onrender.com';
+  // 'http://dev-api.virtual360mevtech.com'
   // https://mev-tech-temp.codeweborganization.com.ng/swagger/index.html
   // static const authKey = ''; https://dev-api.virtual360mevtech.com
+
+  static String getBaseUrlAddress() {
+    const currentFlavor = String.fromEnvironment('FLAVOR');
+    switch (currentFlavor) {
+      case 'production':
+        return 'https://api.virtual360mevtech.com';
+      case 'staging':
+        return 'https://staging-api.virtual360mevtech.com';
+      case 'development':
+        return 'https://dev-api.virtual360mevtech.com';
+      default:
+        return 'https://api.virtual360mevtech.com';
+    }
+  }
+
+  Future<dynamic> testPostJson(
+    String progLink, {
+    Map<String, dynamic>? queryParameters,
+    bool authRequired = true,
+  }) async {
+    try {
+      final hasInternet = await InternetCheck.connectionStatus();
+
+      if (!hasInternet) {
+        return 'Check your Internet Connection';
+      }
+
+      final accessToken = await localStorage.getApiKey();
+
+      final url = Uri.parse(
+        '$baseUrlAddress/api/$progLink',
+      ).replace(queryParameters: queryParameters);
+
+      final headers = <String, String>{
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer ${accessToken ?? MevTechUtilities.authKey}',
+      };
+
+      final headers2 = <String, String>{
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      };
+
+      var response = await http
+          .post(url, headers: authRequired ? headers : headers2)
+          .timeout(const Duration(seconds: 45));
+
+      // log(response.body);
+
+      if (response.statusCode == 400 && authRequired) {
+        final refreshed = await refreshTokenRequest();
+        if (refreshed == null) return 'Session expired. Please login again.';
+
+        final newToken = await localStorage.getApiKey();
+        final retryHeaders = {...headers, 'Authorization': 'Bearer $newToken'};
+
+        response = await http
+            .post(url, headers: retryHeaders)
+            .timeout(const Duration(seconds: 45));
+      }
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      }
+      // else if (response.statusCode == 301) {
+      //   return mockData();
+      // }
+      else {
+        return handleError(response);
+      }
+    } on TimeoutException {
+      return 'Request timed out. Please try again.';
+    } catch (e) {
+      return returnedError(e);
+    }
+  }
 
   Future<dynamic> postJsonRequest(
     Map<String, dynamic> jsonData,
@@ -50,7 +135,7 @@ class ApiService {
 
       final accessToken = await localStorage.getApiKey();
 
-      final url = Uri.parse('$baseUrlAddress/$progLink');
+      final url = Uri.parse('$baseUrlAddress/api/$progLink');
 
       final headers = <String, String>{
         'Content-Type': 'application/json',
@@ -69,7 +154,7 @@ class ApiService {
             headers: authRequired ? headers : headers2,
             body: json.encode(jsonData),
           )
-          .timeout(const Duration(seconds: 25));
+          .timeout(const Duration(seconds: 45));
 
       // log(response.body);
 
@@ -78,18 +163,11 @@ class ApiService {
         if (refreshed == null) return 'Session expired. Please login again.';
 
         final newToken = await localStorage.getApiKey();
-        final retryHeaders = {
-          ...headers,
-          'Authorization': 'Bearer $newToken',
-        };
+        final retryHeaders = {...headers, 'Authorization': 'Bearer $newToken'};
 
         response = await http
-            .post(
-              url,
-              headers: retryHeaders,
-              body: json.encode(jsonData),
-            )
-            .timeout(const Duration(seconds: 25));
+            .post(url, headers: retryHeaders, body: json.encode(jsonData))
+            .timeout(const Duration(seconds: 45));
       }
 
       if (response.statusCode == 200) {
@@ -104,7 +182,7 @@ class ApiService {
     } on TimeoutException {
       return 'Request timed out. Please try again.';
     } catch (e) {
-      return e.toString();
+      return returnedError(e);
     }
   }
 
@@ -113,6 +191,7 @@ class ApiService {
     bool authRequired = true,
     Map<String, dynamic>? queryParams,
     String token = '',
+    int timeOut = 25,
   }) async {
     try {
       final hasInternet = await InternetCheck.connectionStatus();
@@ -123,8 +202,9 @@ class ApiService {
 
       final accessToken = await localStorage.getApiKey();
 
-      final url = Uri.parse('$baseUrlAddress/$progLink')
-          .replace(queryParameters: queryParams);
+      final url = Uri.parse(
+        '$baseUrlAddress/api/$progLink',
+      ).replace(queryParameters: queryParams);
       final headers = <String, String>{
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -140,11 +220,8 @@ class ApiService {
       // log(url.toString());
 
       var response = await http
-          .get(
-            url,
-            headers: headers,
-          )
-          .timeout(const Duration(seconds: 25));
+          .get(url, headers: headers)
+          .timeout(const Duration(seconds: 45));
 
       // final jsonTestData = json.encode(jsonData);
 
@@ -162,11 +239,8 @@ class ApiService {
           };
 
           response = await http
-              .get(
-                url,
-                headers: retryHeaders,
-              )
-              .timeout(const Duration(seconds: 25));
+              .get(url, headers: retryHeaders)
+              .timeout(Duration(seconds: timeOut));
         } else {
           return json.decode(response.body);
         }
@@ -180,7 +254,7 @@ class ApiService {
     } on TimeoutException {
       return 'Request timed out. Please try again.';
     } catch (e) {
-      return e.toString();
+      return returnedError(e);
     }
   }
 
@@ -199,8 +273,9 @@ class ApiService {
 
       final accessToken = await localStorage.getApiKey();
 
-      final url = Uri.parse('$baseUrlAddress/$progLink')
-          .replace(queryParameters: queryParams);
+      final url = Uri.parse(
+        '$baseUrlAddress/api/$progLink',
+      ).replace(queryParameters: queryParams);
       final headers = <String, String>{
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -216,11 +291,8 @@ class ApiService {
       // log(url.toString());
 
       var response = await http
-          .patch(
-            url,
-            headers: headers,
-          )
-          .timeout(const Duration(seconds: 25));
+          .patch(url, headers: headers)
+          .timeout(const Duration(seconds: 45));
 
       // final jsonTestData = json.encode(jsonData);
 
@@ -238,11 +310,8 @@ class ApiService {
           };
 
           response = await http
-              .get(
-                url,
-                headers: retryHeaders,
-              )
-              .timeout(const Duration(seconds: 25));
+              .get(url, headers: retryHeaders)
+              .timeout(const Duration(seconds: 45));
         } else {
           return json.decode(response.body);
         }
@@ -256,7 +325,7 @@ class ApiService {
     } on TimeoutException {
       return 'Request timed out. Please try again.';
     } catch (e) {
-      return e.toString();
+      return returnedError(e);
     }
   }
 
@@ -274,7 +343,7 @@ class ApiService {
 
       final accessToken = await localStorage.getApiKey();
 
-      final url = Uri.parse('$baseUrlAddress/$progLink');
+      final url = Uri.parse('$baseUrlAddress/api/$progLink');
       final headers = <String, String>{
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -283,11 +352,8 @@ class ApiService {
       };
 
       var response = await http
-          .get(
-            url,
-            headers: headers,
-          )
-          .timeout(const Duration(seconds: 25));
+          .get(url, headers: headers)
+          .timeout(const Duration(seconds: 45));
 
       if (response.statusCode == 400 && authRequired) {
         final responseCode = handleNotFoundError(response);
@@ -303,11 +369,8 @@ class ApiService {
           };
 
           response = await http
-              .get(
-                url,
-                headers: retryHeaders,
-              )
-              .timeout(const Duration(seconds: 25));
+              .get(url, headers: retryHeaders)
+              .timeout(const Duration(seconds: 45));
         } else {
           return json.decode(response.body);
         }
@@ -321,7 +384,7 @@ class ApiService {
     } on TimeoutException {
       return 'Request timed out. Please try again.';
     } catch (e) {
-      return e.toString();
+      return returnedError(e);
     }
   }
 
@@ -340,12 +403,13 @@ class ApiService {
       if (authRequired && token != null) 'Authorization': 'Bearer $token',
     };
 
-    Uri url = Uri.parse('$baseUrlAddress/$progLink')
-        .replace(queryParameters: queryParams);
+    Uri url = Uri.parse(
+      '$baseUrlAddress/api/$progLink',
+    ).replace(queryParameters: queryParams);
 
     http.Response response = await http
         .get(url, headers: headers)
-        .timeout(const Duration(seconds: 25));
+        .timeout(const Duration(seconds: 45));
 
     if (response.statusCode == 401 && authRequired) {
       // Access token expired, try to refresh
@@ -354,13 +418,10 @@ class ApiService {
       //await refreshTokenRequest(refreshToken ?? '');
       if (newToken != null) {
         // Retry the request with new token
-        final retryHeaders = {
-          ...headers,
-          'Authorization': 'Bearer $newToken',
-        };
+        final retryHeaders = {...headers, 'Authorization': 'Bearer $newToken'};
         response = await http
             .get(url, headers: retryHeaders)
-            .timeout(const Duration(seconds: 25));
+            .timeout(const Duration(seconds: 45));
       } else {
         return 'Session expired. Please login again.';
       }
@@ -386,7 +447,7 @@ class ApiService {
 
       final accessToken = await localStorage.getApiKey();
 
-      final url = Uri.parse('$baseUrlAddress/$progLink');
+      final url = Uri.parse('$baseUrlAddress/api/$progLink');
 
       final headers = <String, String>{
         'Content-Type': 'application/json',
@@ -395,32 +456,19 @@ class ApiService {
       };
 
       var response = await http
-          .put(
-            url,
-            headers: headers,
-            body: json.encode(jsonData),
-          )
-          .timeout(
-            const Duration(seconds: 25),
-          );
+          .put(url, headers: headers, body: json.encode(jsonData))
+          .timeout(const Duration(seconds: 45));
 
       if (response.statusCode == 400) {
         final refreshed = await refreshTokenRequest();
         if (refreshed == null) return 'Session expired. Please login again.';
 
         final newToken = await localStorage.getApiKey();
-        final retryHeaders = {
-          ...headers,
-          'Authorization': 'Bearer $newToken',
-        };
+        final retryHeaders = {...headers, 'Authorization': 'Bearer $newToken'};
 
         response = await http
-            .put(
-              url,
-              headers: retryHeaders,
-              body: json.encode(jsonData),
-            )
-            .timeout(const Duration(seconds: 25));
+            .put(url, headers: retryHeaders, body: json.encode(jsonData))
+            .timeout(const Duration(seconds: 45));
       }
 
       // log(response.body);
@@ -435,12 +483,13 @@ class ApiService {
     } on TimeoutException {
       return 'Request timed out. Please try again.';
     } catch (e) {
-      return e.toString();
+      return returnedError(e);
     }
   }
 
   Future<dynamic> deleteJsonRequest(
     String progLink, {
+    Map<String, dynamic>? queryParams,
     bool authRequired = true,
   }) async {
     try {
@@ -452,7 +501,9 @@ class ApiService {
 
       final accessToken = await localStorage.getApiKey();
 
-      final url = Uri.parse('$baseUrlAddress/$progLink');
+      final url = Uri.parse(
+        '$baseUrlAddress/api/$progLink',
+      ).replace(queryParameters: queryParams);
       final headers = <String, String>{
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -468,28 +519,19 @@ class ApiService {
       // log(headers.toString());
 
       var response = await http
-          .delete(
-            url,
-            headers: authRequired ? headers : headers2,
-          )
-          .timeout(const Duration(seconds: 25));
+          .delete(url, headers: authRequired ? headers : headers2)
+          .timeout(const Duration(seconds: 45));
 
       if (response.statusCode == 400 && authRequired) {
         final refreshed = await refreshTokenRequest();
         if (refreshed == null) return 'Session expired. Please login again.';
 
         final newToken = await localStorage.getApiKey();
-        final retryHeaders = {
-          ...headers,
-          'Authorization': 'Bearer $newToken',
-        };
+        final retryHeaders = {...headers, 'Authorization': 'Bearer $newToken'};
 
         response = await http
-            .delete(
-              url,
-              headers: retryHeaders,
-            )
-            .timeout(const Duration(seconds: 25));
+            .delete(url, headers: retryHeaders)
+            .timeout(const Duration(seconds: 45));
       }
 
       // final jsonTestData = json.encode(jsonData);
@@ -497,17 +539,14 @@ class ApiService {
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else if (response.statusCode == 204) {
-        return {
-          'status': true,
-          'responseMessage': 'Request was successful.',
-        };
+        return {'status': true, 'responseMessage': 'Request was successful.'};
       } else {
         return handleError(response);
       }
     } on TimeoutException {
       return 'Request timed out. Please try again.';
     } catch (e) {
-      return e.toString();
+      return returnedError(e);
     }
   }
 
@@ -525,7 +564,7 @@ class ApiService {
 
       final accessToken = await localStorage.getApiKey();
 
-      // final url = Uri.parse('$baseUrlAddress/$progLink');
+      // final url = Uri.parse('$baseUrlAddress/api/$progLink');
       final headers = <String, String>{
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -540,28 +579,19 @@ class ApiService {
       // log(url.toString());
 
       var response = await http
-          .get(
-            url,
-            headers: authRequired ? headers : headers2,
-          )
-          .timeout(const Duration(seconds: 25));
+          .get(url, headers: authRequired ? headers : headers2)
+          .timeout(const Duration(seconds: 45));
 
       if (response.statusCode == 400 && authRequired) {
         final refreshed = await refreshTokenRequest();
         if (refreshed == null) return 'Session expired. Please login again.';
 
         final newToken = await localStorage.getApiKey();
-        final retryHeaders = {
-          ...headers,
-          'Authorization': 'Bearer $newToken',
-        };
+        final retryHeaders = {...headers, 'Authorization': 'Bearer $newToken'};
 
         response = await http
-            .get(
-              url,
-              headers: retryHeaders,
-            )
-            .timeout(const Duration(seconds: 25));
+            .get(url, headers: retryHeaders)
+            .timeout(const Duration(seconds: 45));
       }
 
       // final jsonTestData = json.encode(jsonData);
@@ -574,12 +604,14 @@ class ApiService {
     } on TimeoutException {
       return 'Request timed out. Please try again.';
     } catch (e) {
-      return e.toString();
+      return returnedError(e);
     }
   }
 
   Future<dynamic> multipartRequestCreate(
-      String progLink, CreateCourseRequest requestModel) async {
+    String progLink,
+    CreateCourseRequest requestModel,
+  ) async {
     try {
       final hasInternet = await InternetCheck.connectionStatus();
 
@@ -589,7 +621,7 @@ class ApiService {
 
       final accessToken = await localStorage.getApiKey();
 
-      final url = Uri.parse('$baseUrlAddress/$progLink');
+      final url = Uri.parse('$baseUrlAddress/api/$progLink');
 
       final request = http.MultipartRequest('POST', url)
         ..headers['Authorization'] =
@@ -612,8 +644,9 @@ class ApiService {
         request.fields['CourseImageUrl'] = requestModel.courseImageUrl!;
       }
 
-      final streamedResponse =
-          await request.send().timeout(const Duration(seconds: 25));
+      final streamedResponse = await request.send().timeout(
+        const Duration(seconds: 45),
+      );
 
       final response = await http.Response.fromStream(streamedResponse);
 
@@ -625,7 +658,7 @@ class ApiService {
     } on TimeoutException {
       return 'Request timed out. Please try again.';
     } catch (e) {
-      return e.toString();
+      return returnedError(e);
     }
   }
 
@@ -643,9 +676,9 @@ class ApiService {
 
       final accessToken = await localStorage.getApiKey();
 
-      final url = Uri.parse('$baseUrlAddress/$progLink').replace(
-        queryParameters: queryParams,
-      );
+      final url = Uri.parse(
+        '$baseUrlAddress/api/$progLink',
+      ).replace(queryParameters: queryParams);
 
       // log(url.toString());
 
@@ -671,8 +704,9 @@ class ApiService {
       //   request.fields['CourseImageUrl'] = requestModel.courseImageUrl!;
       // }
 
-      final streamedResponse =
-          await request.send().timeout(const Duration(seconds: 25));
+      final streamedResponse = await request.send().timeout(
+        const Duration(seconds: 45),
+      );
 
       final response = await http.Response.fromStream(streamedResponse);
       // log(response.body);
@@ -687,12 +721,14 @@ class ApiService {
     } on TimeoutException {
       return 'Request timed out. Please try again.';
     } catch (e) {
-      return e.toString();
+      return returnedError(e);
     }
   }
 
   Future<dynamic> multipartCreateCourseContent(
-      String progLink, CreateCourseContentRequest requestModel) async {
+    String progLink,
+    CreateCourseContentRequest requestModel,
+  ) async {
     try {
       final hasInternet = await InternetCheck.connectionStatus();
 
@@ -702,7 +738,7 @@ class ApiService {
 
       final accessToken = await localStorage.getApiKey();
 
-      final url = Uri.parse('$baseUrlAddress/$progLink');
+      final url = Uri.parse('$baseUrlAddress/api/$progLink');
 
       final request = http.MultipartRequest('POST', url)
         ..headers['Authorization'] =
@@ -721,8 +757,9 @@ class ApiService {
         );
       }
 
-      final streamedResponse =
-          await request.send().timeout(const Duration(seconds: 25));
+      final streamedResponse = await request.send().timeout(
+        const Duration(seconds: 45),
+      );
 
       final response = await http.Response.fromStream(streamedResponse);
 
@@ -734,7 +771,7 @@ class ApiService {
     } on TimeoutException {
       return 'Request timed out. Please try again.';
     } catch (e) {
-      return e.toString();
+      return returnedError(e);
     }
   }
 
@@ -752,7 +789,7 @@ class ApiService {
 
       final accessToken = await localStorage.getApiKey();
 
-      final url = Uri.parse('$baseUrlAddress/$progLink');
+      final url = Uri.parse('$baseUrlAddress/api/$progLink');
 
       final request = http.MultipartRequest('POST', url)
         ..headers['Authorization'] =
@@ -766,8 +803,9 @@ class ApiService {
           ),
         );
 
-      final streamedResponse =
-          await request.send().timeout(const Duration(seconds: 25));
+      final streamedResponse = await request.send().timeout(
+        const Duration(seconds: 45),
+      );
 
       final response = await http.Response.fromStream(streamedResponse);
 
@@ -779,7 +817,7 @@ class ApiService {
     } on TimeoutException {
       return 'Request timed out. Please try again.';
     } catch (e) {
-      return e.toString();
+      return returnedError(e);
     }
   }
 
@@ -792,7 +830,7 @@ class ApiService {
         throw Exception('Session expired. Please log in again.');
       }
 
-      final url = Uri.parse('$baseUrlAddress/v1/auth/refresh-token');
+      final url = Uri.parse('$baseUrlAddress/api/v1/auth/refresh-token');
 
       final response = await http
           .post(
@@ -806,7 +844,7 @@ class ApiService {
               'refreshToken': refreshToken,
             }),
           )
-          .timeout(const Duration(seconds: 25));
+          .timeout(const Duration(seconds: 45));
       // log(response.body);
 
       if (response.statusCode == 200) {
@@ -823,6 +861,7 @@ class ApiService {
             MevTechUtilities.authKey = newToken;
             if (newRefreshToken != null && newRefreshToken is String) {
               await localStorage.setApiRefreshToken(newRefreshToken);
+              MevTechUtilities.refreshToken = newRefreshToken;
             }
             return newToken;
           }
@@ -848,9 +887,7 @@ class ApiService {
       final uri = Uri.parse(redirectUri);
       final scheme = uri.scheme;
 
-      final response = await http.get(
-        url,
-      );
+      final response = await http.get(url);
 
       if (response.statusCode == 200) {
         final returnedData = json.decode(response.body) as Map<String, dynamic>;
@@ -872,7 +909,7 @@ class ApiService {
         return handleError(response);
       }
     } catch (e) {
-      return e.toString();
+      return returnedError(e);
     }
   }
 
@@ -887,7 +924,7 @@ class ApiService {
 
       final url = Uri.parse('$baseUrl$progLink');
 
-      final response = await http.get(url).timeout(const Duration(seconds: 25));
+      final response = await http.get(url).timeout(const Duration(seconds: 45));
 
       // final jsonTestData = json.encode(jsonData);
 
@@ -899,7 +936,7 @@ class ApiService {
     } on TimeoutException {
       return 'Request timed out. Please try again.';
     } catch (e) {
-      return e.toString();
+      return returnedError(e);
     }
   }
 
@@ -911,7 +948,7 @@ class ApiService {
         return 'Check your Internet Connection';
       }
 
-      final url = Uri.parse('$baseUrlAddress/$progLink');
+      final url = Uri.parse('$baseUrlAddress/api/$progLink');
 
       final request = http.MultipartRequest('POST', url)
         ..headers['Authorization'] = 'Bearer ${MevTechUtilities.authKey}'
@@ -923,8 +960,9 @@ class ApiService {
           ),
         );
 
-      final streamedResponse =
-          await request.send().timeout(const Duration(seconds: 25));
+      final streamedResponse = await request.send().timeout(
+        const Duration(seconds: 45),
+      );
 
       final response = await http.Response.fromStream(streamedResponse);
 
@@ -936,7 +974,7 @@ class ApiService {
     } on TimeoutException {
       return 'Request timed out. Please try again.';
     } catch (e) {
-      return e.toString();
+      return returnedError(e);
     }
   }
 
@@ -954,8 +992,9 @@ class ApiService {
 
       final accessToken = await localStorage.getApiKey();
 
-      final url = Uri.parse('$baseUrlAddress/$progLink')
-          .replace(queryParameters: queryParams);
+      final url = Uri.parse(
+        '$baseUrlAddress/api/$progLink',
+      ).replace(queryParameters: queryParams);
       final headers = <String, String>{
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -968,11 +1007,8 @@ class ApiService {
       };
 
       final response = await http
-          .get(
-            url,
-            headers: authRequired ? headers : headers2,
-          )
-          .timeout(const Duration(seconds: 25));
+          .get(url, headers: authRequired ? headers : headers2)
+          .timeout(const Duration(seconds: 45));
 
       // final jsonTestData = json.encode(jsonData);
 
@@ -986,11 +1022,11 @@ class ApiService {
     } on TimeoutException {
       return 'Request timed out. Please try again.';
     } catch (e) {
-      return e.toString();
+      return returnedError(e);
     }
   }
 
-// chat functionality
+  // chat functionality
 
   Future<dynamic> chatMultipartRequestCreate(
     String progLink,
@@ -1005,7 +1041,7 @@ class ApiService {
 
       final accessToken = await localStorage.getApiKey();
 
-      final url = Uri.parse('$baseUrlAddress/$progLink');
+      final url = Uri.parse('$baseUrlAddress/api/$progLink');
 
       final request = http.MultipartRequest('POST', url)
         ..headers['Authorization'] =
@@ -1025,8 +1061,9 @@ class ApiService {
         );
       }
 
-      final streamedResponse =
-          await request.send().timeout(const Duration(seconds: 25));
+      final streamedResponse = await request.send().timeout(
+        const Duration(seconds: 45),
+      );
 
       final response = await http.Response.fromStream(streamedResponse);
 
@@ -1038,29 +1075,29 @@ class ApiService {
     } on TimeoutException {
       return 'Request timed out. Please try again.';
     } catch (e) {
-      return e.toString();
+      return returnedError(e);
     }
   }
 
-// Future<File> downloadImageToFile(String imageUrl) async {
-//   final response = await http.get(Uri.parse(imageUrl));
+  // Future<File> downloadImageToFile(String imageUrl) async {
+  //   final response = await http.get(Uri.parse(imageUrl));
 
-//   if (response.statusCode == 200) {
-//     // Get temporary directory
-//     final tempDir = await getTemporaryDirectory();
+  //   if (response.statusCode == 200) {
+  //     // Get temporary directory
+  //     final tempDir = await getTemporaryDirectory();
 
-//     // Create file path
-//     final fileName = path.basename(imageUrl);
-//     final file = File('${tempDir.path}/$fileName');
+  //     // Create file path
+  //     final fileName = path.basename(imageUrl);
+  //     final file = File('${tempDir.path}/$fileName');
 
-//     // Write the bytes
-//     await file.writeAsBytes(response.bodyBytes);
+  //     // Write the bytes
+  //     await file.writeAsBytes(response.bodyBytes);
 
-//     return file;
-//   } else {
-//     throw Exception('Failed to download image');
-//   }
-// }
+  //     return file;
+  //   } else {
+  //     throw Exception('Failed to download image');
+  //   }
+  // }
 
   File? selectedImageFile;
   String? imageUrl; //
@@ -1075,32 +1112,32 @@ class ApiService {
     }
   }
 
-// When submitting:
-// Future<void> onSubmit() async {
-//   File fileToUpload;
+  // When submitting:
+  // Future<void> onSubmit() async {
+  //   File fileToUpload;
 
-//   if (selectedImageFile != null) {
-//     // User picked new image
-//     fileToUpload = selectedImageFile!;
-//   } else if (imageUrl != null) {
-//     // Use the existing network image → download it
-//     fileToUpload = await downloadImageToFile(imageUrl!);
-//   } else {
-//     throw Exception('No image selected');
-//   }
+  //   if (selectedImageFile != null) {
+  //     // User picked new image
+  //     fileToUpload = selectedImageFile!;
+  //   } else if (imageUrl != null) {
+  //     // Use the existing network image → download it
+  //     fileToUpload = await downloadImageToFile(imageUrl!);
+  //   } else {
+  //     throw Exception('No image selected');
+  //   }
 
-//   // Now upload fileToUpload to API as Multipart
-// }
+  //   // Now upload fileToUpload to API as Multipart
+  // }
 
   String getRedirectUri() {
     const currentFlavor = String.fromEnvironment('FLAVOR');
     switch (currentFlavor) {
       case 'production':
-        return 'dev.adryanev.template://auth-callback';
+        return 'com.mevtech.app://auth-callback';
       case 'staging':
-        return 'dev.adryanev.template.stg://auth-callback';
+        return 'com.mevtech.app.stg://auth-callback';
       case 'development':
-        return 'dev.adryanev.template.dev://auth-callback';
+        return 'com.mevtech.app.dev://auth-callback';
       default:
         throw Exception('Unknown or missing FLAVOR');
     }
@@ -1121,6 +1158,18 @@ class ApiService {
       final error = json.decode(response.body);
       return error;
     } catch (_) {
+      final reasonPhrase = response.reasonPhrase;
+
+      if (reasonPhrase != null &&
+          reasonPhrase.contains('Not Found') &&
+          response.statusCode == 404) {
+        return '404: Unable to find the specified remote address';
+      }
+
+      if (reasonPhrase != null && reasonPhrase.contains('Not Found')) {
+        return 'Unable to find the specified remote address';
+      }
+
       return response.reasonPhrase ?? 'An error occurred';
     }
   }
@@ -1149,7 +1198,7 @@ class ApiService {
 
       final url = Uri.parse('https://www.youtube.com/embed/$videoId');
 
-      final response = await http.get(url).timeout(const Duration(seconds: 25));
+      final response = await http.get(url).timeout(const Duration(seconds: 45));
 
       // final jsonTestData = json.encode(jsonData);
 
@@ -1161,7 +1210,7 @@ class ApiService {
     } on TimeoutException {
       return 'Request timed out. Please try again.';
     } catch (e) {
-      return e.toString();
+      return returnedError(e);
     }
   }
 
@@ -1174,9 +1223,10 @@ class ApiService {
       final videoId = MevTechUtilities.extractYoutubeId(videoUrl);
 
       final url = Uri.parse(
-          'https://www.googleapis.com/youtube/v3/videos?part=status&id=$videoId&key=$youtubeApiKey');
+        'https://www.googleapis.com/youtube/v3/videos?part=status&id=$videoId&key=$youtubeApiKey',
+      );
 
-      final response = await http.get(url).timeout(const Duration(seconds: 25));
+      final response = await http.get(url).timeout(const Duration(seconds: 45));
 
       // final jsonTestData = json.encode(jsonData);
 
@@ -1188,8 +1238,16 @@ class ApiService {
     } on TimeoutException {
       return 'Request timed out. Please try again.';
     } catch (e) {
-      return e.toString();
+      return returnedError(e);
     }
+  }
+
+  String returnedError(Object e) {
+    if (e.toString().contains(baseUrlAddress) ||
+        e.toString().contains('https://dev-api.virtual360mevtech.com')) {
+      return 'An Error has occured and unable to connect to the remote server\nPleaae check your network connection\nand try again';
+    }
+    return e.toString();
   }
 
   dynamic mockData() async {

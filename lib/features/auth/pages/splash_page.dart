@@ -2,132 +2,130 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:template/core/utils/colors.dart';
-import 'package:template/features/auth/logic/auth-cubit/auth_cubit.dart';
+import 'package:mevtech/core/utils/colors.dart';
+import 'package:mevtech/features/auth/logic/auth-cubit/auth_cubit.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 
-class SplashPage extends StatelessWidget {
+class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
 
   @override
+  State<SplashPage> createState() => _SplashPageState();
+}
+
+class _SplashPageState extends State<SplashPage> {
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (context.read<AuthCubit>().state is! AuthLoading) {
+        context.read<AuthCubit>().checkUserSession();
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthCubit, AuthState>(
-      builder: (context, state) {
-        return Scaffold(
-          backgroundColor: AppColor.primaryLight1,
-          body: Padding(
-            padding: const EdgeInsets.all(8),
-            child: Center(
+    return Scaffold(
+      backgroundColor: AppColor.primary,
+      body: BlocBuilder<AuthCubit, AuthState>(
+        builder: (context, state) {
+          if (state is AuthLoading &&
+              state.actionType == AuthActionType.sessionCheck) {
+            return Center(
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: .center,
                 children: [
-                  RichText(
-                    text: TextSpan(
-                      text: 'Mev',
-                      style: GoogleFonts.poppins(
-                        color: Colors.black54,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 25.sp,
-                        decoration: TextDecoration.overline,
-                        decorationColor: AppColor.secondary,
-                        decorationThickness: 2,
-                      ),
-                      children: [
-                        TextSpan(
-                          text: 'Tech',
-                          style: GoogleFonts.poppins(
-                            color: Colors.black,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 25.sp,
-                          ),
-                        ),
-                      ],
+                  Image.asset(
+                    'assets/splash/Splah-image.png',
+                    width: MediaQuery.sizeOf(context).width * 0.80,
+                  ),
+                  Container(
+                    width: 150,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: LinearProgressIndicator(
+                      backgroundColor: Colors.grey.shade400,
+                      color: Colors.white,
+                      // value: 0.6,
                     ),
                   ),
-                  SizedBox(height: 20.h),
-                  if (state is AuthLoading &&
-                      state.actionType == AuthActionType.sessionCheck)
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 40.w),
-                      child: LinearProgressIndicator(
-                        backgroundColor: Colors.grey.shade400,
-                        color: AppColor.primary,
-                        stopIndicatorColor: Colors.black,
-                        trackGap: 100,
-                        minHeight: 8,
-                      ),
-                    )
-                  else if (state is AuthFailure &&
-                      state.actionType == AuthActionType.sessionCheck)
-                    Column(
-                      children: [
-                        Container(
-                          padding: EdgeInsets.all(20.r),
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: Colors.grey.shade200,
-                              width: 3,
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Column(
-                            children: [
-                              Text(
-                                state.errorMessage,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.black54,
-                                ),
-                              ),
-                              SizedBox(height: 10.h),
-                              TextButton.icon(
-                                onPressed:
-                                    context.read<AuthCubit>().checkUserSession,
-                                icon: const Icon(
-                                  Icons.refresh,
-                                  color: AppColor.secondary,
-                                ),
-                                label: Text(
-                                  'Retry',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
-                                    color: AppColor.primary,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        MaterialButton(
-                          onPressed: context.read<AuthCubit>().logOut,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Back to login',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.black54,
-                                ),
-                              ),
-                              SizedBox(width: 5.w),
-                              const Icon(
-                                Icons.login,
-                                color: AppColor.secondary,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
                 ],
               ),
-            ),
-          ),
-        );
-      },
+            );
+          }
+
+          if (state is AuthFailure &&
+              state.actionType == AuthActionType.sessionCheck) {
+            return Column(
+              mainAxisAlignment: .center,
+              children: [
+                Container(
+                  margin: EdgeInsets.all(15.r),
+                  padding: EdgeInsets.all(20.r),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade200, width: 3),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        textAlign: TextAlign.center,
+                        '⚠️ ${state.errorMessage}',
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 10.h),
+                      TextButton.icon(
+                        onPressed: context.read<AuthCubit>().checkUserSession,
+                        icon: Icon(
+                          Icons.refresh,
+                          size: 25.sp,
+                          color: Colors.white,
+                        ),
+                        label: Text(
+                          'Retry',
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 20.h),
+                MaterialButton(
+                  onPressed: context.read<AuthCubit>().logOut,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Back to login',
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(width: 5.w),
+                      Icon(Icons.login, color: Colors.white, size: 30.sp),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          }
+          return const SizedBox.shrink();
+        },
+      ),
     );
   }
 }

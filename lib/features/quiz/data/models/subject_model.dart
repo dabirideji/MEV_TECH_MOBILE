@@ -9,5 +9,13 @@ class Subject {
       subjects: subjectsMap.values.map((e) => e.toString()).toList(),
     );
   }
+
+  static Map<String, dynamic> toMap(String subject) {
+    return {
+      'name': subject,
+      'updatedAt': DateTime.now().millisecondsSinceEpoch,
+    };
+  }
+
   final List<String> subjects;
 }

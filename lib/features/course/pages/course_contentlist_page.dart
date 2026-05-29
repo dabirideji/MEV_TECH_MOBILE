@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:template/app/router/app_router.dart';
-import 'package:template/core/utils/colors.dart';
-import 'package:template/features/course/course-widget/course_card.dart';
-import 'package:template/features/course/course-widget/youtube_video_card.dart';
-import 'package:template/features/course/data/models/course-content-models/course_video_model.dart';
-import 'package:template/features/course/logic/course-content-cubit/course_content_cubit.dart';
-import 'package:template/features/presentation/utilities-class/mev_tech_utilities.dart';
+import 'package:mevtech/app/router/app_router.dart';
+import 'package:mevtech/core/utils/colors.dart';
+import 'package:mevtech/features/course/course-widget/course_card.dart';
+import 'package:mevtech/features/course/course-widget/youtube_video_card.dart';
+import 'package:mevtech/features/course/data/models/course-content-models/course_video_model.dart';
+import 'package:mevtech/features/course/logic/course-content-cubit/course_content_cubit.dart';
+import 'package:mevtech/features/presentation/utilities-class/mev_tech_utilities.dart';
 
 class CourseContentlistPage extends StatefulWidget {
   const CourseContentlistPage({required this.courseId, super.key});
@@ -70,15 +70,17 @@ class _CourseContentlistPageState extends State<CourseContentlistPage> {
           if (state is CourseContentSuccess && state.status.isDeleteFailure) {
             MevTechUtilities.hideProgressIndicator(context);
             MevTechUtilities.errorToast(
-                context, state.status.error ?? 'unable to complete action');
+              context,
+              state.status.error ?? 'unable to complete action',
+            );
           }
 
           if (state is CourseContentSuccess && state.status.isDeleteSuccess) {
             MevTechUtilities.hideProgressIndicator(context);
             MevTechUtilities.successToast(context, 'Succesfully deleted');
-            context
-                .read<CourseContentCubit>()
-                .fetchCourseContent(widget.courseId);
+            context.read<CourseContentCubit>().fetchCourseContent(
+              widget.courseId,
+            );
           }
         },
         builder: (context, state) {
@@ -87,22 +89,19 @@ class _CourseContentlistPageState extends State<CourseContentlistPage> {
               child: CourseContentListCard(
                 courseContents: state.courseContentModel,
                 onTap: (id) {
-                  context.pushNamed(
-                    AppRouter.courseContent,
-                    extra: id,
-                  );
+                  context.pushNamed(AppRouter.courseContent, extra: id);
                 },
                 onLongPress: (id) {
                   MevTechUtilities.showAnimatedAlert(
-                      context: context,
-                      message:
-                          'Are you sure you want to delete the selected course content?',
-                      onConfirm: () {
-                        context.pop();
-                        context
-                            .read<CourseContentCubit>()
-                            .deleteCourseContent(id);
-                      });
+                    context: context,
+                    message:
+                        'Are you sure you want to delete the selected course content?',
+                    onConfirm: () {
+                      context.read<CourseContentCubit>().deleteCourseContent(
+                        id,
+                      );
+                    },
+                  );
                 },
               ),
             );
@@ -121,10 +120,7 @@ class _CourseContentlistPageState extends State<CourseContentlistPage> {
                   Container(
                     padding: EdgeInsets.all(20.r),
                     decoration: BoxDecoration(
-                      border: Border.all(
-                        color: Colors.grey.shade200,
-                        width: 3,
-                      ),
+                      border: Border.all(color: Colors.grey.shade200, width: 3),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Column(
@@ -165,9 +161,7 @@ class _CourseContentlistPageState extends State<CourseContentlistPage> {
             );
           }
 
-          return const Center(
-            child: Text('Unable to load item'),
-          );
+          return const Center(child: Text('Unable to load item'));
         },
       ),
     );
@@ -181,7 +175,6 @@ class _CourseContentlistPageState extends State<CourseContentlistPage> {
       confirmText: 'Confirm',
       alignment: Alignment.bottomCenter,
       onConfirm: () {
-        context.pop();
         // context.read<CourseCubit>().deleteCourse(id);
       },
     );

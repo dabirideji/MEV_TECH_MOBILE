@@ -10,27 +10,26 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:injectable/injectable.dart';
-import 'package:template/app/router/app_router.dart';
-import 'package:template/core/network/api_service.dart';
-import 'package:template/core/network/signalr_service.dart';
-import 'package:template/data/odata_query_builder.dart';
-import 'package:template/features/course/data/models/course-models/course_model.dart';
-import 'package:template/features/course/data/repository/course_repository.dart';
-import 'package:template/features/course/logic/course-cubit/course_cubit.dart';
-import 'package:template/features/presentation/utilities-class/mev_tech_utilities.dart';
-import 'package:template/features/presentation/widgets/course.dart';
+import 'package:mevtech/app/router/app_router.dart';
+import 'package:mevtech/core/network/api_service.dart';
+import 'package:mevtech/core/network/signalr_service.dart';
+import 'package:mevtech/core/storages/DatabaseHandler.dart';
+import 'package:mevtech/data/odata_query_builder.dart';
+import 'package:mevtech/features/course/data/models/course-models/course_model.dart';
+import 'package:mevtech/features/course/data/repository/course_repository.dart';
+import 'package:mevtech/features/course/logic/course-cubit/course_cubit.dart';
+import 'package:mevtech/features/presentation/utilities-class/mev_tech_utilities.dart';
+import 'package:mevtech/features/presentation/widgets/course.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
 part 'dashboard_state.dart';
 
 @injectable
 class DashboardCubit extends Cubit<DashboardState> {
-  DashboardCubit(this.courseRepository) : super(const DashboardSuccess()) {
-    loadDashboardData();
-    // signalRInit();
-  }
+  DashboardCubit(this.courseRepository) : super(const DashboardSuccess());
 
   final picker = ImagePicker();
+  final db = DatabaseHandler();
   final CourseRepository courseRepository;
   // late SignalRService _signalRService;
 
@@ -40,12 +39,24 @@ class DashboardCubit extends Cubit<DashboardState> {
 
   TextEditingController searchText = TextEditingController();
 
-  final List<CarouselSliderController> carouselController =
-      List.generate(5, (index) => CarouselSliderController());
+  final List<CarouselSliderController> carouselController = List.generate(
+    5,
+    (index) => CarouselSliderController(),
+  );
 
   List<Course> popularCourses = [];
   List<Course> trendingCourses = [];
   List<Course> otherCourses = [];
+
+  final isMenuExpanded = ValueNotifier(false);
+
+  void resetMenu() {
+    isMenuExpanded.value = false;
+  }
+
+  void toggleMenu() {
+    isMenuExpanded.value = !isMenuExpanded.value;
+  }
 
   void goToNextPage(int index) {
     carouselController[index].nextPage(
@@ -63,35 +74,77 @@ class DashboardCubit extends Cubit<DashboardState> {
 
   int _currentSearchId = 0;
 
-  // Future<void> signalRInit() async {
-  //   try {
-  //     final token = MevTechUtilities.authKey;
-  //     final userId = MevTechUtilities.id;
-  //     _signalRService = SignalRService(userId: userId, token: token);
-  //     await _signalRService.initSignalR();
-  //   } catch (e) {
-  //     log(e.toString());
-  //   }
-  // }
+  Future<void> initializeLocalDB(String? userId) async {
+    try {
+      if (userId == null) return;
+
+      await db.openDatabaseForUser(userId);
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
 
   Future<void> loadDashboardData() async {
-    emit((state as DashboardSuccess).copyWith(
-      courseStatus: LoadStatus.loading,
-      categoryStatus: LoadStatus.loading,
-    ));
+    // emit(
+    //   (state as DashboardSuccess).copyWith(
+    //     courseStatus: LoadStatus.loading,
+    //     categoryStatus: LoadStatus.loading,
+    //   ),
+    // );
 
     // Both run at the same time
-    unawaited(loadCourses(showLoadingStatus: false));
-    unawaited(loadCategories(showLoadingStatus: false));
+    // unawaited(loadCourses(showLoadingStatus: false));
+    // unawaited(loadCategories(showLoadingStatus: false));
+    unawaited(loadLocalCourses());
+    unawaited(loadLocalCategories());
+  }
+
+  Future<void> clearDB() async {
+    try {
+      await courseRepository.clearDB();
+    } catch (e) {
+      log(e.toString());
+    }
+  }
+
+  Future<void> loadLocalCourses() async {
+    try {
+      final courses = await courseRepository.getLocalCourses();
+      if (courses.isEmpty) {
+        await loadCourses();
+      } else {
+        if (!isClosed) {
+          emit(
+            (state as DashboardSuccess).copyWith(
+              courses: courses,
+              courseStatus: LoadStatus.success,
+            ),
+          );
+        }
+        final remoteCourses = await courseRepository.getCourses();
+        if (!isClosed) {
+          emit(
+            (state as DashboardSuccess).copyWith(
+              courses: remoteCourses,
+              courseStatus: LoadStatus.success,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      log(e.toString());
+    }
   }
 
   Future<void> loadCourses({bool showLoadingStatus = true}) async {
     try {
       if (showLoadingStatus) {
         if (!isClosed) {
-          emit((state as DashboardSuccess).copyWith(
-            courseStatus: LoadStatus.loading,
-          ));
+          emit(
+            (state as DashboardSuccess).copyWith(
+              courseStatus: LoadStatus.loading,
+            ),
+          );
         }
       }
 
@@ -99,18 +152,51 @@ class DashboardCubit extends Cubit<DashboardState> {
 
       final result = await courseRepository.getCourses();
       if (!isClosed) {
-        emit((state as DashboardSuccess).copyWith(
-          courses: result,
-          courseStatus: LoadStatus.success,
-        ));
+        emit(
+          (state as DashboardSuccess).copyWith(
+            courses: result,
+            courseStatus: LoadStatus.success,
+          ),
+        );
       }
     } catch (e) {
       if (!isClosed) {
-        emit((state as DashboardSuccess).copyWith(
-          courseStatus: LoadStatus.failure,
-          courseError: e.toString(),
-        ));
+        emit(
+          (state as DashboardSuccess).copyWith(
+            courseStatus: LoadStatus.failure,
+            courseError: e.toString(),
+          ),
+        );
       }
+    }
+  }
+
+  Future<void> loadLocalCategories() async {
+    try {
+      final categories = await courseRepository.getLocalCourseCategory();
+      if (categories.isEmpty) {
+        await loadCategories();
+      } else {
+        if (!isClosed) {
+          emit(
+            (state as DashboardSuccess).copyWith(
+              categories: categories,
+              categoryStatus: LoadStatus.success,
+            ),
+          );
+        }
+        final remoteCategories = await courseRepository.getCourseCategories();
+        if (!isClosed) {
+          emit(
+            (state as DashboardSuccess).copyWith(
+              categories: remoteCategories,
+              categoryStatus: LoadStatus.success,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      log(e.toString());
     }
   }
 
@@ -118,29 +204,37 @@ class DashboardCubit extends Cubit<DashboardState> {
     try {
       if (showLoadingStatus) {
         if (!isClosed) {
-          emit((state as DashboardSuccess).copyWith(
-            categoryStatus: LoadStatus.loading,
-          ));
+          emit(
+            (state as DashboardSuccess).copyWith(
+              categoryStatus: LoadStatus.loading,
+            ),
+          );
         }
       }
 
-      final result = await courseRepository.fetchAll<CourseCategoryModel>(
-        endPoint: 'CourseCategory/GetAllAsQueryable',
-        fromJson: CourseCategoryModel.fromJson,
-      );
+      // final result = await courseRepository.fetchAll<CourseCategoryModel>(
+      //   endPoint: 'CourseCategory/GetAllAsQueryable',
+      //   fromJson: CourseCategoryModel.fromJson,
+      // );
+
+      final result = await courseRepository.getCourseCategories();
 
       if (!isClosed) {
-        emit((state as DashboardSuccess).copyWith(
-          categories: result,
-          categoryStatus: LoadStatus.success,
-        ));
+        emit(
+          (state as DashboardSuccess).copyWith(
+            categories: result,
+            categoryStatus: LoadStatus.success,
+          ),
+        );
       }
     } catch (e) {
       if (!isClosed) {
-        emit((state as DashboardSuccess).copyWith(
-          categoryStatus: LoadStatus.failure,
-          categoryError: e.toString(),
-        ));
+        emit(
+          (state as DashboardSuccess).copyWith(
+            categoryStatus: LoadStatus.failure,
+            categoryError: e.toString(),
+          ),
+        );
       }
     }
   }
@@ -151,19 +245,23 @@ class DashboardCubit extends Cubit<DashboardState> {
     try {
       const endPoint = 'Course/GetOData/odata';
 
-      final queryBuilder =
-          ODataQueryBuilder(baseUrl: '${ApiService.baseUrlAddress}/$endPoint');
+      final queryBuilder = ODataQueryBuilder(
+        baseUrl: '${ApiService.baseUrlAddress}/api/$endPoint',
+      );
 
       final uri = queryBuilder
           .filter(
-              "contains(courseTitle, '$searchText') or contains(courseName, '$searchText')")
+            "contains(courseTitle, '$searchText') or contains(courseName, '$searchText')",
+          )
           .top(10)
           .build();
 
       if (!isClosed) {
-        emit((state as DashboardSuccess).copyWith(
-          searchStatus: LoadStatus.loading,
-        ));
+        emit(
+          (state as DashboardSuccess).copyWith(
+            searchStatus: LoadStatus.loading,
+          ),
+        );
       }
 
       final result = await courseRepository.fetchOdata<CourseModel>(
@@ -173,18 +271,22 @@ class DashboardCubit extends Cubit<DashboardState> {
 
       if (searchId == _currentSearchId) {
         if (!isClosed) {
-          emit((state as DashboardSuccess).copyWith(
-            searchStatus: LoadStatus.success,
-            searchedCourses: result,
-          ));
+          emit(
+            (state as DashboardSuccess).copyWith(
+              searchStatus: LoadStatus.success,
+              searchedCourses: result,
+            ),
+          );
         }
       }
     } catch (e) {
       if (!isClosed) {
-        emit((state as DashboardSuccess).copyWith(
-          searchStatus: LoadStatus.failure,
-          searchError: e.toString(),
-        ));
+        emit(
+          (state as DashboardSuccess).copyWith(
+            searchStatus: LoadStatus.failure,
+            searchError: e.toString(),
+          ),
+        );
       }
     }
   }

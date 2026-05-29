@@ -7,29 +7,34 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
-import 'package:template/core/network/notification_service.dart';
-import 'package:template/core/storages/local_storages.dart';
-import 'package:template/core/utils/multiple_status_states.dart';
-import 'package:template/core/utils/request_states.dart';
-import 'package:template/features/presentation/utilities-class/mev_tech_utilities.dart';
-import 'package:template/features/user/data/models/login_model.dart';
-import 'package:template/features/user/data/models/user_model.dart';
-import 'package:template/features/user/data/models/user_notification_model.dart';
-import 'package:template/features/user/data/models/user_requests.dart.dart';
-import 'package:template/features/user/data/repository/user_repository.dart';
+import 'package:mevtech/core/network/notification_service.dart';
+import 'package:mevtech/core/storages/DatabaseHandler.dart';
+import 'package:mevtech/core/storages/local_storages.dart';
+import 'package:mevtech/core/utils/multiple_status_states.dart';
+import 'package:mevtech/core/utils/request_states.dart';
+import 'package:mevtech/features/presentation/utilities-class/mev_tech_utilities.dart';
+import 'package:mevtech/features/user/data/models/login_model.dart';
+import 'package:mevtech/features/user/data/models/user_model.dart';
+import 'package:mevtech/features/user/data/models/user_notification_model.dart';
+import 'package:mevtech/features/user/data/models/user_requests.dart.dart';
+import 'package:mevtech/features/user/data/repository/user_repository.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 
 part 'auth_state.dart';
 
 @lazySingleton
 class AuthCubit extends Cubit<AuthState> with ChangeNotifier {
   AuthCubit(this.userRepository, this.localStorage, this.notificationService)
-      : super(AuthInitial()) {
-    checkUserSession();
+    : super(AuthInitial()) {
+    // checkUserSession();
   }
 
   final UserRepository userRepository;
   final LocalStorage localStorage;
   final NotificationService notificationService;
+
+  final db = DatabaseHandler();
+
   String userEmail = '';
   int _notifReadTryCount = 0;
   int _notifFetchTryCount = 0;
@@ -99,22 +104,55 @@ class AuthCubit extends Cubit<AuthState> with ChangeNotifier {
         subscription: authState.model.subscription,
       );
 
-      emit(authState.copyWith(
+      emit(
+        authState.copyWith(
           model: model,
           isSubscribed: authState.isSubscribed,
-          actionType: AuthActionType.updateData));
+          actionType: AuthActionType.updateData,
+        ),
+      );
     } catch (e) {
-      emit(authState.copyWith(
+      emit(
+        authState.copyWith(
           model: authState.model,
           isSubscribed: authState.isSubscribed,
-          actionType: AuthActionType.updateData));
+          actionType: AuthActionType.updateData,
+        ),
+      );
+    }
+  }
+
+  Future<void> testOneSignalNotifications(String userId) async {
+    try {
+      final result = await userRepository.testNotifiion(userId);
+      // log(result);
+    } catch (e) {
+      log(e.toString());
+    }
+  }
+
+  Future<void> loginOnesignal(String userId) async {
+    try {
+      final id = await OneSignalUser().getExternalId();
+      if (id != null) {
+        // log('UserId: $id');
+      }
+
+      final isSubscribed = OneSignalPushSubscription().optedIn;
+      if (isSubscribed ?? false) {
+        // log('$isSubscribed');
+      }
+
+      await OneSignal.login(userId);
+    } catch (e) {
+      log(e.toString());
     }
   }
 
   Future<void> checkUserSession() async {
     // remove this immediate hardcoded code
-    txtEmail.text = 'ade@gmail.com';
-    txtPassword.text = 'Crypto123#';
+    // txtEmail.text = 'ade@gmail.com';
+    // txtPassword.text = 'Crypto123#';
     try {
       emit(const AuthLoading(AuthActionType.sessionCheck));
 
@@ -138,10 +176,12 @@ class AuthCubit extends Cubit<AuthState> with ChangeNotifier {
       final notifications = await getStorageNotifications();
 
       emit(
-        AuthLoginSuccess(result,
-            isSubscribed: isSubscribed,
-            notifications: notifications,
-            actionType: AuthActionType.sessionCheck),
+        AuthLoginSuccess(
+          result,
+          isSubscribed: isSubscribed,
+          notifications: notifications,
+          actionType: AuthActionType.sessionCheck,
+        ),
       );
 
       MevTechUtilities.id = id;
@@ -152,6 +192,26 @@ class AuthCubit extends Cubit<AuthState> with ChangeNotifier {
       notifyListeners();
     }
   }
+
+  // Future<void> checkUserSessionMock() async {
+  //   try {
+  //     emit(const AuthLoading(AuthActionType.sessionCheck));
+  //     final token = await localStorage.getApiKey();
+  //     final refreshToken = await localStorage.getApiRefreshToken();
+  //     final id = await localStorage.getUserID();
+  //     if (token == null || id == null) {
+  //       emit(AuthUnAuthenticated());
+  //       return;
+  //     }
+  //     final result = await Future.delayed(const Duration(seconds: 3), () {
+  //       return 'Hurray';
+  //     });
+  //     emit(AuthFailure('test', actionType: AuthActionType.sessionCheck));
+  //     log(result);
+  //   } catch (e) {
+  //     emit(AuthFailure(e.toString(), actionType: AuthActionType.sessionCheck));
+  //   }
+  // }
 
   Future<void> registerUser() async {
     final jsonData = RegisterRequest(
@@ -189,10 +249,14 @@ class AuthCubit extends Cubit<AuthState> with ChangeNotifier {
 
       final result = await userRepository.loginStudent(jsonData);
 
+      // await db.openDatabaseForUser(result.user.id);
+
       await localStorage.setApiKey(result.accessToken);
       await localStorage.setApiRefreshToken(result.refreshToken);
       await localStorage.setUserID(result.user.id);
       final isSubscribed = result.subscription != null;
+
+      MevTechUtilities.id = result.user.id;
 
       emit(AuthLoginSuccess(result, isSubscribed: isSubscribed));
       // log('Bearer ${result.accessToken}');
@@ -227,6 +291,10 @@ class AuthCubit extends Cubit<AuthState> with ChangeNotifier {
   Future<void> logOut() async {
     try {
       await localStorage.clearUserData();
+
+      await db.close();
+      // await db.deleteUserDatabase(currentUser?.id);
+
       emit(AuthUnAuthenticated());
     } catch (e) {
       emit(AuthUnAuthenticated());
@@ -242,19 +310,19 @@ class AuthCubit extends Cubit<AuthState> with ChangeNotifier {
     required String title,
     required String body,
   }) {
-    notificationService.showNotification(
-      id: id,
-      title: title,
-      body: body,
-    );
+    notificationService.showNotification(id: id, title: title, body: body);
   }
 
   Future<void> saveReadNotifications(
-      List<NotificationModel> notifications) async {
+    List<NotificationModel> notifications,
+  ) async {
     final stored = await localStorage.getUserNotifications() ?? [];
     final existing = stored
-        .map((e) =>
-            NotificationModel.fromJson(json.decode(e) as Map<String, dynamic>))
+        .map(
+          (e) => NotificationModel.fromJson(
+            json.decode(e) as Map<String, dynamic>,
+          ),
+        )
         .toList();
 
     final readOnly = notifications.where((n) => n.isRead).toList();
@@ -277,8 +345,11 @@ class AuthCubit extends Cubit<AuthState> with ChangeNotifier {
     if (jsonList == null) return [];
 
     return jsonList
-        .map((jsonStr) => NotificationModel.fromJson(
-            json.decode(jsonStr) as Map<String, dynamic>))
+        .map(
+          (jsonStr) => NotificationModel.fromJson(
+            json.decode(jsonStr) as Map<String, dynamic>,
+          ),
+        )
         .toList();
   }
 
@@ -317,15 +388,14 @@ class AuthCubit extends Cubit<AuthState> with ChangeNotifier {
 
       _notifFetchTryCount = 0;
 
-      emit(authState.copyWith(
-        notifications: merged,
-      ));
+      emit(authState.copyWith(notifications: merged));
 
       if (shouldShowNotif) {
         showNotification(
-            id: 1,
-            title: '🔔 Alert',
-            body: 'You have new unread notification!');
+          id: 1,
+          title: '🔔 Alert',
+          body: 'You have new unread notification!',
+        );
       }
     } catch (e) {
       _notifFetchTryCount++;
@@ -364,8 +434,9 @@ class AuthCubit extends Cubit<AuthState> with ChangeNotifier {
 
     _notifReadTryCount = 0;
     try {
-      final notification = authState.notifications
-          .firstWhere((notif) => notif.id == notificationId);
+      final notification = authState.notifications.firstWhere(
+        (notif) => notif.id == notificationId,
+      );
       if (notification.isRead) return;
 
       _markAsreadLocal(index: index);
@@ -385,10 +456,13 @@ class AuthCubit extends Cubit<AuthState> with ChangeNotifier {
       final result = await userRepository.markNotifAsread(notificationId);
 
       if (result) {
-        final notification = authState.notifications
-            .firstWhere((notif) => notif.id == notificationId);
+        final notification = authState.notifications.firstWhere(
+          (notif) => notif.id == notificationId,
+        );
         await saveReadNotifications([notification]);
+
         _notifReadTryCount = 0;
+        await fetchNotifications(); // might need to remove
       }
     } catch (e) {
       _notifReadTryCount++;
@@ -396,9 +470,7 @@ class AuthCubit extends Cubit<AuthState> with ChangeNotifier {
     }
   }
 
-  void _markAsreadLocal({
-    required int index,
-  }) {
+  void _markAsreadLocal({required int index}) {
     if (state is! AuthLoginSuccess) return;
     final authState = state as AuthLoginSuccess;
 
@@ -419,9 +491,7 @@ class AuthCubit extends Cubit<AuthState> with ChangeNotifier {
             : notification;
       }).toList();
 
-      emit(authState.copyWith(
-        notifications: notifications,
-      ));
+      emit(authState.copyWith(notifications: notifications));
     } catch (e) {
       log('error encountered');
     }
@@ -442,10 +512,13 @@ class AuthCubit extends Cubit<AuthState> with ChangeNotifier {
 
     try {
       if (user != null) {
-        emit(authState.copyWith(
+        emit(
+          authState.copyWith(
             model: model,
             isSubscribed: isSubscribed,
-            actionType: AuthActionType.updateData));
+            actionType: AuthActionType.updateData,
+          ),
+        );
       }
     } catch (_) {}
   }
@@ -462,10 +535,13 @@ class AuthCubit extends Cubit<AuthState> with ChangeNotifier {
     );
 
     try {
-      emit(authState.copyWith(
+      emit(
+        authState.copyWith(
           model: model,
           isSubscribed: isSubscribed,
-          actionType: AuthActionType.updateData));
+          actionType: AuthActionType.updateData,
+        ),
+      );
     } catch (_) {}
   }
 
@@ -483,14 +559,14 @@ class AuthCubit extends Cubit<AuthState> with ChangeNotifier {
 
       final result = await userRepository.sendEmailConfirmToken(jsonData);
 
-      emit(current.copyWith(
-        sendStatus: const RequestState.success(),
-        message: result,
-      ));
+      emit(
+        current.copyWith(
+          sendStatus: const RequestState.success(),
+          message: result,
+        ),
+      );
     } catch (e) {
-      emit(current.copyWith(
-        sendStatus: RequestState.failure(e.toString()),
-      ));
+      emit(current.copyWith(sendStatus: RequestState.failure(e.toString())));
     }
   }
 
@@ -506,16 +582,16 @@ class AuthCubit extends Cubit<AuthState> with ChangeNotifier {
 
       final result = await userRepository.verifyEmailConfirmToken(jsonData);
 
-      emit(current.copyWith(
-        verifyStatus: const RequestState.success(),
-        message: result,
-      ));
+      emit(
+        current.copyWith(
+          verifyStatus: const RequestState.success(),
+          message: result,
+        ),
+      );
 
       clearField();
     } catch (e) {
-      emit(current.copyWith(
-        verifyStatus: RequestState.failure(e.toString()),
-      ));
+      emit(current.copyWith(verifyStatus: RequestState.failure(e.toString())));
     }
   }
 
@@ -599,9 +675,19 @@ class AuthCubit extends Cubit<AuthState> with ChangeNotifier {
 
       clearField();
     } catch (e) {
-      emit(
-        AuthFailure(e.toString(), actionType: AuthActionType.resetPassword),
-      );
+      emit(AuthFailure(e.toString(), actionType: AuthActionType.resetPassword));
     }
   }
+
+  // Future<String?> fetchQuizExplanation(String message) async {
+  //   try {
+  //     final explanationMessage = await userRepository.getQuizExplanation(
+  //       message,
+  //     );
+
+  //     return explanationMessage;
+  //   } catch (e) {
+  //     return null;
+  //   }
+  // }
 }

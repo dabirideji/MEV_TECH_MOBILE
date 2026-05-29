@@ -4,20 +4,15 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logging/logging.dart';
+import 'package:mevtech/core/network/api_service.dart';
 import 'package:signalr_netcore/iretry_policy.dart';
 import 'package:signalr_netcore/signalr_client.dart';
-import 'package:template/core/network/notification_service.dart';
-import 'package:template/features/auth/logic/auth-cubit/auth_cubit.dart';
-import 'package:template/features/chat/data/repository/chat_repository.dart';
-import 'package:template/features/user/data/models/transaction_model.dart';
+import 'package:mevtech/core/network/notification_service.dart';
+import 'package:mevtech/features/auth/logic/auth-cubit/auth_cubit.dart';
+import 'package:mevtech/features/chat/data/repository/chat_repository.dart';
+import 'package:mevtech/features/user/data/models/transaction_model.dart';
 
-enum ConnectionStatus {
-  initial,
-  connecting,
-  connected,
-  disconnected,
-  error,
-}
+enum ConnectionStatus { initial, connecting, connected, disconnected, error }
 
 class SignalRState extends Equatable {
   const SignalRState({
@@ -32,8 +27,12 @@ class SignalRState extends Equatable {
   final String? message;
 
   @override
-  List<Object?> get props =>
-      [chatStatus, transactionStatus, notificationStatus, message];
+  List<Object?> get props => [
+    chatStatus,
+    transactionStatus,
+    notificationStatus,
+    message,
+  ];
 
   // A getter to determine the overall app status
   ConnectionStatus get overallStatus {
@@ -80,7 +79,7 @@ class SignalRState extends Equatable {
 @lazySingleton
 class SignalRCubit extends Cubit<SignalRState> {
   SignalRCubit(this.authCubit, this.notificationService, this.chatRepository)
-      : super(const SignalRState());
+    : super(const SignalRState());
 
   final AuthCubit authCubit;
   final NotificationService notificationService;
@@ -97,7 +96,11 @@ class SignalRCubit extends Cubit<SignalRState> {
   HubConnection? get transactionHubConnection => _transactionHubConnection;
   HubConnection? get notificationHubConnection => _notificationHubConnection;
 
-  final String baseUrl = 'https://mev-tech-api.onrender.com';
+  // final String baseUrl = 'https://mev-tech-api.onrender.com';
+  // final String baseUrl = 'https://dev-api.virtual360mevtech.com';
+
+  final String baseUrl = ApiService.baseUrlAddress;
+
   final Logger _hubLogger = Logger('SignalR.Hub');
 
   String? _disconnectReason;
@@ -116,11 +119,13 @@ class SignalRCubit extends Cubit<SignalRState> {
       return;
     }
 
-    emit(const SignalRState(
-      chatStatus: ConnectionStatus.connecting,
-      transactionStatus: ConnectionStatus.connecting,
-      notificationStatus: ConnectionStatus.connecting,
-    ));
+    emit(
+      const SignalRState(
+        chatStatus: ConnectionStatus.connecting,
+        transactionStatus: ConnectionStatus.connecting,
+        notificationStatus: ConnectionStatus.connecting,
+      ),
+    );
 
     try {
       // Attempt to start the connections
@@ -173,29 +178,37 @@ class SignalRCubit extends Cubit<SignalRState> {
     if (_transactionHubConnection?.state == HubConnectionState.Connected ||
         _transactionHubConnection?.state == HubConnectionState.Connecting) {
       _hubLogger.info(
-          '🟡 $hubName hub is already connected or connecting. Skipping start.');
+        '🟡 $hubName hub is already connected or connecting. Skipping start.',
+      );
       return;
     }
 
     try {
-      _transactionHubConnection =
-          _buildHubConnection(hubName: hubName, userId: userId, token: token);
+      _transactionHubConnection = _buildHubConnection(
+        hubName: hubName,
+        userId: userId,
+        token: token,
+      );
 
       if (_transactionHubConnection == null) return;
 
       // Listen for when the connection gets successfully reconnected
       _transactionHubConnection?.onreconnected(({connectionId}) {
         _hubLogger.info(
-            '✅ Reconnected to $hubName hub. Connection ID: $connectionId');
+          '✅ Reconnected to $hubName hub. Connection ID: $connectionId',
+        );
         emit(state.copyWith(transactionStatus: ConnectionStatus.connected));
       });
 
       // Listen for when the client starts the reconnection process
       _transactionHubConnection?.onreconnecting(({error}) {
         _hubLogger.info('🟡 Reconnecting to $hubName hub...');
-        emit(state.copyWith(
+        emit(
+          state.copyWith(
             transactionStatus: ConnectionStatus.connecting,
-            message: 'Reconnecting...'));
+            message: 'Reconnecting...',
+          ),
+        );
       });
 
       // Listen for when the connection is closed
@@ -209,10 +222,12 @@ class SignalRCubit extends Cubit<SignalRState> {
           disconnectionMessage = _disconnectReason;
         }
 
-        emit(state.copyWith(
-          transactionStatus: ConnectionStatus.disconnected,
-          message: disconnectionMessage,
-        ));
+        emit(
+          state.copyWith(
+            transactionStatus: ConnectionStatus.disconnected,
+            message: disconnectionMessage,
+          ),
+        );
 
         _disconnectReason = null;
       });
@@ -227,27 +242,36 @@ class SignalRCubit extends Cubit<SignalRState> {
             ..info("🔔 transaction received: ${transData['transaction']}")
             ..info("🔔 transaction received: ${transData['subscription']}");
           final transModel = Transaction.fromJson(
-              transData['transaction'] as Map<String, dynamic>);
+            transData['transaction'] as Map<String, dynamic>,
+          );
           final subModel = Subscription.fromJson(
-              transData['subscription'] as Map<String, dynamic>);
+            transData['subscription'] as Map<String, dynamic>,
+          );
           // log(transModel.toString());
           // log(subModel.toString());
-          _hubLogger
-              .info('🔔 Payment Successful\n Account updated to premium!');
+          _hubLogger.info(
+            '🔔 Payment Successful\n Account updated to premium!',
+          );
           authCubit.showNotification(
-              id: 1,
-              title: '🔔 Payment Successful',
-              body: 'Account updated to premium!');
+            id: 1,
+            title: '🔔 Payment Successful',
+            body: 'Account updated to premium!',
+          );
         }
       });
 
       await _transactionHubConnection?.start();
       _hubLogger.info(
-          '✅ Connected to $hubName hub. Connection ID: ${_transactionHubConnection?.connectionId}');
+        '✅ Connected to $hubName hub. Connection ID: ${_transactionHubConnection?.connectionId}',
+      );
     } catch (e) {
       _hubLogger.severe('💥 Failed to connect to $hubName hub initially: $e');
-      emit(state.copyWith(
-          transactionStatus: ConnectionStatus.error, message: e.toString()));
+      emit(
+        state.copyWith(
+          transactionStatus: ConnectionStatus.error,
+          message: e.toString(),
+        ),
+      );
     }
   }
 
@@ -259,29 +283,37 @@ class SignalRCubit extends Cubit<SignalRState> {
     if (_notificationHubConnection?.state == HubConnectionState.Connected ||
         _notificationHubConnection?.state == HubConnectionState.Connecting) {
       _hubLogger.info(
-          '🟡 $hubName hub is already connected or connecting. Skipping start.');
+        '🟡 $hubName hub is already connected or connecting. Skipping start.',
+      );
       return;
     }
 
     try {
-      _notificationHubConnection =
-          _buildHubConnection(hubName: hubName, userId: userId, token: token);
+      _notificationHubConnection = _buildHubConnection(
+        hubName: hubName,
+        userId: userId,
+        token: token,
+      );
 
       if (_notificationHubConnection == null) return;
 
       // Listen for when the connection gets successfully reconnected
       _notificationHubConnection?.onreconnected(({connectionId}) {
         _hubLogger.info(
-            '✅ Reconnected to $hubName hub. Connection ID: $connectionId');
+          '✅ Reconnected to $hubName hub. Connection ID: $connectionId',
+        );
         emit(state.copyWith(notificationStatus: ConnectionStatus.connected));
       });
 
       // Listen for when the client starts the reconnection process
       _notificationHubConnection?.onreconnecting(({error}) {
         _hubLogger.info('🟡 Reconnecting to $hubName hub...');
-        emit(state.copyWith(
+        emit(
+          state.copyWith(
             notificationStatus: ConnectionStatus.connecting,
-            message: 'Reconnecting...'));
+            message: 'Reconnecting...',
+          ),
+        );
       });
 
       // Listen for when the connection is closed
@@ -296,17 +328,27 @@ class SignalRCubit extends Cubit<SignalRState> {
           disconnectionMessage = _disconnectReason;
         }
 
-        emit(state.copyWith(
-          notificationStatus: ConnectionStatus.disconnected,
-          message: disconnectionMessage,
-        ));
+        emit(
+          state.copyWith(
+            notificationStatus: ConnectionStatus.disconnected,
+            message: disconnectionMessage,
+          ),
+        );
 
         _disconnectReason = null;
       });
 
       // Register specific handlers
 
-      _notificationHubConnection?.on('ReceiveConnectionId', (data) {
+      // _notificationHubConnection?.on('ReceiveConnectionId', (data) {
+      //   if (data != null && data.isNotEmpty) {
+      //     authCubit.fetchNotifications();
+      //   }
+      // });
+
+      // ConnectionEstablished
+
+      _notificationHubConnection?.on('ConnectionEstablished', (data) {
         if (data != null && data.isNotEmpty) {
           authCubit.fetchNotifications();
         }
@@ -321,11 +363,16 @@ class SignalRCubit extends Cubit<SignalRState> {
 
       await _notificationHubConnection?.start();
       _hubLogger.info(
-          '✅ Connected to $hubName hub. Connection ID: ${_notificationHubConnection?.connectionId}');
+        '✅ Connected to $hubName hub. Connection ID: ${_notificationHubConnection?.connectionId}',
+      );
     } catch (e) {
       _hubLogger.severe('💥 Failed to connect to $hubName hub initially: $e');
-      emit(state.copyWith(
-          notificationStatus: ConnectionStatus.error, message: e.toString()));
+      emit(
+        state.copyWith(
+          notificationStatus: ConnectionStatus.error,
+          message: e.toString(),
+        ),
+      );
     }
   }
 
@@ -337,29 +384,37 @@ class SignalRCubit extends Cubit<SignalRState> {
     if (_chatHubConnection?.state == HubConnectionState.Connected ||
         _chatHubConnection?.state == HubConnectionState.Connecting) {
       _hubLogger.info(
-          '🟡 $hubName hub is already connected or connecting. Skipping start.');
+        '🟡 $hubName hub is already connected or connecting. Skipping start.',
+      );
       return;
     }
 
     try {
-      _chatHubConnection =
-          _buildHubConnection(hubName: hubName, userId: userId, token: token);
+      _chatHubConnection = _buildHubConnection(
+        hubName: hubName,
+        userId: userId,
+        token: token,
+      );
 
       if (_chatHubConnection == null) return;
 
       // Listen for when the connection gets successfully reconnected
       _chatHubConnection?.onreconnected(({connectionId}) {
         _hubLogger.info(
-            '✅ Reconnected to $hubName hub. Connection ID: $connectionId');
+          '✅ Reconnected to $hubName hub. Connection ID: $connectionId',
+        );
         emit(state.copyWith(chatStatus: ConnectionStatus.connected));
       });
 
       // Listen for when the client starts the reconnection process
       _chatHubConnection?.onreconnecting(({error}) {
         _hubLogger.info('🟡 Reconnecting to $hubName hub...');
-        emit(state.copyWith(
+        emit(
+          state.copyWith(
             chatStatus: ConnectionStatus.connecting,
-            message: 'Reconnecting...'));
+            message: 'Reconnecting...',
+          ),
+        );
       });
 
       // Listen for when the connection is closed
@@ -372,10 +427,12 @@ class SignalRCubit extends Cubit<SignalRState> {
           disconnectionMessage = _disconnectReason;
         }
 
-        emit(state.copyWith(
-          transactionStatus: ConnectionStatus.disconnected,
-          message: disconnectionMessage,
-        ));
+        emit(
+          state.copyWith(
+            transactionStatus: ConnectionStatus.disconnected,
+            message: disconnectionMessage,
+          ),
+        );
 
         _disconnectReason = null;
       });
@@ -401,11 +458,16 @@ class SignalRCubit extends Cubit<SignalRState> {
 
       await _chatHubConnection?.start();
       _hubLogger.info(
-          '✅ Connected to $hubName hub. Connection ID: ${_chatHubConnection?.connectionId}');
+        '✅ Connected to $hubName hub. Connection ID: ${_chatHubConnection?.connectionId}',
+      );
     } catch (e) {
       _hubLogger.severe('💥 Failed to connect to $hubName hub initially: $e');
-      emit(state.copyWith(
-          chatStatus: ConnectionStatus.error, message: e.toString()));
+      emit(
+        state.copyWith(
+          chatStatus: ConnectionStatus.error,
+          message: e.toString(),
+        ),
+      );
     }
   }
 
@@ -433,11 +495,13 @@ class SignalRCubit extends Cubit<SignalRState> {
     await _chatHubConnection?.stop();
     await _transactionHubConnection?.stop();
     await _notificationHubConnection?.stop();
-    emit(const SignalRState(
-      chatStatus: ConnectionStatus.disconnected,
-      transactionStatus: ConnectionStatus.disconnected,
-      notificationStatus: ConnectionStatus.disconnected,
-    ));
+    emit(
+      const SignalRState(
+        chatStatus: ConnectionStatus.disconnected,
+        transactionStatus: ConnectionStatus.disconnected,
+        notificationStatus: ConnectionStatus.disconnected,
+      ),
+    );
   }
 }
 

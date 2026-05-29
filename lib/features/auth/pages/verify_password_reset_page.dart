@@ -4,10 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:template/app/router/app_router.dart';
-import 'package:template/core/utils/colors.dart';
-import 'package:template/features/auth/logic/auth-cubit/auth_cubit.dart';
-import 'package:template/features/presentation/utilities-class/mev_tech_utilities.dart';
+import 'package:mevtech/app/router/app_router.dart';
+import 'package:mevtech/core/utils/colors.dart';
+import 'package:mevtech/features/auth/logic/auth-cubit/auth_cubit.dart';
+import 'package:mevtech/features/presentation/utilities-class/mev_tech_utilities.dart';
 
 class VerifyPasswordResetPage extends StatelessWidget {
   const VerifyPasswordResetPage({super.key});
@@ -40,7 +40,7 @@ class VerifyPasswordResetPage extends StatelessWidget {
           MevTechUtilities.errorToast(context, state.errorMessage);
         } else if (state is AuthPasswordResetSuccess) {
           Navigator.of(context).pop();
-          MevTechUtilities.showToast(context, state.message);
+          MevTechUtilities.successToast(context, state.message);
           context.pushReplacementNamed(AppRouter.resetPass);
         }
       },
@@ -107,15 +107,11 @@ class VerifyPasswordResetPage extends StatelessWidget {
                           border: const OutlineInputBorder(),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8.r),
-                            borderSide: const BorderSide(
-                              color: Colors.black26,
-                            ),
+                            borderSide: const BorderSide(color: Colors.black26),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8.r),
-                            borderSide: const BorderSide(
-                              color: Colors.black26,
-                            ),
+                            borderSide: const BorderSide(color: Colors.black26),
                           ),
                         ),
                       ),

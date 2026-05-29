@@ -7,22 +7,27 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+// import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:forui/forui.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:template/app/router/app_router.dart';
-import 'package:template/core/extensions/context_extensions.dart';
-import 'package:template/core/network/signalr_cubit.dart';
-import 'package:template/core/utils/constants.dart';
-import 'package:template/features/auth/logic/auth-cubit/auth_cubit.dart';
-import 'package:template/features/chat/data/chat-data/chat_data_cubit.dart';
-import 'package:template/features/course/logic/selected_course_cubit.dart';
-import 'package:template/features/home/home_cubit.dart';
-import 'package:template/features/presentation/dashboard/dashboard_cubit.dart';
-import 'package:template/features/presentation/landing/landing_cubit.dart';
-import 'package:template/injector.dart';
-import 'package:template/l10n/l10n.dart';
-import 'package:template/shared/flash/presentation/blocs/cubit/flash_cubit.dart';
+import 'package:mevtech/app/router/app_router.dart';
+import 'package:mevtech/core/extensions/context_extensions.dart';
+import 'package:mevtech/core/network/signalr_cubit.dart';
+import 'package:mevtech/core/utils/colors.dart';
+import 'package:mevtech/core/utils/constants.dart';
+import 'package:mevtech/features/auth/logic/auth-cubit/auth_cubit.dart';
+import 'package:mevtech/features/chat/data/chat-data/chat_data_cubit.dart';
+import 'package:mevtech/features/course/logic/selected_course_cubit.dart';
+import 'package:mevtech/features/home/home_cubit.dart';
+import 'package:mevtech/features/presentation/dashboard/dashboard_cubit.dart';
+import 'package:mevtech/features/presentation/landing/landing_cubit.dart';
+import 'package:mevtech/injector.dart';
+// import 'package:mevtech/l10n/app_localizations.dart';
+
+// import 'package:mevtech/l10n/l10n.dart';
+import 'package:mevtech/shared/flash/presentation/blocs/cubit/flash_cubit.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 
 final _appTextTheme = GoogleFonts.poppinsTextTheme();
 
@@ -31,36 +36,22 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // print('Rebuilding main app');
+    // OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
     return MultiBlocProvider(
       providers: [
-        BlocProvider(
-          create: (context) => getIt<FlashCubit>(),
-        ),
-        BlocProvider(
-          create: (context) => getIt<LandingCubit>(),
-        ),
+        BlocProvider(create: (context) => getIt<FlashCubit>()),
+        BlocProvider(create: (context) => getIt<LandingCubit>()),
         // BlocProvider(
         //   create: (context) => getIt<AuthCubit>(),
         // ),
-        BlocProvider.value(
-          value: getIt<AuthCubit>(),
-        ),
-        BlocProvider(
-          create: (context) => getIt<HomeCubit>(),
-        ),
-        BlocProvider(
-          create: (context) => getIt<SelectedCourseCubit>(),
-        ),
+        BlocProvider.value(value: getIt<AuthCubit>()),
+        // BlocProvider(create: (context) => getIt<HomeCubit>()),
+        // BlocProvider(create: (context) => getIt<SelectedCourseCubit>()),
         // BlocProvider<SignalRCubit>(
         //   create: (context) => getIt<SignalRCubit>(),
         // ),
-        BlocProvider.value(
-          value: getIt<SignalRCubit>(),
-        ),
-        BlocProvider(
-          create: (context) => getIt<ChatDataCubit>(),
-        ),
+        BlocProvider.value(value: getIt<SignalRCubit>()),
+        // BlocProvider(create: (context) => getIt<ChatDataCubit>()),
       ],
       child: MultiBlocListener(
         listeners: [
@@ -70,9 +61,7 @@ class App extends StatelessWidget {
                 case FlashDisappeared():
                   break;
                 case FlashAppeared():
-                  context.showSnackbar(
-                    message: state.message,
-                  );
+                  context.showSnackbar(message: state.message);
               }
             },
           ),
@@ -80,16 +69,21 @@ class App extends StatelessWidget {
             listener: (context, authState) {
               final signalRCubit = context.read<SignalRCubit>();
               if (authState is AuthLoginSuccess) {
+                context.read<AuthCubit>().loginOnesignal(
+                  authState.model.user.id,
+                );
                 signalRCubit.connect(
-                    userId: authState.model.user.id,
-                    token: authState.model.accessToken);
-                // signalRCubit.disconnect();
+                  userId: authState.model.user.id,
+                  token: authState.model.accessToken,
+                );
               } else if (authState is AuthUnAuthenticated) {
                 signalRCubit.disconnect();
               }
             },
           ),
           BlocListener<SignalRCubit, SignalRState>(
+            listenWhen: (prev, curr) =>
+                prev.overallStatus != curr.overallStatus,
             listener: (context, signalRState) {
               // This is a global listener for any connection event.
               if (signalRState.overallStatus == ConnectionStatus.disconnected ||
@@ -98,15 +92,12 @@ class App extends StatelessWidget {
                 final authCubit = context.read<AuthCubit>();
                 if (authState is AuthLoginSuccess) {
                   // A slight delay to avoid overwhelming the server, then retry.
-                  Future.delayed(
-                    const Duration(seconds: 3),
-                    () async {
-                      await authCubit.refreshAndAuthenticate(
-                        isTokenExpired:
-                            signalRState.message?.contains('400') ?? false,
-                      );
-                    },
-                  );
+                  Future.delayed(const Duration(seconds: 3), () async {
+                    await authCubit.refreshAndAuthenticate(
+                      isTokenExpired:
+                          signalRState.message?.contains('400') ?? false,
+                    );
+                  });
                 }
               }
             },
@@ -120,20 +111,41 @@ class App extends StatelessWidget {
               debugShowCheckedModeBanner: false,
               // scaffoldMessengerKey: rootScaffoldMessengerKey,
               theme: ThemeData(
-                  useMaterial3: true,
-                  // textTheme: GoogleFonts.poppinsTextTheme(),
-                  textTheme: _appTextTheme),
-              localizationsDelegates: const [
-                AppLocalizations.delegate,
-                GlobalMaterialLocalizations.delegate,
-              ],
-              supportedLocales: AppLocalizations.supportedLocales,
+                useMaterial3: true,
+                primaryColor: AppColor.primary,
+                colorScheme: ColorScheme.fromSeed(seedColor: AppColor.primary),
+                // textTheme: GoogleFonts.poppinsTextTheme(),
+                textTheme: _appTextTheme,
+              ),
+              // localizationsDelegates: const [
+              //   AppLocalizations.delegate,
+              //   GlobalMaterialLocalizations.delegate,
+              // ],
+              // supportedLocales: AppLocalizations.supportedLocales,
               routerConfig: appRouter,
               builder: (context, widget) {
-                return MediaQuery(
-                  data: MediaQuery.of(context)
-                      .copyWith(textScaler: TextScaler.noScaling),
-                  child: widget!,
+                // return MediaQuery(
+                //   data: MediaQuery.of(context)
+                //       .copyWith(textScaler: TextScaler.noScaling),
+                //   child: widget!,
+                // );
+
+                return FAnimatedTheme(
+                  data: FThemeData(
+                    colors: FThemes.zinc.light.colors.copyWith(
+                      primary: AppColor.primary,
+                      primaryForeground: Colors.white,
+                    ),
+                    typography: FThemes.zinc.light.typography
+                        .copyWith(xs: const TextStyle(fontSize: 12, height: 1))
+                        .scale(sizeScalar: 0.8),
+                  ),
+                  child: MediaQuery(
+                    data: MediaQuery.of(
+                      context,
+                    ).copyWith(textScaler: TextScaler.noScaling),
+                    child: widget!,
+                  ),
                 );
               },
             );
@@ -153,7 +165,6 @@ class App extends StatelessWidget {
 //     onBackground: Colors.black, // Used for general text color
 //   ),
 // ),
-
 // final poppinsTextTheme = GoogleFonts.poppinsTextTheme().copyWith(
 //   headlineLarge: GoogleFonts.poppins(fontSize: 32, fontWeight: FontWeight.bold),
 //   headlineMedium: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.w600),

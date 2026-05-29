@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:template/core/utils/colors.dart';
+import 'package:mevtech/core/utils/colors.dart';
 
 class MyTextField extends StatelessWidget {
   const MyTextField({
@@ -24,6 +24,7 @@ class MyTextField extends StatelessWidget {
     this.maxLength,
     this.counterText = '',
     this.onChanged,
+    this.isDense = true,
   });
 
   final String hintText;
@@ -44,6 +45,7 @@ class MyTextField extends StatelessWidget {
   final int? maxLength;
   final String? counterText;
   final void Function(String)? onChanged;
+  final bool? isDense;
 
   @override
   Widget build(BuildContext context) {
@@ -58,13 +60,13 @@ class MyTextField extends StatelessWidget {
       showCursor: showCursor,
       inputFormatters: inputFormatters,
       style: TextStyle(
-        color: Colors.black54,
+        color: Colors.black87,
         fontSize: 13.sp,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w600,
       ),
       decoration: InputDecoration(
         counterText: counterText,
-        isDense: true,
+        isDense: isDense,
         hintText: hintText,
         hintStyle: TextStyle(
           color: Colors.black38,

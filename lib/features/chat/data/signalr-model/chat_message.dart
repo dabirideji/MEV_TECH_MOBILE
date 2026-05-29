@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:template/features/chat/chat-constant/chat_color_scheme.dart';
+import 'package:mevtech/core/utils/constants.dart';
 
 class ChatMessage {
   ChatMessage({
@@ -100,7 +100,7 @@ class MessageModel {
       username: (json['username'] ?? '') as String,
       content: (json['content'] ?? '') as String,
       type: (json['type'] ?? '') as String,
-      timestamp: (json['timestamp'] ?? '') as String,
+      timestamp: normalizeApiTimestamp((json['timestamp'] ?? '') as String),
       metadata:
           (json['metadata'] ?? <String, dynamic>{}) as Map<String, dynamic>?,
       isEdited: (json['isEdited'] ?? false) as bool,
@@ -173,7 +173,7 @@ class MessageModel {
       username: username,
       content: content,
       type: 'Text',
-      timestamp: DateTime.now().toLocal().toIso8601String(),
+      timestamp: DateTime.now().toUtc().toIso8601String(),
       metadata: {},
       isEdited: false,
       replyToMessageId: null,
@@ -184,8 +184,8 @@ class MessageModel {
       media: <dynamic>{},
       editedAt: null,
       id: id,
-      createdAt: DateTime.now().toString(),
-      updatedAt: DateTime.now().toString(),
+      createdAt: DateTime.now().toUtc().toIso8601String(),
+      updatedAt: DateTime.now().toUtc().toIso8601String(),
       rowVersion: '',
       createdBy: null,
       updatedBy: null,
@@ -306,6 +306,24 @@ extension MessageModelMapper on MessageModel {
     };
   }
 
+  Map<String, dynamic> toEditUpdateMap() {
+    return {
+      'content': content,
+      'isEdited': isEdited ? 1 : 0,
+      'editedAt': editedAt,
+      'updatedAt': updatedAt,
+      'updatedBy': updatedBy,
+    };
+  }
+
+  Map<String, dynamic> toDeleteUpdateMap() {
+    return {
+      'isDeleted': isDeleted ? 1 : 0,
+      'deletedAt': deletedAt,
+      'deletedBy': deletedBy,
+    };
+  }
+
   static MessageModel fromMap(Map<String, dynamic> map) {
     return MessageModel(
       id: (map['id'] ?? '') as String,
@@ -323,10 +341,11 @@ extension MessageModelMapper on MessageModel {
       replyToMessage: map['replyToMessage'] as String?,
       mentions:
           map['mentions'] != null && (map['mentions'] as String).isNotEmpty
-              ? (jsonDecode(map['mentions'] as String) as List<dynamic>)
-              : <dynamic>[],
+          ? (jsonDecode(map['mentions'] as String) as List<dynamic>)
+          : <dynamic>[],
       mediaId: map['mediaId'] as String?,
-      readStatuses: (map['readStatuses'] != null) &&
+      readStatuses:
+          (map['readStatuses'] != null) &&
               (map['readStatuses'] as String).isNotEmpty
           ? (jsonDecode(map['readStatuses'] as String) as List<dynamic>)
           : <dynamic>[],
@@ -347,6 +366,61 @@ extension MessageModelMapper on MessageModel {
       archiveReason: map['archiveReason'] as String?,
     );
   }
+}
+
+class MessageEditModel {
+  MessageEditModel({
+    required this.messageId,
+    required this.roomId,
+    required this.newContent,
+    required this.editedBy,
+    required this.editedAt,
+    required this.isEdited,
+  });
+
+  factory MessageEditModel.fromJson(Map<String, dynamic> json) {
+    return MessageEditModel(
+      messageId: (json['messageId'] ?? '') as String,
+      roomId: (json['roomId'] ?? '') as String,
+      newContent: (json['newContent'] ?? '') as String,
+      editedBy: (json['editedBy'] ?? '') as String,
+      editedAt: (json['editedAt'] ?? '') as String,
+      isEdited: (json['isEdited'] ?? '') as bool,
+    );
+  }
+
+  final String messageId;
+  final String roomId;
+  final String newContent;
+  final String editedBy;
+  final String editedAt;
+  final bool isEdited;
+}
+
+class MessageDeleteModel {
+  MessageDeleteModel({
+    required this.messageId,
+    required this.roomId,
+    required this.deletedBy,
+    required this.deletedAt,
+    required this.isDeleted,
+  });
+
+  factory MessageDeleteModel.fromJson(Map<String, dynamic> json) {
+    return MessageDeleteModel(
+      messageId: (json['messageId'] ?? '') as String,
+      roomId: (json['roomId'] ?? '') as String,
+      deletedBy: (json['deletedBy'] ?? '') as String,
+      deletedAt: (json['deletedAt'] ?? '') as String,
+      isDeleted: (json['isDeleted'] ?? '') as bool,
+    );
+  }
+
+  final String messageId;
+  final String roomId;
+  final String deletedBy;
+  final String deletedAt;
+  final bool isDeleted;
 }
 
 // message sent, and received response

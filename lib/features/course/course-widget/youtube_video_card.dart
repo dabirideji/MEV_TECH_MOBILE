@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:template/features/course/data/models/course-content-models/course_video_model.dart';
+import 'package:mevtech/features/course/data/models/course-content-models/course_video_model.dart';
 
 class YouTubeVideoCard extends StatelessWidget {
   const YouTubeVideoCard({required this.videoModel, this.onPressed, super.key});

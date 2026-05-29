@@ -1,4 +1,4 @@
-import 'package:template/core/utils/constants.dart';
+import 'package:mevtech/core/utils/constants.dart';
 
 class ChatRoom {
   const ChatRoom({

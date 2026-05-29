@@ -3,19 +3,19 @@ import 'dart:io';
 
 import 'package:image_picker/image_picker.dart';
 import 'package:injectable/injectable.dart';
-import 'package:template/core/error/failure_response.dart';
-import 'package:template/core/network/api_service.dart';
-import 'package:template/core/utils/constants.dart';
-import 'package:template/data/generic_repository.dart';
-import 'package:template/data/google_signin.dart';
-import 'package:template/data/paginated_model.dart';
-import 'package:template/features/presentation/utilities-class/mev_tech_utilities.dart';
-import 'package:template/features/quiz/data/models/question_model.dart';
-import 'package:template/features/quiz/data/models/subject_model.dart';
-import 'package:template/features/user/data/models/login_model.dart';
-import 'package:template/features/user/data/models/subscription_model.dart';
-import 'package:template/features/user/data/models/user_model.dart';
-import 'package:template/features/user/data/models/user_requests.dart.dart';
+import 'package:mevtech/core/error/failure_response.dart';
+import 'package:mevtech/core/network/api_service.dart';
+import 'package:mevtech/core/utils/constants.dart';
+import 'package:mevtech/data/generic_repository.dart';
+import 'package:mevtech/data/google_signin.dart';
+import 'package:mevtech/data/paginated_model.dart';
+import 'package:mevtech/features/presentation/utilities-class/mev_tech_utilities.dart';
+import 'package:mevtech/features/quiz/data/models/question_model.dart';
+import 'package:mevtech/features/quiz/data/models/subject_model.dart';
+import 'package:mevtech/features/user/data/models/login_model.dart';
+import 'package:mevtech/features/user/data/models/subscription_model.dart';
+import 'package:mevtech/features/user/data/models/user_model.dart';
+import 'package:mevtech/features/user/data/models/user_requests.dart.dart';
 
 @singleton
 class UserRepository {
@@ -31,7 +31,8 @@ class UserRepository {
     final result = await apiService.refreshTokenRequest();
     if (result == null) {
       throw FailureResponse.fromResponse(
-          'Session expired. Please login again.');
+        'Session expired. Please login again.',
+      );
     }
     return result;
   }
@@ -42,12 +43,9 @@ class UserRepository {
     required String refreshToken,
   }) async {
     final progLink = 'Student/GetById/$id';
-    final result = await apiService.getJsonRequest(
-      progLink,
-      token: token,
-    );
+    final result = await apiService.getJsonRequest(progLink, token: token);
 
-// this result is a test and should be removed, the above comment is the original
+    // this result is a test and should be removed, the above comment is the original
     // final result = await apiService.mockData();
 
     if (result != null) {
@@ -71,7 +69,33 @@ class UserRepository {
         throw FailureResponse.fromResponse(result);
       }
     } else {
-      throw FailureResponse.fromResponse('Unknown');
+      throw FailureResponse.fromResponse('Unknown Error');
+    }
+  }
+
+  // /api/v1/test/TestOneSignalConnection/test-onesignal-connection
+
+  Future<String> testNotifiion(String userId) async {
+    const progLink =
+        'v1/test/TestOneSignalConnection/test-onesignal-connection';
+    final result = await apiService.testPostJson(
+      progLink,
+      queryParameters: {'userId': userId},
+    );
+
+    // this result is a test and should be removed, the above comment is the original
+    // final result = await apiService.mockData();
+
+    if (result != null && result is String) {
+      // if (result is Map && result['status'] == true && result['data'] != null) {
+      //   // final data = result['data'] as Map<String, dynamic>;
+      //   return 'test';
+      // } else {
+      //   throw FailureResponse.fromResponse(result);
+      // }
+      return result;
+    } else {
+      throw FailureResponse.fromResponse('Unknown Error');
     }
   }
 
@@ -180,9 +204,7 @@ class UserRepository {
   }
 
   Future<UserModel> getStudentbyID(String id) async {
-    final result = await apiService.getJsonRequest(
-      'Student/GetById/$id',
-    );
+    final result = await apiService.getJsonRequest('Student/GetById/$id');
     if (result != null) {
       if (result is Map && result['status'] == true && result['data'] != null) {
         final data = result['data'] as Map<String, dynamic>;
@@ -233,9 +255,28 @@ class UserRepository {
     }
   }
 
+  // dynamic data = {'status': true, 'responseMessage': 'Hell Yah Success'};
+
+  Future<String> deleteAccount() async {
+    final result = await apiService.deleteJsonRequest('v1/auth/delete-account');
+    // final result = await Future.delayed(const Duration(seconds: 2), () {
+    //   return data;
+    // });
+    if (result != null) {
+      if (result is Map && result['status'] == true) {
+        return result['responseMessage'] as String;
+      } else {
+        throw FailureResponse.fromResponse(result);
+      }
+    } else {
+      throw FailureResponse.fromResponse('Unknown');
+    }
+  }
+
   Future<bool> markNotifAsread(String id) async {
     final result = await apiService.patchJsonRequest(
-        'Notification/MarkNotificationAsRead/$id/mark-as-read');
+      'Notification/MarkNotificationAsRead/$id/mark-as-read',
+    );
 
     if (result != null) {
       if (result is bool && result == true) {
@@ -250,9 +291,7 @@ class UserRepository {
 
   // email verify
 
-  Future<String> sendEmailConfirmToken(
-    Map<String, dynamic> jsonData,
-  ) async {
+  Future<String> sendEmailConfirmToken(Map<String, dynamic> jsonData) async {
     final result = await apiService.postJsonRequest(
       jsonData,
       'Token/SendToken',
@@ -273,9 +312,7 @@ class UserRepository {
     }
   }
 
-  Future<String> verifyEmailConfirmToken(
-    Map<String, dynamic> jsonData,
-  ) async {
+  Future<String> verifyEmailConfirmToken(Map<String, dynamic> jsonData) async {
     final result = await apiService.getJsonRequest(
       'Token/VerifyToken',
       queryParams: jsonData,
@@ -340,9 +377,7 @@ class UserRepository {
     }
   }
 
-  Future<String> resetPasswordStudent(
-    ResetPasswordRequest jsonData,
-  ) async {
+  Future<String> resetPasswordStudent(ResetPasswordRequest jsonData) async {
     final result = await apiService.postJsonRequest(
       jsonData.toJson(),
       'Student/ResetPassword',
@@ -367,6 +402,23 @@ class UserRepository {
 
   Future<List<UserModel>> getAllStudent() async {
     final result = await apiService.getJsonRequest('Student/GetAll');
+    // /api/Student/GetAllAsQueryable
+    if (result != null) {
+      if (result is Map && result['status'] == true) {
+        final data = result['data'] as List<dynamic>;
+        return data
+            .map((e) => UserModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+      } else {
+        throw FailureResponse.fromResponse(result);
+      }
+    } else {
+      throw FailureResponse.fromResponse('Unknown');
+    }
+  }
+
+  Future<List<UserModel>> getAllAsQueryStudent() async {
+    final result = await apiService.getJsonRequest('Student/GetAllAsQueryable');
     if (result != null) {
       if (result is Map && result['status'] == true) {
         final data = result['data'] as List<dynamic>;
@@ -382,8 +434,10 @@ class UserRepository {
   }
 
   Future<void> requestEmailVerifToken(Map<String, dynamic> jsonData) async {
-    final result =
-        await apiService.postJsonRequest(jsonData, 'Token/SendToken');
+    final result = await apiService.postJsonRequest(
+      jsonData,
+      'Token/SendToken',
+    );
     if (result != null) {
       if (result is Map && result['status'] == true) {
         // if (result['data'] != null) {
@@ -446,13 +500,10 @@ class UserRepository {
 
   // Future<void> uploadImage() async {
   //   final picker = ImagePicker();
-
   //   final picked = await picker.pickImage(source: ImageSource.gallery);
-
   //   if (picked != null) {
   //     final file = File(picked.path);
   //     final result = await apiService.uploadFileRequest('File/upload', file);
-
   //     if (result != null) {
   //       if (result is Map && result['status'] == true) {
   //       } else {
@@ -537,9 +588,7 @@ class UserRepository {
   }
 
   Future<UserModel> getInstructorbyID(String id) async {
-    final result = await apiService.getJsonRequest(
-      'Instructor/GetById/$id',
-    );
+    final result = await apiService.getJsonRequest('Instructor/GetById/$id');
     if (result != null) {
       if (result is Map && result['status'] == true && result['data'] != null) {
         final data = result['data'] as Map<String, dynamic>;
@@ -554,7 +603,9 @@ class UserRepository {
   }
 
   Future<UserModel> updateInstructor(
-      UpdateUserRequest jsonData, String id) async {
+    UpdateUserRequest jsonData,
+    String id,
+  ) async {
     final result = await apiService.updateJsonRequest(
       jsonData.toJson(),
       'Instructor/Update/${jsonData.id}',
@@ -576,9 +627,7 @@ class UserRepository {
     }
   }
 
-  Future<String> resetPasswordInstructor(
-    ResetPasswordRequest jsonData,
-  ) async {
+  Future<String> resetPasswordInstructor(ResetPasswordRequest jsonData) async {
     final result = await apiService.postJsonRequest(
       jsonData.toJson(),
       'Instructor/ResetPassword',
@@ -646,11 +695,7 @@ class UserRepository {
       endPoint: endPoint,
       fromJson: fromJson,
     );
-    return repo.getPaginated(
-      page: page,
-      pageSize: pageSize,
-      token: token,
-    );
+    return repo.getPaginated(page: page, pageSize: pageSize, token: token);
   }
 
   Future<List<T>> fetchAll<T>({
@@ -759,52 +804,64 @@ class UserRepository {
       endPoint: '',
       fromJson: fromJson,
     );
-    return repo.getOdata(
-      url: url,
-      authRequired: authRequired,
-      token: token,
-    );
+    return repo.getOdata(url: url, authRequired: authRequired, token: token);
   }
 
   // Quiz Section
 
-  Future<Subject> getSubjects() async {
-    final result = await apiService.getJsonRequest('v1/quiz/subjects');
-    if (result != null) {
-      if (result is Map && result['status'] == true) {
-        final data = result['data'] as Map<String, dynamic>;
+  // Future<Subject> getSubjects() async {
+  //   final result = await apiService.getJsonRequest('v1/quiz/subjects');
+  //   if (result != null) {
+  //     if (result is Map && result['status'] == true) {
+  //       final data = result['data'] as Map<String, dynamic>;
 
-        return Subject.fromJson(data);
-      } else {
-        throw FailureResponse.fromResponse(result);
-      }
-    } else {
-      throw FailureResponse.fromResponse('Unknown');
-    }
-  }
+  //       return Subject.fromJson(data);
+  //     } else {
+  //       throw FailureResponse.fromResponse(result);
+  //     }
+  //   } else {
+  //     throw FailureResponse.fromResponse('Unknown');
+  //   }
+  // }
 
-  Future<List<QuestionModel>> getQuizQuestions({
-    Map<String, dynamic>? queryParams,
-    String? count,
-  }) async {
-    final result = await apiService.getJsonRequest(
-      // 'v1/quiz/questions/many',
-      'v1/quiz/questions/$count',
-      queryParams: queryParams,
-    );
-    if (result != null) {
-      if (result is Map && result['status'] == true) {
-        final data = result['data'] as Map<String, dynamic>;
-        final actualData = data['data'] as List<dynamic>;
+  // Future<List<QuestionModel>> getQuizQuestions({
+  //   Map<String, dynamic>? queryParams,
+  //   String? count,
+  // }) async {
+  //   final result = await apiService.getJsonRequest(
+  //     // 'v1/quiz/questions/many',
+  //     'v1/quiz/questions/$count',
+  //     queryParams: queryParams,
+  //   );
+  //   if (result != null) {
+  //     if (result is Map && result['status'] == true) {
+  //       final data = result['data'] as Map<String, dynamic>;
+  //       final actualData = data['data'] as List<dynamic>;
 
-        return actualData
-            .map((e) => QuestionModel.fromJson(e as Map<String, dynamic>))
-            .toList();
-      } else {
-        throw FailureResponse.fromResponse(result);
-      }
-    } else {
-      throw FailureResponse.fromResponse('Unknown');
-    }
-  }
+  //       return actualData
+  //           .map((e) => QuestionModel.fromJson(e as Map<String, dynamic>))
+  //           .toList();
+  //     } else {
+  //       throw FailureResponse.fromResponse(result);
+  //     }
+  //   } else {
+  //     throw FailureResponse.fromResponse('Unknown');
+  //   }
+  // }
+
+  // Future<String> getQuizExplanation(String message) async {
+  //   final jsonData = <String, dynamic>{'message': message};
+  //   final result = await apiService.postJsonRequest(jsonData, 'chat');
+  //   if (result != null) {
+  //     if (result is Map && result['status'] == true) {
+  //       final data = result['data'] as Map<String, dynamic>;
+  //       final returnedMessage = data['response'] as String;
+  //       return returnedMessage;
+  //     } else {
+  //       throw FailureResponse.fromResponse(result);
+  //     }
+  //   } else {
+  //     throw FailureResponse.fromResponse('Unknown');
+  //   }
+  // }
 }

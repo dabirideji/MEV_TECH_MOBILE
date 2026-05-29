@@ -1,7 +1,7 @@
 // in notification_service.dart
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:injectable/injectable.dart';
-import 'package:template/bootstrap.dart';
+import 'package:mevtech/bootstrap.dart';
 
 @lazySingleton
 class NotificationService {

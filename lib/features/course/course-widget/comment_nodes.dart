@@ -1,5 +1,5 @@
 // Abstract base class for nodes in our comment tree display
-import 'package:template/features/course/data/models/course-content-models/course_content_model.dart';
+import 'package:mevtech/features/course/data/models/course-content-models/course_content_model.dart';
 
 abstract class CommentTreeNode {}
 

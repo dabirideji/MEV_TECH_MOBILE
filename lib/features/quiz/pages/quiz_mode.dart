@@ -1,19 +1,13 @@
-import 'dart:developer';
-
-import 'package:dropdown_flutter/custom_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:quick_quiz_view/quick_quiz_view.dart';
-import 'package:template/app/router/app_router.dart';
-import 'package:template/core/utils/colors.dart';
-import 'package:template/features/course/course-widget/dropdown_btn.dart';
-import 'package:template/features/presentation/utilities-class/mev_tech_utilities.dart';
-import 'package:template/features/quiz/logic/quiz_cubit.dart';
-import 'package:template/features/quiz/pages/testing_page.dart';
-import 'package:template/features/quiz/widget/question_card.dart';
-import 'package:template/features/quiz/widget/quiz_container.dart';
+import 'package:mevtech/app/router/app_router.dart';
+import 'package:mevtech/core/utils/colors.dart';
+import 'package:mevtech/features/course/course-widget/dropdown_btn.dart';
+import 'package:mevtech/features/presentation/utilities-class/mev_tech_utilities.dart';
+import 'package:mevtech/features/quiz/logic/quiz_cubit.dart';
+import 'package:mevtech/features/quiz/widget/quiz_container.dart';
 
 class QuizModeScreen extends StatefulWidget {
   const QuizModeScreen({super.key});
@@ -28,7 +22,9 @@ class _QuizModeScreenState extends State<QuizModeScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<QuizCubit>().fetchSubjects();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<QuizCubit>().fetchSubjects();
+    });
   }
 
   @override
@@ -40,29 +36,26 @@ class _QuizModeScreenState extends State<QuizModeScreen> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: const Icon(Icons.arrow_back),
-        ),
+        // leading: IconButton(
+        //   onPressed: () {
+        //     Navigator.pop(context);
+        //   },
+        //   icon: const Icon(Icons.arrow_back),
+        // ),
         title: Text(
           'Quiz Mode',
-          style: TextStyle(
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
         ),
-        actions: [
-          TextButton(
-              onPressed: () {
-                Navigator.of(context)
-                    .push(MaterialPageRoute<dynamic>(builder: (context) {
-                  return TestingPage();
-                }));
-              },
-              child: Text('Testing Class'))
-        ],
+        // actions: [
+        //   TextButton(
+        //       onPressed: () {
+        //         Navigator.of(context)
+        //             .push(MaterialPageRoute<dynamic>(builder: (context) {
+        //           return TestingPage();
+        //         }));
+        //       },
+        //       child: Text('Testing Class'))
+        // ],
       ),
       body: SingleChildScrollView(
         physics: const ClampingScrollPhysics(),
@@ -73,10 +66,7 @@ class _QuizModeScreenState extends State<QuizModeScreen> {
             children: [
               Text(
                 'Select Subject',
-                style: TextStyle(
-                  fontSize: 13.sp,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600),
               ),
               SizedBox(height: 10.h),
               BlocBuilder<QuizCubit, QuizState>(
@@ -89,15 +79,16 @@ class _QuizModeScreenState extends State<QuizModeScreen> {
                         hintText: state.subjectStatus.isLoading
                             ? 'Loading...'
                             : state.subjectStatus.isFailure &&
-                                    state.subjects.isEmpty
-                                ? 'Unable to fetch subject'
-                                : 'Select Subject',
+                                  state.subjects.isEmpty
+                            ? 'Unable to fetch subject'
+                            : 'Select Subject',
                         initialValue: state.subjectId,
                         items: state.subjects,
                         onChanged: quizCubit.selectSubject,
                       ),
                       Visibility(
-                        visible: state.subjects.isEmpty &&
+                        visible:
+                            state.subjects.isEmpty &&
                             state.subjectStatus.isFailure,
                         child: TextButton.icon(
                           onPressed: quizCubit.fetchSubjects,
@@ -122,9 +113,7 @@ class _QuizModeScreenState extends State<QuizModeScreen> {
                             ),
                             backgroundColor: Colors.white,
                             shape: StadiumBorder(
-                              side: BorderSide(
-                                color: Colors.grey.shade300,
-                              ),
+                              side: BorderSide(color: Colors.grey.shade300),
                             ),
                           ),
                         ),
@@ -143,19 +132,23 @@ class _QuizModeScreenState extends State<QuizModeScreen> {
                           'Unlimited time',
                           'Instant feedback',
                           'Review answers',
-                          'No pressure'
+                          'No pressure',
                         ],
-                        buttonText: 'Start Practice Mode',
+                        buttonText: 'Start Practice',
                         // buttonColor: Colors.blue.shade700,
                         onPressed: () async {
                           state.subjectId != null && state.subjectId!.isNotEmpty
-                              ? await context.pushNamed(
-                                  AppRouter.quiz,
-                                  extra: state.subjectId,
-                                  pathParameters: {'mode': 'Practice Mode'},
-                                ).then((_) {
-                                  quizCubit.selectSubject(state.subjectId);
-                                })
+                              ? await context
+                                    .pushNamed(
+                                      AppRouter.quiz,
+                                      extra: state.subjectId,
+                                      pathParameters: {
+                                        'mode': QuizMode.practice.name,
+                                      },
+                                    )
+                                    .then((_) {
+                                      quizCubit.selectSubject(state.subjectId);
+                                    })
                               : MevTechUtilities.alertDialogBox(
                                   context: context,
                                   message:
@@ -179,19 +172,23 @@ class _QuizModeScreenState extends State<QuizModeScreen> {
                           '30-minute timer',
                           'Final scoring',
                           'Exam simulation',
-                          'Performance tracking'
+                          'Performance tracking',
                         ],
-                        buttonText: 'Start Test Mode',
+                        buttonText: 'Start Test',
                         // buttonColor: Colors.blue.shade700,
                         onPressed: () async {
                           state.subjectId != null && state.subjectId!.isNotEmpty
-                              ? await context.pushNamed(
-                                  AppRouter.quiz,
-                                  extra: state.subjectId,
-                                  pathParameters: {'mode': 'Test Mode'},
-                                ).then((_) {
-                                  quizCubit.selectSubject(state.subjectId);
-                                })
+                              ? await context
+                                    .pushNamed(
+                                      AppRouter.quiz,
+                                      extra: state.subjectId,
+                                      pathParameters: {
+                                        'mode': QuizMode.test.name,
+                                      },
+                                    )
+                                    .then((_) {
+                                      quizCubit.selectSubject(state.subjectId);
+                                    })
                               : MevTechUtilities.alertDialogBox(
                                   context: context,
                                   message:

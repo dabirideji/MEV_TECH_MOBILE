@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
 
 class AppColor {
   // static const primary = Color(0xFF006BB3);
@@ -33,11 +34,14 @@ class AppColor {
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
     colors: [blue, blueDarker],
-    stops: [
-      0,
-      0.7,
-    ],
+    stops: [0, 0.7],
   );
+
+  static const custom = Color(0xFF065808);
+  static const customDark = Color(0xFF629F80);
+
+  static const custom3 = Color(0xFF04368E);
+  static const custom3Secondary = Color(0xFFA00505);
 }
 
 // #65a090

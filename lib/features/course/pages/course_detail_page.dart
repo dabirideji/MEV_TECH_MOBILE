@@ -2,19 +2,20 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:template/app/router/app_router.dart';
-import 'package:template/core/utils/colors.dart';
-import 'package:template/features/auth/logic/auth-cubit/auth_cubit.dart';
-import 'package:template/features/course/data/models/course-content-models/course_content_model.dart';
-import 'package:template/features/course/data/models/course-models/course_model.dart';
-import 'package:template/features/course/logic/course-cubit/course_cubit.dart';
-import 'package:template/features/course/logic/course_details_cubit.dart';
-import 'package:template/features/course/logic/selected_course_cubit.dart';
-import 'package:template/features/presentation/dashboard/dashboard_cubit.dart';
-import 'package:template/features/presentation/utilities-class/mev_tech_utilities.dart';
-import 'package:template/injector.dart';
+import 'package:mevtech/app/router/app_router.dart';
+import 'package:mevtech/core/utils/colors.dart';
+import 'package:mevtech/features/auth/logic/auth-cubit/auth_cubit.dart';
+import 'package:mevtech/features/course/data/models/course-content-models/course_content_model.dart';
+import 'package:mevtech/features/course/data/models/course-models/course_model.dart';
+import 'package:mevtech/features/course/logic/course-cubit/course_cubit.dart';
+import 'package:mevtech/features/course/logic/course_details_cubit.dart';
+import 'package:mevtech/features/course/logic/selected_course_cubit.dart';
+import 'package:mevtech/features/presentation/dashboard/dashboard_cubit.dart';
+import 'package:mevtech/features/presentation/utilities-class/mev_tech_utilities.dart';
+import 'package:mevtech/injector.dart';
 
 class CourseDetailsPage extends StatelessWidget {
   const CourseDetailsPage({required this.courseId, super.key});
@@ -55,15 +56,15 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
     if (selectedCourse == null || selectedCourse.id != widget.courseId) {
       context.read<CourseDetailsCubit>().fetchCourseById(widget.courseId);
       context.read<CourseDetailsCubit>().fetchCourseEnrollment(
-            courseId: widget.courseId,
-            studentId: MevTechUtilities.id,
-          );
+        courseId: widget.courseId,
+        studentId: MevTechUtilities.id,
+      );
     } else {
       context.read<CourseDetailsCubit>().loadFromMemory(selectedCourse);
       context.read<CourseDetailsCubit>().fetchCourseEnrollment(
-            courseId: selectedCourse.id,
-            studentId: MevTechUtilities.id,
-          );
+        courseId: selectedCourse.id,
+        studentId: MevTechUtilities.id,
+      );
     }
   }
 
@@ -87,7 +88,9 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
           MevTechUtilities.hideProgressIndicator(context);
 
           MevTechUtilities.errorToast(
-              context, state.createStatus.error ?? 'Something went wrong');
+            context,
+            state.createStatus.error ?? 'Something went wrong',
+          );
         } else if (state is CourseDetailsSuccess &&
             state.createStatus.isSuccess) {
           MevTechUtilities.hideProgressIndicator(context);
@@ -109,9 +112,7 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
                   onPressed: () {
                     Navigator.pop(context);
                   },
-                  icon: const Icon(
-                    Icons.arrow_back_ios,
-                  ),
+                  icon: const Icon(Icons.arrow_back_ios),
                 ),
                 title: Text(
                   'Course Details',
@@ -142,18 +143,20 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
                               borderRadius: BorderRadius.circular(8),
                               child: CachedNetworkImage(
                                 imageUrl: course.courseImageUrl,
-                                placeholder: (_, url) => const Center(
+                                placeholder: (_, url) => Center(
                                   child: SizedBox(
-                                    width: 30,
-                                    height: 30,
-                                    child: CircularProgressIndicator(
-                                      color: AppColor.secondary,
-                                      backgroundColor: AppColor.primary,
+                                    width: 30.w,
+                                    height: 30.h,
+                                    child: MevTechUtilities.customLoader(
+                                      scale: 1.5,
                                     ),
                                   ),
                                 ),
-                                errorWidget: (context, url, error) =>
-                                    const Icon(Icons.error),
+                                errorWidget: (context, url, error) => Icon(
+                                  FIcons.imageOff,
+                                  color: Colors.red,
+                                  size: 25.sp,
+                                ),
                                 fit: BoxFit.fill,
                               ),
                             ),
@@ -252,6 +255,7 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
                   );
                 },
               ),
+
               // floatingActionButton:
               // Padding(
               //         padding: const EdgeInsets.only(bottom: 10),
@@ -319,24 +323,25 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
               //             )),
               //       )
               //     : null,
-
               bottomNavigationBar: SafeArea(
                 child: Padding(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 12.w, vertical: 5.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.w,
+                    vertical: 5.h,
+                  ),
                   child: ElevatedButton.icon(
                     onPressed: () {
                       !authSuccess.isSubscribed
                           ? context.pushNamed(AppRouter.subscription)
                           : state.courseEnrollment != null
-                              ? context.pushNamed(
-                                  AppRouter.courseContentlist,
-                                  extra: widget.courseId,
-                                )
-                              : detailsCubit.createCourseEnrollment(
-                                  courseId: widget.courseId,
-                                  studentId: MevTechUtilities.id,
-                                );
+                          ? context.pushNamed(
+                              AppRouter.courseContentlist,
+                              extra: widget.courseId,
+                            )
+                          : detailsCubit.createCourseEnrollment(
+                              courseId: widget.courseId,
+                              studentId: MevTechUtilities.id,
+                            );
                     },
                     style: ElevatedButton.styleFrom(
                       shape: RoundedRectangleBorder(
@@ -356,7 +361,7 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
                           )
                         : null,
                     label: Container(
-                      height: 45.h,
+                      height: 50.h,
                       width: double.infinity,
                       alignment: Alignment.center,
                       child: buttonText(
@@ -371,17 +376,16 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
             ),
           );
         }
-        return const Scaffold(
-          body: Text('Unable to load Course'),
-        );
+        return const Scaffold(body: Text('Unable to load Course'));
       },
     );
   }
 
-  Widget buttonText(
-      {required String courseId,
-      required String studentId,
-      required CourseEnrollmentModel? enrollment}) {
+  Widget buttonText({
+    required String courseId,
+    required String studentId,
+    required CourseEnrollmentModel? enrollment,
+  }) {
     if (enrollment != null) {
       if (courseId == enrollment.courseId &&
           studentId == enrollment.studentId) {
@@ -431,20 +435,9 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Icon(
-                      Icons.star,
-                      color: AppColor.primary,
-                      size: 35.r,
-                    ),
-                    Image.asset(
-                      'assets/images/success-icon.png',
-                      width: 150,
-                    ),
-                    Icon(
-                      Icons.star,
-                      color: AppColor.primary,
-                      size: 35.r,
-                    ),
+                    Icon(Icons.star, color: AppColor.primary, size: 35.r),
+                    Image.asset('assets/images/success-icon.png', width: 150),
+                    Icon(Icons.star, color: AppColor.primary, size: 35.r),
                   ],
                 ),
                 SizedBox(height: 30.h),
@@ -557,7 +550,6 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
       confirmText: 'Confirm',
       alignment: Alignment.bottomCenter,
       onConfirm: () {
-        context.pop();
         context.read<CourseCubit>().deleteCourse(id);
       },
     );
@@ -603,9 +595,7 @@ class _CourseDetailsViewState extends State<CourseDetailsView> {
                     onPressed: () {
                       context.pop();
                     },
-                    icon: const Icon(
-                      Icons.close,
-                    ),
+                    icon: const Icon(Icons.close),
                   ),
                 ),
                 SizedBox(height: 20.h),

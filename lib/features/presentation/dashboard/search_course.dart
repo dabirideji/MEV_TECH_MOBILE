@@ -4,11 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:template/app/router/app_router.dart';
-import 'package:template/core/utils/colors.dart';
-import 'package:template/features/course/course-widget/course_card.dart';
-import 'package:template/features/course/logic/selected_course_cubit.dart';
-import 'package:template/features/presentation/dashboard/dashboard_cubit.dart';
+import 'package:mevtech/app/router/app_router.dart';
+import 'package:mevtech/core/utils/colors.dart';
+import 'package:mevtech/features/course/course-widget/course_card.dart';
+import 'package:mevtech/features/course/logic/selected_course_cubit.dart';
+import 'package:mevtech/features/presentation/dashboard/dashboard_cubit.dart';
+import 'package:mevtech/features/presentation/utilities-class/mev_tech_utilities.dart';
 
 class SearchCourse extends StatefulWidget {
   const SearchCourse({super.key});
@@ -42,14 +43,12 @@ class _SearchCourseState extends State<SearchCourse> {
         final dashboardCubit = context.read<DashboardCubit>();
 
         return Scaffold(
+          resizeToAvoidBottomInset: false,
           appBar: AppBar(
             centerTitle: true,
             title: Text(
               'Search Course',
-              style: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
             ),
           ),
           body: Padding(
@@ -81,9 +80,7 @@ class _SearchCourseState extends State<SearchCourse> {
                             child: SizedBox(
                               height: 10.h,
                               width: 10.w,
-                              child: const CircularProgressIndicator(
-                                color: Colors.black54,
-                              ),
+                              child: MevTechUtilities.customLoader(scale: 1),
                             ),
                           )
                         : null,
@@ -107,39 +104,40 @@ class _SearchCourseState extends State<SearchCourse> {
                 SizedBox(height: 10.h),
                 Expanded(
                   // state.searchError != null
-                  child: state.searchedCourses.isEmpty &&
-                          dashboardCubit.searchText.text.isNotEmpty
+                  child:
+                      state.searchedCourses.isEmpty &&
+                          dashboardCubit.searchText.text.trim().isNotEmpty
                       ? Center(
                           child: Text(state.searchError ?? 'No courses found'),
                         )
                       : state.searchedCourses.isEmpty
-                          ? CourseModelCard(
-                              courses: state.courses,
-                              onTap: (course) {
-                                context
-                                    .read<SelectedCourseCubit>()
-                                    .selectCourse(course);
+                      ? CourseModelCard(
+                          courses: state.courses,
+                          onTap: (course) {
+                            context.read<SelectedCourseCubit>().selectCourse(
+                              course,
+                            );
 
-                                context.pushNamed(
-                                  AppRouter.courseDetails,
-                                  pathParameters: {'id': course.id},
-                                );
-                              },
-                            )
-                          : CourseModelCard(
-                              courses: state.searchedCourses,
-                              onTap: (course) {
-                                context
-                                    .read<SelectedCourseCubit>()
-                                    .selectCourse(course);
+                            context.pushNamed(
+                              AppRouter.courseDetails,
+                              pathParameters: {'id': course.id},
+                            );
+                          },
+                        )
+                      : CourseModelCard(
+                          courses: state.searchedCourses,
+                          onTap: (course) {
+                            context.read<SelectedCourseCubit>().selectCourse(
+                              course,
+                            );
 
-                                context.pushNamed(
-                                  AppRouter.courseDetails,
-                                  pathParameters: {'id': course.id},
-                                );
-                              },
-                            ),
-                )
+                            context.pushNamed(
+                              AppRouter.courseDetails,
+                              pathParameters: {'id': course.id},
+                            );
+                          },
+                        ),
+                ),
               ],
             ),
           ),

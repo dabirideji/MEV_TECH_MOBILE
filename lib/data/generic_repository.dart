@@ -1,6 +1,6 @@
-import 'package:template/core/error/failure_response.dart';
-import 'package:template/core/network/api_service.dart';
-import 'package:template/data/paginated_model.dart';
+import 'package:mevtech/core/error/failure_response.dart';
+import 'package:mevtech/core/network/api_service.dart';
+import 'package:mevtech/data/paginated_model.dart';
 
 class GenericRepository<T> {
   GenericRepository({

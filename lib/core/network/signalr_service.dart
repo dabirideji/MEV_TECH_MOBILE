@@ -7,8 +7,8 @@ import 'package:logging/logging.dart';
 import 'package:signalr_netcore/http_connection_options.dart';
 import 'package:signalr_netcore/hub_connection.dart';
 import 'package:signalr_netcore/hub_connection_builder.dart';
-import 'package:template/features/presentation/utilities-class/mev_tech_utilities.dart';
-import 'package:template/features/user/data/models/transaction_model.dart';
+import 'package:mevtech/features/presentation/utilities-class/mev_tech_utilities.dart';
+import 'package:mevtech/features/user/data/models/transaction_model.dart';
 
 class SignalRService {
   SignalRService({required this.userId, required this.token});

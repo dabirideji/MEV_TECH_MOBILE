@@ -1,7 +1,7 @@
 import 'dart:developer';
 
-import 'package:template/features/user/data/models/subscription_model.dart';
-import 'package:template/features/user/data/models/user_model.dart';
+import 'package:mevtech/features/user/data/models/subscription_model.dart';
+import 'package:mevtech/features/user/data/models/user_model.dart';
 
 class Transaction {
   Transaction({

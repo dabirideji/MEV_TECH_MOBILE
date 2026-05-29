@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:template/features/user/data/models/user_notification_model.dart';
+import 'package:mevtech/features/user/data/models/user_notification_model.dart';
 
 abstract class LocalStorage {
   Future<String?> getApiKey();

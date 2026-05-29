@@ -1,9 +1,9 @@
 // server_list.dart
 
 import 'package:flutter/material.dart';
-import 'package:template/features/chat/data/models/room_model.dart';
-import 'package:template/features/chat/data/signalr-model/room.dart';
-import 'package:template/features/chat/mock/mock_models.dart';
+import 'package:mevtech/features/chat/data/models/room_model.dart';
+import 'package:mevtech/features/chat/data/signalr-model/room.dart';
+import 'package:mevtech/features/chat/mock/mock_models.dart';
 
 class ServerList extends StatefulWidget {
   const ServerList({
@@ -75,31 +75,36 @@ class _ServerListState extends State<ServerList> {
             },
           ),
           Divider(
-              indent: 20, endIndent: 20, color: Theme.of(context).dividerColor),
+            indent: 20,
+            endIndent: 20,
+            color: Theme.of(context).dividerColor,
+          ),
           Expanded(
             child: ListView.builder(
-                itemCount: widget.myRooms.length,
-                itemBuilder: (context, index) {
-                  final myRoom = widget.myRooms[index];
+              itemCount: widget.myRooms.length,
+              itemBuilder: (context, index) {
+                final myRoom = widget.myRooms[index];
 
-                  return _ServerIcon(
-                    text: getFirstLetter(myRoom.name),
-                    isSelected: selectedId == myRoom.id,
-                    onTap: () {
-                      selectServer(myRoom.id);
-                      widget.onTapServer?.call(myRoom.id);
-                    },
-                    // () => widget.onTapServer?.call(myRoom.id),
-                  );
-                }),
+                return _ServerIcon(
+                  text: getFirstLetter(myRoom.name),
+                  isSelected: selectedId == myRoom.id,
+                  onTap: () {
+                    selectServer(myRoom.id);
+                    widget.onTapServer?.call(myRoom.id);
+                  },
+                  // () => widget.onTapServer?.call(myRoom.id),
+                );
+              },
+            ),
           ),
           //  _ServerIcon(text: 'P', isSelected: isSelected),
           //     _ServerIcon(text: 'D', isSelected: isSelected),
           IconButton(
-              padding: EdgeInsets.zero,
-              visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
-              onPressed: widget.onAddBtnClick,
-              icon: const _ServerIcon(icon: Icons.add, isSelected: false)),
+            padding: EdgeInsets.zero,
+            visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
+            onPressed: widget.onAddBtnClick,
+            icon: const _ServerIcon(icon: Icons.add, isSelected: false),
+          ),
           // IconButton(
           //   icon: const Icon(Icons.add),
           //   onPressed: () {},
@@ -109,10 +114,10 @@ class _ServerListState extends State<ServerList> {
           //     ),
           //   ),
           // ),
-          _ServerIcon(
-            icon: Icons.explore,
-            isSelected: selectedId == exploreId,
-          ),
+          // _ServerIcon(
+          //   icon: Icons.explore,
+          //   isSelected: selectedId == exploreId,
+          // ),
         ],
       ),
     );
@@ -168,15 +173,18 @@ class _ServerIcon extends StatelessWidget {
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                              color: accentColor.withOpacity(0.3),
-                              blurRadius: 4)
+                            color: accentColor.withOpacity(0.3),
+                            blurRadius: 4,
+                          ),
                         ]
                       : null,
                 ),
                 child: icon != null
-                    ? Icon(icon,
+                    ? Icon(
+                        icon,
                         color: isSelected ? Colors.white : Colors.black87,
-                        size: 28)
+                        size: 28,
+                      )
                     : Center(
                         child: Text(
                           text!,

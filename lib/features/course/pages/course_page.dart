@@ -3,13 +3,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:template/app/router/app_router.dart';
-import 'package:template/core/utils/colors.dart';
-import 'package:template/features/auth/logic/auth-cubit/auth_cubit.dart';
-import 'package:template/features/course/course-widget/course_card.dart';
-import 'package:template/features/course/logic/course-cubit/course_cubit.dart';
-import 'package:template/features/course/logic/selected_course_cubit.dart';
-import 'package:template/features/presentation/utilities-class/mev_tech_utilities.dart';
+import 'package:mevtech/app/router/app_router.dart';
+import 'package:mevtech/core/utils/colors.dart';
+import 'package:mevtech/features/auth/logic/auth-cubit/auth_cubit.dart';
+import 'package:mevtech/features/course/course-widget/course_card.dart';
+import 'package:mevtech/features/course/logic/course-cubit/course_cubit.dart';
+import 'package:mevtech/features/course/logic/selected_course_cubit.dart';
+import 'package:mevtech/features/presentation/utilities-class/mev_tech_utilities.dart';
 
 class CoursePage extends StatefulWidget {
   const CoursePage({super.key});
@@ -22,7 +22,9 @@ class _CoursePageState extends State<CoursePage> {
   @override
   void initState() {
     super.initState();
-    context.read<CourseCubit>().onCreate();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<CourseCubit>().fetchLocalCourses();
+    });
   }
 
   @override
@@ -52,10 +54,7 @@ class _CoursePageState extends State<CoursePage> {
           MevTechUtilities.errorToast(context, state.errorMessage);
         } else if (state is CourseSuccess &&
             state.courseRefreshError.isNotEmpty) {
-          MevTechUtilities.errorToast(
-            context,
-            state.courseRefreshError,
-          );
+          MevTechUtilities.errorToast(context, state.courseRefreshError);
         }
       },
       builder: (context, state) {
@@ -116,57 +115,57 @@ class _CoursePageState extends State<CoursePage> {
                   ),
                 )
               : state is CourseLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(
-                        color: AppColor.secondary,
-                        backgroundColor: AppColor.primary,
-                      ),
-                    )
-                  : Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: EdgeInsets.all(20.r),
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: Colors.grey.shade200,
-                                width: 3,
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Column(
-                              children: [
-                                Text(
-                                  'Unable to Load Courses',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.black54,
-                                  ),
-                                ),
-                                SizedBox(height: 20.h),
-                                IconButton(
-                                  onPressed: courseCubit.fetchCourses,
-                                  icon: const Icon(
-                                    Icons.refresh,
-                                    color: AppColor.secondary,
-                                  ),
-                                ),
-                                Text(
-                                  'Retry',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.black54,
-                                  ),
-                                ),
-                              ],
-                            ),
+              ? const Center(
+                  child: CircularProgressIndicator(
+                    color: AppColor.secondary,
+                    backgroundColor: AppColor.primary,
+                  ),
+                )
+              : Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(20.r),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: Colors.grey.shade200,
+                            width: 3,
                           ),
-                        ],
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              'Unable to Load Courses',
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black54,
+                              ),
+                            ),
+                            SizedBox(height: 20.h),
+                            IconButton(
+                              onPressed: courseCubit.fetchCourses,
+                              icon: const Icon(
+                                Icons.refresh,
+                                color: AppColor.secondary,
+                              ),
+                            ),
+                            Text(
+                              'Retry',
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black54,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
+                    ],
+                  ),
+                ),
           // floatingActionButton: FloatingActionButton(
           //   backgroundColor: AppColor.secondary,
           //   onPressed: () {

@@ -6,11 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:injectable/injectable.dart';
-import 'package:template/core/utils/request_states.dart';
-import 'package:template/features/auth/logic/auth-cubit/auth_cubit.dart';
-import 'package:template/features/user/data/models/user_model.dart';
-import 'package:template/features/user/data/models/user_requests.dart.dart';
-import 'package:template/features/user/data/repository/user_repository.dart';
+import 'package:mevtech/core/utils/request_states.dart';
+import 'package:mevtech/features/auth/logic/auth-cubit/auth_cubit.dart';
+import 'package:mevtech/features/user/data/models/user_model.dart';
+import 'package:mevtech/features/user/data/models/user_requests.dart.dart';
+import 'package:mevtech/features/user/data/repository/user_repository.dart';
 
 part 'user_state.dart';
 
@@ -43,9 +43,7 @@ class UserCubit extends Cubit<UserState> {
     final current = state as UserSuccess;
 
     if (user != null) {
-      emit(current.copyWith(
-        user: user,
-      ));
+      emit(current.copyWith(user: user));
     }
   }
 
@@ -78,23 +76,57 @@ class UserCubit extends Cubit<UserState> {
 
         final result = await userRepository.updateStudent(jsonData, id);
 
-        emit(current.copyWith(
-          updateUserStatus: const RequestState.success(),
-          user: result,
-          message: 'Update Request Successful',
-        ));
+        emit(
+          current.copyWith(
+            updateUserStatus: const RequestState.success(),
+            user: result,
+            message: 'Update Request Successful',
+          ),
+        );
       } else {
-        emit(current.copyWith(
-          updateUserStatus:
-              const RequestState.failure('Invalid user ID, please re-login'),
-        ));
+        emit(
+          current.copyWith(
+            updateUserStatus: const RequestState.failure(
+              'Invalid user ID, please re-login',
+            ),
+          ),
+        );
       }
     } catch (e) {
-      emit(current.copyWith(
-        updateUserStatus: RequestState.failure(e.toString()),
-      ));
+      emit(
+        current.copyWith(updateUserStatus: RequestState.failure(e.toString())),
+      );
     }
   }
+
+  Future<void> deleteUserAccount() async {
+    if (state is! UserSuccess) return;
+    final current = state as UserSuccess;
+
+    try {
+      emit(
+        current.copyWith(deleteUserAccountStatus: const RequestState.loading()),
+      );
+
+      final result = await userRepository.deleteAccount();
+
+      emit(
+        current.copyWith(
+          deleteUserAccountStatus: const RequestState.success(),
+
+          message: '$result\nAccount Deleted Successfully',
+        ),
+      );
+    } catch (e) {
+      emit(
+        current.copyWith(
+          deleteUserAccountStatus: RequestState.failure(e.toString()),
+        ),
+      );
+    }
+  }
+
+  File? nullFile;
 
   Future<void> uploadProfilePic(File? imageFile) async {
     if (state is! UserSuccess) return;
@@ -103,8 +135,9 @@ class UserCubit extends Cubit<UserState> {
     try {
       if (current.user != null && imageFile != null) {
         if (!isClosed) {
-          emit(current.copyWith(
-              imageUploadStatus: const RequestState.loading()));
+          emit(
+            current.copyWith(imageUploadStatus: const RequestState.loading()),
+          );
         }
 
         final result = await userRepository.uploadProfileImage(
@@ -113,17 +146,25 @@ class UserCubit extends Cubit<UserState> {
         );
 
         if (!isClosed) {
-          emit(current.copyWith(
-            imageUploadStatus: const RequestState.success(),
-            user: result,
-            message: 'Image upload successful',
-          ));
+          emit(
+            current.copyWith(
+              imageUploadStatus: const RequestState.success(),
+              user: result,
+              message: 'Image upload successful',
+            ),
+          );
         }
       }
     } catch (e) {
       if (!isClosed) {
-        emit(current.copyWith(
-            imageUploadStatus: RequestState.failure(e.toString())));
+        emit(
+          current.copyWith(
+            imageUploadStatus: RequestState.failure(e.toString()),
+            file: nullFile,
+          ),
+        );
+
+        emit(UserSuccess(user: current.user));
       }
     }
   }
@@ -159,9 +200,7 @@ class UserCubit extends Cubit<UserState> {
       }
     } catch (e) {
       if (!isClosed) {
-        emit(
-          current.copyWith(message: e.toString()),
-        );
+        emit(current.copyWith(message: e.toString()));
       }
     }
   }
@@ -171,11 +210,14 @@ class UserCubit extends Cubit<UserState> {
     final current = state as UserSuccess;
 
     if (!isClosed) {
-      emit(current.copyWith(
-        imageUploadStatus: const RequestState.initial(),
-        message: '',
-        updateUserStatus: const RequestState.initial(),
-      ));
+      emit(
+        current.copyWith(
+          imageUploadStatus: const RequestState.initial(),
+          message: '',
+          updateUserStatus: const RequestState.initial(),
+          deleteUserAccountStatus: const RequestState.initial(),
+        ),
+      );
     }
   }
 

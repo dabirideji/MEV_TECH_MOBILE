@@ -4,12 +4,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:template/app/router/app_router.dart';
-import 'package:template/core/utils/colors.dart';
-import 'package:template/features/auth/logic/auth-cubit/auth_cubit.dart';
-import 'package:template/features/presentation/utilities-class/mev_tech_utilities.dart';
-import 'package:template/features/user/data/models/user_model.dart';
-import 'package:template/features/user/logic/user-cubit/user_cubit.dart';
+import 'package:mevtech/app/router/app_router.dart';
+import 'package:mevtech/core/utils/colors.dart';
+import 'package:mevtech/features/auth/logic/auth-cubit/auth_cubit.dart';
+import 'package:mevtech/features/presentation/utilities-class/mev_tech_utilities.dart';
+import 'package:mevtech/features/user/data/models/user_model.dart';
+import 'package:mevtech/features/user/logic/user-cubit/user_cubit.dart';
 
 class EditUserPage extends StatelessWidget {
   const EditUserPage({super.key});
@@ -27,6 +27,7 @@ class EditUserPage extends StatelessWidget {
     }
 
     return BlocConsumer<UserCubit, UserState>(
+      listenWhen: (previous, current) => previous != current,
       listener: (context, state) {
         if (state is UserSuccess && state.updateUserStatus.isLoading) {
           MevTechUtilities.showProgressIndicator(context);
@@ -40,12 +41,12 @@ class EditUserPage extends StatelessWidget {
         } else if (state is UserSuccess && state.updateUserStatus.isSuccess) {
           MevTechUtilities.hideProgressIndicator(context);
 
-          authCubit.updateUserdata(state.user);
-
           MevTechUtilities.successToast(context, state.message);
-          if (Navigator.canPop(context)) {
-            Navigator.pop(context);
+          if (context.canPop()) {
+            context.pop(context);
           }
+
+          authCubit.updateUserdata(state.user);
         }
       },
       builder: (context, state) {
@@ -55,10 +56,7 @@ class EditUserPage extends StatelessWidget {
           appBar: AppBar(
             title: Text(
               'Edit Profile',
-              style: TextStyle(
-                fontSize: 15.sp,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600),
             ),
           ),
           body: SingleChildScrollView(
@@ -140,9 +138,7 @@ class EditUserPage extends StatelessWidget {
                     controller: userCubit.txtPhoneNumber,
                     hintText: 'Enter Phone Number',
                     keyboardType: TextInputType.number,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                    ],
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     prefixIcon: Padding(
                       padding: const EdgeInsets.only(
                         left: 13,
@@ -164,9 +160,7 @@ class EditUserPage extends StatelessWidget {
                   SizedBox(height: 30.h),
                   ElevatedButton(
                     onPressed: () {
-                      userCubit.updateUser(
-                        state.user?.id ?? user?.id,
-                      );
+                      userCubit.updateUser(state.user?.id ?? user?.id);
                     },
                     style: ElevatedButton.styleFrom(
                       shape: RoundedRectangleBorder(
@@ -176,7 +170,7 @@ class EditUserPage extends StatelessWidget {
                       foregroundColor: Colors.white,
                     ),
                     child: Container(
-                      height: 40.h,
+                      height: 50.h,
                       width: double.infinity,
                       alignment: Alignment.center,
                       child: Text(
@@ -206,7 +200,7 @@ class EditUserPage extends StatelessWidget {
                       foregroundColor: AppColor.primary,
                     ),
                     child: Container(
-                      height: 40.h,
+                      height: 50.h,
                       width: double.infinity,
                       alignment: Alignment.center,
                       child: Text(
@@ -245,9 +239,7 @@ class EditUserPage extends StatelessWidget {
       keyboardType: keyboardType,
       obscureText: obscureText,
       inputFormatters: inputFormatters,
-      style: TextStyle(
-        fontSize: 13.sp,
-      ),
+      style: TextStyle(fontSize: 13.sp),
       decoration: InputDecoration(
         isDense: true,
         hintText: hintText,
@@ -256,22 +248,18 @@ class EditUserPage extends StatelessWidget {
           fontSize: 12.sp,
           color: Colors.black38,
         ),
-        filled: true,
+        // filled: true,
         prefixIcon: prefixIcon,
         suffixIcon: suffixIcon,
-        fillColor: Colors.grey.shade100,
+        // fillColor: Colors.grey.shade100,
         border: const OutlineInputBorder(),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8.r),
-          borderSide: const BorderSide(
-            color: Colors.black26,
-          ),
+          borderSide: const BorderSide(color: Colors.black26),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8.r),
-          borderSide: const BorderSide(
-            color: Colors.black26,
-          ),
+          borderSide: const BorderSide(color: Colors.black26),
         ),
       ),
     );

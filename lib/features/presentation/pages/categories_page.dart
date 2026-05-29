@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:template/app/router/app_router.dart';
-import 'package:template/core/utils/colors.dart';
-import 'package:template/features/course/course-widget/course_card.dart';
-import 'package:template/features/course/data/models/course-models/course_model.dart';
-import 'package:template/features/course/logic/course-cubit/course_cubit.dart';
-import 'package:template/features/course/logic/selected_course_cubit.dart';
-import 'package:template/features/presentation/utilities-class/mev_tech_utilities.dart';
-import 'package:template/features/presentation/widgets/course.dart';
+import 'package:mevtech/app/router/app_router.dart';
+import 'package:mevtech/core/utils/colors.dart';
+import 'package:mevtech/features/course/course-widget/course_card.dart';
+import 'package:mevtech/features/course/data/models/course-models/course_model.dart';
+import 'package:mevtech/features/course/logic/course-cubit/course_cubit.dart';
+import 'package:mevtech/features/course/logic/selected_course_cubit.dart';
+import 'package:mevtech/features/presentation/utilities-class/mev_tech_utilities.dart';
+import 'package:mevtech/features/presentation/widgets/course.dart';
 
 class CategoriesPage extends StatelessWidget {
   const CategoriesPage({super.key});
@@ -95,7 +96,9 @@ class _CategoriesViewState extends State<CategoriesView> {
           MevTechUtilities.hideProgressIndicator(context);
 
           MevTechUtilities.successToast(
-              context, state.message ?? 'Request Successful');
+            context,
+            state.message ?? 'Request Successful',
+          );
 
           context.read<CourseCubit>().resetRoute();
         }
@@ -120,33 +123,31 @@ class _CategoriesViewState extends State<CategoriesView> {
                 },
                 icon: const Icon(Icons.arrow_back_ios),
               ),
-              iconTheme: const IconThemeData(
-                color: AppColor.primary,
-              ),
+              iconTheme: const IconThemeData(color: AppColor.primary),
               title: Text(
-                'Categories',
+                'Course Categories',
                 style: TextStyle(
                   fontFamily: 'poppings',
                   fontWeight: FontWeight.w600,
                   fontSize: 17.sp,
                 ),
               ),
-              actions: [
-                Padding(
-                  padding: EdgeInsets.only(right: 10.w),
-                  child: IconButton(
-                    onPressed: () {
-                      // courseCubit.clearField();
-                      context.pushNamed(AppRouter.courseCategorySettings);
-                    },
-                    icon: Icon(
-                      Icons.add_card,
-                      size: 35.r,
-                      color: AppColor.secondary,
-                    ),
-                  ),
-                ),
-              ],
+              // actions: [
+              //   Padding(
+              //     padding: EdgeInsets.only(right: 10.w),
+              //     child: IconButton(
+              //       onPressed: () {
+              //         // courseCubit.clearField();
+              //         context.pushNamed(AppRouter.courseCategorySettings);
+              //       },
+              //       icon: Icon(
+              //         Icons.add_card,
+              //         size: 35.r,
+              //         color: AppColor.secondary,
+              //       ),
+              //     ),
+              //   ),
+              // ],
             ),
             body: Padding(
               padding: EdgeInsets.all(12.r),
@@ -162,7 +163,7 @@ class _CategoriesViewState extends State<CategoriesView> {
                         categoryList: courses,
                         isMenuExpanded:
                             state.isMenuExpanded[category.categoryName] ??
-                                false,
+                            false,
                         category: category.categoryName,
                         onClickViewAll: (category) {
                           context.pushNamed(
@@ -174,9 +175,9 @@ class _CategoriesViewState extends State<CategoriesView> {
                           courseCubit.toggleMenu(category.categoryName);
                         },
                         onTap: (course) {
-                          context
-                              .read<SelectedCourseCubit>()
-                              .selectCourse(course);
+                          context.read<SelectedCourseCubit>().selectCourse(
+                            course,
+                          );
 
                           context.pushNamed(
                             AppRouter.courseDetails,
@@ -202,9 +203,9 @@ class _CategoriesViewState extends State<CategoriesView> {
                           courseCubit.toggleMenu(Course.all);
                         },
                         onTap: (course) {
-                          context
-                              .read<SelectedCourseCubit>()
-                              .selectCourse(course);
+                          context.read<SelectedCourseCubit>().selectCourse(
+                            course,
+                          );
 
                           context.pushNamed(
                             AppRouter.courseDetails,
@@ -332,28 +333,67 @@ class _CategoriesViewState extends State<CategoriesView> {
         if (state is CourseFailure &&
             state.actionType == CourseActionType.getCourseCategory) {
           return Scaffold(
+            appBar: AppBar(
+              leading: IconButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                icon: const Icon(Icons.arrow_back),
+              ),
+            ),
             body: Center(
-              child: Text(state.errorMessage),
+              child: Container(
+                padding: EdgeInsets.all(20.r),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade400, width: 1.5),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  mainAxisSize: .min,
+                  children: [
+                    Text(
+                      textAlign: TextAlign.center,
+                      '⚠️ ${state.errorMessage}',
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    SizedBox(height: 10.h),
+                    TextButton.icon(
+                      onPressed: context
+                          .read<CourseCubit>()
+                          .loadCoursesAndCategories,
+                      icon: Icon(
+                        FIcons.rotateCcw,
+                        size: 25.sp,
+                        color: AppColor.primary,
+                      ),
+                      label: Text(
+                        'Retry',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.bold,
+                          color: AppColor.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Text(state.errorMessage)
             ),
           );
         }
 
         if (state is CourseLoading &&
             state.actionType == CourseActionType.getCourseCategory) {
-          return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(
-                color: AppColor.secondary,
-                backgroundColor: AppColor.primary,
-              ),
-            ),
-          );
+          return Scaffold(body: Center(child: MevTechUtilities.customLoader()));
         }
         return const Scaffold(
           backgroundColor: Colors.white,
-          body: Center(
-            child: Text('Courses Not Found'),
-          ),
+          body: Center(child: Text('Courses Not Found')),
         );
       },
     );
@@ -392,9 +432,7 @@ class _CategoriesViewState extends State<CategoriesView> {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    icon: const Icon(
-                      Icons.close,
-                    ),
+                    icon: const Icon(Icons.close),
                   ),
                 ),
                 Text(
@@ -405,47 +443,43 @@ class _CategoriesViewState extends State<CategoriesView> {
                   ),
                 ),
                 Expanded(
-                    child: ListView.builder(
-                        physics: const ClampingScrollPhysics(),
-                        itemCount: items.length,
-                        itemBuilder: (context, index) {
-                          final value = items[index];
-                          return Column(
-                            children: [
-                              ListTile(
-                                title: Text(
-                                  value.categoryName,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                  ),
+                  child: ListView.builder(
+                    physics: const ClampingScrollPhysics(),
+                    itemCount: items.length,
+                    itemBuilder: (context, index) {
+                      final value = items[index];
+                      return Column(
+                        children: [
+                          ListTile(
+                            title: Text(
+                              value.categoryName,
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                            trailing: ElevatedButton(
+                              onPressed: () => onDelete?.call(value.id ?? ''),
+                              style: ElevatedButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
-                                trailing: ElevatedButton(
-                                  onPressed: () =>
-                                      onDelete?.call(value.id ?? ''),
-                                  style: ElevatedButton.styleFrom(
-                                    padding: EdgeInsets.zero,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                  child: Text(
-                                    'Delete',
-                                    style: TextStyle(
-                                      fontSize: 11.sp,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white,
-                                    ),
-                                  ),
+                                backgroundColor: Colors.red,
+                              ),
+                              child: Text(
+                                'Delete',
+                                style: TextStyle(
+                                  fontSize: 11.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
                                 ),
                               ),
-                              const Divider(
-                                thickness: 0.5,
-                                color: Colors.black45,
-                              ),
-                            ],
-                          );
-                        }))
+                            ),
+                          ),
+                          const Divider(thickness: 0.5, color: Colors.black45),
+                        ],
+                      );
+                    },
+                  ),
+                ),
                 // Row(
                 //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 //   children: [
@@ -520,6 +554,7 @@ class _CategoriesViewState extends State<CategoriesView> {
     );
   }
 }
+
 // If you want to sort all courses by category name, use:
 // final sortedCourses = myList.toList()
 //   ..sort((a, b) => a.category.compareTo(b.category));

@@ -1,18 +1,24 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:injectable/injectable.dart';
-import 'package:template/features/chat/data/signalr-model/chat_message.dart';
-import 'package:template/features/chat/data/signalr-model/room.dart';
-import 'package:template/features/chat/data/signalr-model/user_status.dart';
+import 'package:mevtech/features/chat/data/signalr-model/chat_message.dart';
+import 'package:mevtech/features/chat/data/signalr-model/room.dart';
+import 'package:mevtech/features/chat/data/signalr-model/user_status.dart';
 
 part 'chat_data_state.dart';
 
-@singleton
+@injectable
 class ChatDataCubit extends Cubit<ChatDataState> {
   ChatDataCubit() : super(const ChatDataState());
 
   void getMyRooms(List<RoomMain> rooms) {
-    emit(state.copyWith(roomsMain: rooms, selectedChatRoom: rooms.first));
+    if (rooms.isNotEmpty) {
+      final finalRooms = rooms
+        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      emit(
+        state.copyWith(roomsMain: finalRooms, selectedChatRoom: rooms.first),
+      );
+    }
   }
 
   void getPrivateRooms(List<RoomMain> rooms) {
@@ -66,19 +72,22 @@ class ChatDataCubit extends Cubit<ChatDataState> {
     }
 
     // 2. Update the USERNAME Lookup Map
-    final updatedUsernameMap =
-        Map<String, String>.from(state.userIdToUsernameMap);
+    final updatedUsernameMap = Map<String, String>.from(
+      state.userIdToUsernameMap,
+    );
     // Always store/update the current username for this ID
     updatedUsernameMap[indicator.userId] = indicator.username;
 
     // 3. Emit the new state
-    emit(state.copyWith(
-      typingUsersByRoom: updatedTypingMap,
-      userIdToUsernameMap: updatedUsernameMap,
-    ));
+    emit(
+      state.copyWith(
+        typingUsersByRoom: updatedTypingMap,
+        userIdToUsernameMap: updatedUsernameMap,
+      ),
+    );
   }
 
-//
+  //
 
   // create
 

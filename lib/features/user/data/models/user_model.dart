@@ -1,5 +1,5 @@
-import 'package:template/core/utils/constants.dart';
-import 'package:template/features/user/data/models/subscription_model.dart';
+import 'package:mevtech/core/utils/constants.dart';
+import 'package:mevtech/features/user/data/models/subscription_model.dart';
 
 class UserModel {
   UserModel({

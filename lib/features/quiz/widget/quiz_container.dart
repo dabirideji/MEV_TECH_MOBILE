@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:template/core/utils/colors.dart';
+import 'package:mevtech/core/utils/colors.dart';
 
 class QuizModeContainer extends StatelessWidget {
   const QuizModeContainer({

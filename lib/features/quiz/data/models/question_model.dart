@@ -1,4 +1,6 @@
-import 'package:template/core/utils/constants.dart';
+import 'dart:convert';
+
+import 'package:mevtech/core/utils/constants.dart';
 
 class QuestionModel {
   QuestionModel({
@@ -32,6 +34,26 @@ class QuestionModel {
       category: (json['category'] ?? '') as String,
     );
   }
+
+  factory QuestionModel.fromMap(Map<String, dynamic> map) {
+    return QuestionModel(
+      id: map['id'] as int,
+      question: map['question'] as String,
+      option: OptionModel.fromJson(
+        jsonDecode(map['option'] as String) as Map<String, dynamic>,
+      ),
+      section: map['section'] as String,
+      image: map['image'] as String,
+      answer: map['answer'] as String,
+      solution: map['solution'] as String,
+      examtype: map['examtype'] as String,
+      examyear: map['examyear'] as String,
+      questionNub: map['questionNub'] as int,
+      hasPassage: map['hasPassage'] as int,
+      category: map['category'] as String,
+    );
+  }
+
   final int id;
   final String question;
   final OptionModel option;
@@ -44,6 +66,23 @@ class QuestionModel {
   final int questionNub;
   final int hasPassage;
   final String category;
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'question': question,
+      'option': option.toJsonString(), // ✅ JSON STRING
+      'section': section,
+      'image': image,
+      'answer': answer,
+      'solution': solution,
+      'examtype': examtype,
+      'examyear': examyear,
+      'questionNub': questionNub,
+      'hasPassage': hasPassage,
+      'category': category,
+    };
+  }
 }
 
 class OptionModel {
@@ -69,4 +108,11 @@ class OptionModel {
   final String c;
   final String d;
   final String? e;
+
+  Map<String, dynamic> toMap() {
+    return {'a': a, 'b': b, 'c': c, 'd': d, 'e': e};
+  }
+
+  /// Convert to JSON string for Sqflite
+  String toJsonString() => jsonEncode(toMap());
 }

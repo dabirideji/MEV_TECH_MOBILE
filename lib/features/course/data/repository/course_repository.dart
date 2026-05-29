@@ -1,22 +1,26 @@
+import 'dart:async';
 import 'dart:developer';
 
 import 'package:injectable/injectable.dart';
-import 'package:template/core/error/failure_response.dart';
-import 'package:template/core/network/api_service.dart';
-import 'package:template/core/utils/constants.dart';
-import 'package:template/data/generic_repository.dart';
-import 'package:template/data/paginated_model.dart';
-import 'package:template/features/course/data/models/course-content-models/course_content_model.dart';
-import 'package:template/features/course/data/models/course-content-models/course_content_request.dart';
-import 'package:template/features/course/data/models/course-content-models/course_video_model.dart';
-import 'package:template/features/course/data/models/course-models/course_model.dart';
-import 'package:template/features/course/data/models/course-models/course_request.dart';
+import 'package:mevtech/core/error/failure_response.dart';
+import 'package:mevtech/core/network/api_service.dart';
+import 'package:mevtech/core/storages/DatabaseHandler.dart';
+import 'package:mevtech/core/utils/constants.dart';
+import 'package:mevtech/data/generic_repository.dart';
+import 'package:mevtech/data/paginated_model.dart';
+import 'package:mevtech/features/course/data/models/course-content-models/course_content_model.dart';
+import 'package:mevtech/features/course/data/models/course-content-models/course_content_request.dart';
+import 'package:mevtech/features/course/data/models/course-content-models/course_video_model.dart';
+import 'package:mevtech/features/course/data/models/course-models/course_model.dart';
+import 'package:mevtech/features/course/data/models/course-models/course_request.dart';
 
 @singleton
 class CourseRepository {
   CourseRepository(this.apiService);
 
   final ApiService apiService;
+
+  final db = DatabaseHandler();
 
   Future<String> createCourse(CreateCourseRequest requestModel) async {
     final result = await apiService.multipartRequestCreate(
@@ -35,15 +39,35 @@ class CourseRepository {
     }
   }
 
+  Future<List<CourseModel>> getLocalCourses() async {
+    final result = await db.getDbRecords('course');
+    if (result.isNotEmpty) {
+      final courses = result.map(CourseModel.fromMap).toList();
+      return courses;
+    }
+    // return getCourses();
+    return [];
+  }
+
+  Future<void> clearDB() async {
+    await db.deleteDbRecords('course');
+    await db.deleteDbRecords('courseCategory');
+  }
+
   Future<List<CourseModel>> getCourses() async {
     final result = await apiService.getJsonRequest('Course/GetAllAsQueryable');
     if (result != null) {
       if (result is Map && result['status'] == true) {
+        await db.deleteDbRecords('course');
         final data = result['data'] as List<dynamic>;
 
-        return data
+        final courses = data
             .map((e) => CourseModel.fromJson(e as Map<String, dynamic>))
             .toList();
+
+        await db.insertDbRecord<CourseModel>('course', courses);
+
+        return courses;
       } else {
         throw FailureResponse.fromResponse(result);
       }
@@ -53,9 +77,7 @@ class CourseRepository {
   }
 
   Future<CourseModel> getCoursebyID(String id) async {
-    final result = await apiService.getJsonRequest(
-      'Course/GetById/$id',
-    );
+    final result = await apiService.getJsonRequest('Course/GetById/$id');
     if (result != null) {
       if (result is Map && result['status'] == true && result['data'] != null) {
         final data = result['data'] as Map<String, dynamic>;
@@ -107,6 +129,51 @@ class CourseRepository {
     }
   }
 
+  // Course Enrolment
+
+  Future<CourseEnrollmentModel?> getCourseEnrollment({
+    required String courseId,
+    required String studentId,
+    required Uri uri,
+  }) async {
+    final local = await db.getEnrollment(
+      studentId: studentId,
+      courseId: courseId,
+    );
+    if (local != null) {
+      unawaited(refreshEnrolment(uri));
+      return local;
+    }
+
+    final result = await fetchOdata<CourseEnrollmentModel>(
+      url: uri,
+      fromJson: CourseEnrollmentModel.fromJson,
+    );
+
+    if (result.isNotEmpty) {
+      await db.saveEnrollment(result.first);
+      final local = await db.getEnrollment(
+        studentId: studentId,
+        courseId: courseId,
+      );
+      return local;
+    } else {
+      return null;
+    }
+  }
+
+  Future<void> refreshEnrolment(Uri uri) async {
+    try {
+      final result = await fetchOdata<CourseEnrollmentModel>(
+        url: uri,
+        fromJson: CourseEnrollmentModel.fromJson,
+      );
+      if (result.isNotEmpty) {
+        await db.saveEnrollment(result.first);
+      }
+    } catch (_) {}
+  }
+
   // wrapper methods
 
   Future<PaginatedResponse<T>> fetchPaginated<T>({
@@ -121,11 +188,7 @@ class CourseRepository {
       endPoint: endPoint,
       fromJson: fromJson,
     );
-    return repo.getPaginated(
-      page: page,
-      pageSize: pageSize,
-      token: token,
-    );
+    return repo.getPaginated(page: page, pageSize: pageSize, token: token);
   }
 
   Future<List<T>> fetchAll<T>({
@@ -220,11 +283,7 @@ class CourseRepository {
       endPoint: '',
       fromJson: fromJson,
     );
-    return repo.getOdata(
-      url: url,
-      authRequired: authRequired,
-      token: token,
-    );
+    return repo.getOdata(url: url, authRequired: authRequired, token: token);
   }
 
   // Course Category
@@ -248,15 +307,35 @@ class CourseRepository {
     }
   }
 
+  Future<List<CourseCategoryModel>> getLocalCourseCategory() async {
+    final result = await db.getDbRecords('courseCategory');
+    if (result.isNotEmpty) {
+      final categories = result.map(CourseCategoryModel.fromMap).toList();
+      return categories;
+    }
+    // return getCourseCategories();
+    return [];
+  }
+
   Future<List<CourseCategoryModel>> getCourseCategories() async {
-    final result = await apiService.getJsonRequest('CourseCategory/GetAll');
+    final result = await apiService.getJsonRequest(
+      'CourseCategory/GetAllAsQueryable',
+    );
     if (result != null) {
       if (result is Map && result['status'] == true) {
+        await db.deleteDbRecords('courseCategory');
         final data = result['data'] as List<dynamic>;
 
-        return data
+        final categories = data
             .map((e) => CourseCategoryModel.fromJson(e as Map<String, dynamic>))
             .toList();
+
+        await db.insertDbRecord<CourseCategoryModel>(
+          'courseCategory',
+          categories,
+        );
+
+        return categories;
       } else {
         throw FailureResponse.fromResponse(result);
       }
@@ -266,8 +345,7 @@ class CourseRepository {
   }
 
   Future<List<CourseCategoryModel>> getCourseCategoriesAsQueryable() async {
-    final result =
-        await apiService.getJsonRequest('CourseCategory/GetAllAsQueryable');
+    final result = await apiService.getJsonRequest('CourseCategory/GetAll');
     if (result != null) {
       if (result is Map && result['status'] == true) {
         final data = result['data'] as List<dynamic>;
@@ -328,8 +406,9 @@ class CourseRepository {
   }
 
   Future<String> deleteCourseCategory(String id) async {
-    final result =
-        await apiService.deleteJsonRequest('CourseCategory/Delete/$id');
+    final result = await apiService.deleteJsonRequest(
+      'CourseCategory/Delete/$id',
+    );
     if (result != null) {
       if (result is Map && result['status'] == true) {
         return result['responseMessage'] as String;
@@ -343,9 +422,7 @@ class CourseRepository {
 
   // Course Tag
 
-  Future<String> createCourseTag(
-    CourseTagCreateRequest requestModel,
-  ) async {
+  Future<String> createCourseTag(CourseTagCreateRequest requestModel) async {
     final result = await apiService.postJsonRequest(
       requestModel.toJson(),
       'CourseTag/Create',
@@ -380,8 +457,9 @@ class CourseRepository {
   }
 
   Future<List<CourseTagModel>> getCourseTagsAsQueryable() async {
-    final result =
-        await apiService.getJsonRequest('CourseTag/GetAllAsQueryable');
+    final result = await apiService.getJsonRequest(
+      'CourseTag/GetAllAsQueryable',
+    );
     if (result != null) {
       if (result is Map && result['status'] == true) {
         final data = result['data'] as List<dynamic>;
@@ -398,9 +476,7 @@ class CourseRepository {
   }
 
   Future<CourseTagModel> getCourseTagbyID(String id) async {
-    final result = await apiService.getJsonRequest(
-      'CourseTag/GetById/$id',
-    );
+    final result = await apiService.getJsonRequest('CourseTag/GetById/$id');
     if (result != null) {
       if (result is Map && result['status'] == true && result['data'] != null) {
         final data = result['data'] as Map<String, dynamic>;
@@ -559,8 +635,9 @@ class CourseRepository {
   }
 
   Future<String> deleteCourseContent(String id) async {
-    final result =
-        await apiService.deleteJsonRequest('CourseContent/Delete/$id');
+    final result = await apiService.deleteJsonRequest(
+      'CourseContent/Delete/$id',
+    );
     if (result != null) {
       if (result is Map && result['status'] == true) {
         return result['responseMessage'] as String;
@@ -595,9 +672,7 @@ class CourseRepository {
 
   // students course notes
 
-  Future<String> createContentNote(
-    Map<String, dynamic> jsonData,
-  ) async {
+  Future<String> createContentNote(Map<String, dynamic> jsonData) async {
     final result = await apiService.postJsonRequest(
       jsonData,
       'StudentCourseContentNote/Create',
@@ -615,8 +690,36 @@ class CourseRepository {
   }
 
   Future<List<CourseContentNoteModel>> getContentsNotes() async {
-    final result =
-        await apiService.getJsonRequest('StudentCourseContentNote/GetAll');
+    final result = await apiService.getJsonRequest(
+      'StudentCourseContentNote/GetAll',
+    );
+    if (result != null) {
+      if (result is Map && result['status'] == true) {
+        final data = result['data'] as List<dynamic>;
+
+        return data
+            .map(
+              (e) => CourseContentNoteModel.fromJson(e as Map<String, dynamic>),
+            )
+            .toList();
+      } else {
+        throw FailureResponse.fromResponse(result);
+      }
+    } else {
+      throw FailureResponse.fromResponse('Unknown');
+    }
+  }
+
+  // /api/StudentCourseContentNote/GetByCourseContentId/{studentId}
+
+  Future<List<CourseContentNoteModel>> getContentNoteByCourseIdStudentId({
+    required String courseContentId,
+    required String studentId,
+  }) async {
+    final result = await apiService.getJsonRequest(
+      // 'StudentCourseContentNote/GetByCourseContentId$studentId',
+      'StudentCourseContentNote/GetByCourseContentId/$studentId/$courseContentId',
+    );
     if (result != null) {
       if (result is Map && result['status'] == true) {
         final data = result['data'] as List<dynamic>;
@@ -636,9 +739,7 @@ class CourseRepository {
 
   // students course comments
 
-  Future<String> createContentComment(
-    Map<String, dynamic> jsonData,
-  ) async {
+  Future<String> createContentComment(Map<String, dynamic> jsonData) async {
     final result = await apiService.postJsonRequest(
       jsonData,
       'CourseContentComment/Create',
@@ -656,8 +757,35 @@ class CourseRepository {
   }
 
   Future<List<CourseContentCommentModel>> getContentsComment() async {
-    final result = await apiService
-        .getJsonRequest('CourseContentComment/GetAllAsQueryable');
+    final result = await apiService.getJsonRequest(
+      'CourseContentComment/GetAllAsQueryable',
+    );
+    if (result != null) {
+      if (result is Map && result['status'] == true) {
+        final data = result['data'] as List<dynamic>;
+
+        return data
+            .map(
+              (e) =>
+                  CourseContentCommentModel.fromJson(e as Map<String, dynamic>),
+            )
+            .toList();
+      } else {
+        throw FailureResponse.fromResponse(result);
+      }
+    } else {
+      throw FailureResponse.fromResponse('Unknown');
+    }
+  }
+
+  // /api/CourseContentComment/GetByCourseContentId/{courseContentId}
+
+  Future<List<CourseContentCommentModel>> getContentsCommentByContentId(
+    String courseContentId,
+  ) async {
+    final result = await apiService.getJsonRequest(
+      'CourseContentComment/GetByCourseContentId/$courseContentId',
+    );
     if (result != null) {
       if (result is Map && result['status'] == true) {
         final data = result['data'] as List<dynamic>;
@@ -677,10 +805,11 @@ class CourseRepository {
   }
 
   Future<PaginatedResponse<CourseContentCommentModel>>
-      getContentsCommentPaginated({Map<String, dynamic>? queryParams}) async {
+  getContentsCommentPaginated({Map<String, dynamic>? queryParams}) async {
     final result = await apiService.getJsonRequest(
-        'CourseContentComment/GetPaginatedData/paginate',
-        queryParams: queryParams);
+      'CourseContentComment/GetPaginatedData/paginate',
+      queryParams: queryParams,
+    );
     if (result != null) {
       if (result is Map && result['status'] == true) {
         final data = result['data'] as Map<String, dynamic>;

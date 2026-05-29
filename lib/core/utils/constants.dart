@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -24,12 +26,7 @@ class DateTimeFormat {
   static DateFormat get hourMinutes => DateFormat.Hm();
 }
 
-enum MessageType {
-  info,
-  warning,
-  success,
-  danger,
-}
+enum MessageType { info, warning, success, danger }
 
 String? checkNullString(dynamic value) {
   if (value != null) {
@@ -43,6 +40,36 @@ Map<String, dynamic>? checkNullMap(dynamic value) {
     return value;
   }
   return null;
+}
+
+List<dynamic> listFromDbMap(dynamic data) {
+  if (data != null && (data as String).isNotEmpty) {
+    final result = jsonDecode(data) as List<dynamic>;
+    return result;
+  } else {
+    return [];
+  }
+}
+
+Map<String, dynamic> mapFromDbMap(dynamic data) {
+  if (data != null && (data as String).isNotEmpty) {
+    final result = jsonDecode(data) as Map<String, dynamic>;
+    return result;
+  } else {
+    return {};
+  }
+}
+
+String normalizeTimestamp(String raw) {
+  final dt = DateTime.parse(raw).toUtc();
+  return dt.toIso8601String();
+}
+
+String normalizeApiTimestamp(String raw) {
+  final dt = DateTime.parse(raw);
+  // If the string had no timezone, Dart assumes local.
+  // Force it to UTC explicitly.
+  return dt.toUtc().toIso8601String();
 }
 
 // class NullModel<T> {

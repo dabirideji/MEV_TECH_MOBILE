@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:template/features/chat/mock/mock_models.dart';
-import 'package:template/features/chat/widget/main_chat_layout.dart';
+import 'package:mevtech/features/chat/mock/mock_models.dart';
+import 'package:mevtech/features/chat/widget/main_chat_layout.dart';
 
 class TestingPage extends StatefulWidget {
   const TestingPage({super.key});

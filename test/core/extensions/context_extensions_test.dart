@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:template/core/extensions/context_extensions.dart';
-import 'package:template/shared/flash/presentation/blocs/cubit/flash_cubit.dart';
+import 'package:mevtech/core/extensions/context_extensions.dart';
+import 'package:mevtech/shared/flash/presentation/blocs/cubit/flash_cubit.dart';
 
 // Import the file that contains the extension
 

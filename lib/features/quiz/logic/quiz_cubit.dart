@@ -1,20 +1,18 @@
-import 'dart:developer';
-
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:injectable/injectable.dart';
-import 'package:template/core/utils/request_states.dart';
-import 'package:template/features/quiz/data/models/question_model.dart';
-import 'package:template/features/quiz/data/models/subject_model.dart';
-import 'package:template/features/user/data/repository/user_repository.dart';
+import 'package:mevtech/core/extensions/string_extension.dart';
+import 'package:mevtech/core/utils/request_states.dart';
+import 'package:mevtech/features/quiz/data/models/question_model.dart';
+import 'package:mevtech/features/quiz/data/repository/quiz_repository.dart';
 
 part 'quiz_state.dart';
 
 @injectable
 class QuizCubit extends Cubit<QuizState> {
-  QuizCubit(this.userRepository) : super(const QuizState());
+  QuizCubit(this.quizRepository) : super(const QuizState());
 
-  final UserRepository userRepository;
+  final QuizRepository quizRepository;
 
   void selectSubject(String? subjectId) {
     if (!isClosed) {
@@ -40,13 +38,15 @@ class QuizCubit extends Cubit<QuizState> {
         emit(state.copyWith(subjectStatus: const RequestState.loading()));
       }
 
-      final subject = await userRepository.getSubjects();
+      final subjects = await quizRepository.getSubjects();
 
       if (!isClosed) {
-        emit(state.copyWith(
-          subjectStatus: const RequestState.success(),
-          subjects: subject.subjects,
-        ));
+        emit(
+          state.copyWith(
+            subjectStatus: const RequestState.success(),
+            subjects: subjects.map((e) => e.capitalize()).toList(),
+          ),
+        );
       }
     } catch (e) {
       if (!isClosed) {
@@ -56,27 +56,32 @@ class QuizCubit extends Cubit<QuizState> {
   }
 
   Future<void> fetchQuizQuestions(String subject) async {
-    final queryParams = <String, dynamic>{'subject': subject};
     try {
       if (!isClosed) {
         emit(state.copyWith(questionStatus: const RequestState.loading()));
       }
-      final questions = await userRepository.getQuizQuestions(
-          queryParams: queryParams, count: '10');
+
+      final questions = await quizRepository.getQuizQuestions(
+        subject: subject,
+        count: 40,
+      );
 
       final initialSelections = List<int?>.filled(questions.length, null);
 
       if (!isClosed) {
-        emit(state.copyWith(
-          questionStatus: const RequestState.success(),
-          questions: questions,
-          selectedAnswers: initialSelections,
-        ));
+        emit(
+          state.copyWith(
+            questionStatus: const RequestState.success(),
+            questions: questions,
+            selectedAnswers: initialSelections,
+          ),
+        );
       }
     } catch (e) {
       if (!isClosed) {
         emit(
-            state.copyWith(questionStatus: RequestState.failure(e.toString())));
+          state.copyWith(questionStatus: RequestState.failure(e.toString())),
+        );
       }
     }
   }
@@ -90,6 +95,52 @@ class QuizCubit extends Cubit<QuizState> {
       if (!isClosed) {
         emit(state.copyWith(resultState: ResultState.failure));
       }
+    }
+  }
+
+  Future<String?> fetchQuizExplanation(String message) async {
+    try {
+      // if (!isClosed) {
+      //   emit(state.copyWith());
+      // }
+
+      final explanationMessage = await quizRepository.getQuizExplanation(
+        message,
+      );
+
+      return explanationMessage;
+    } catch (e) {
+      // if (!isClosed) {
+      //   emit(state.copyWith());
+      // }
+
+      rethrow;
+    }
+  }
+
+  Future<String?> fetchMockExplanation(String message) async {
+    try {
+      if (!isClosed) {
+        emit(state.copyWith());
+      }
+      // final explanationMessage = await quizRepository.getQuizExplanation(
+      //   message,
+      // );
+      final explanationMessage = await Future.delayed(
+        const Duration(seconds: 4),
+        () {
+          return 'The Transaction was succesful';
+          // return {'high'} as String;
+        },
+      );
+
+      return explanationMessage;
+    } catch (e) {
+      if (!isClosed) {
+        emit(state.copyWith());
+      }
+      // return null;
+      rethrow;
     }
   }
 

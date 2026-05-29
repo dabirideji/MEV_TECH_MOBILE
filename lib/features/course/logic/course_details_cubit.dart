@@ -3,13 +3,13 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:injectable/injectable.dart';
-import 'package:template/core/network/api_service.dart';
-import 'package:template/core/utils/request_states.dart';
-import 'package:template/data/odata_query_builder.dart';
-import 'package:template/features/course/data/models/course-content-models/course_content_model.dart';
-import 'package:template/features/course/data/models/course-models/course_model.dart';
-import 'package:template/features/course/data/repository/course_repository.dart';
-import 'package:template/features/presentation/utilities-class/mev_tech_utilities.dart';
+import 'package:mevtech/core/network/api_service.dart';
+import 'package:mevtech/core/utils/request_states.dart';
+import 'package:mevtech/data/odata_query_builder.dart';
+import 'package:mevtech/features/course/data/models/course-content-models/course_content_model.dart';
+import 'package:mevtech/features/course/data/models/course-models/course_model.dart';
+import 'package:mevtech/features/course/data/repository/course_repository.dart';
+import 'package:mevtech/features/presentation/utilities-class/mev_tech_utilities.dart';
 
 sealed class CourseDetailsState extends Equatable {
   const CourseDetailsState();
@@ -53,8 +53,13 @@ final class CourseDetailsSuccess extends CourseDetailsState {
   }
 
   @override
-  List<Object?> get props =>
-      [course, fetchStatus, createStatus, message, courseEnrollment];
+  List<Object?> get props => [
+    course,
+    fetchStatus,
+    createStatus,
+    message,
+    courseEnrollment,
+  ];
 }
 
 final class CourseDetailsFailure extends CourseDetailsState {
@@ -89,11 +94,13 @@ class CourseDetailsCubit extends Cubit<CourseDetailsState> {
   void resetState() {
     if (state is! CourseDetailsSuccess) return;
     final current = state as CourseDetailsSuccess;
-    emit(current.copyWith(
-      createStatus: const RequestState.initial(),
-      fetchStatus: const RequestState.initial(),
-      message: '',
-    ));
+    emit(
+      current.copyWith(
+        createStatus: const RequestState.initial(),
+        fetchStatus: const RequestState.initial(),
+        message: '',
+      ),
+    );
   }
 
   Future<void> createCourseEnrollment({
@@ -116,17 +123,18 @@ class CourseDetailsCubit extends Cubit<CourseDetailsState> {
         fromJson: CourseEnrollmentModel.fromJson,
       );
 
-      emit(current.copyWith(
-        createStatus: const RequestState.success(),
-        message: result,
-      ));
+      emit(
+        current.copyWith(
+          createStatus: const RequestState.success(),
+          message: result,
+        ),
+      );
 
       unawaited(
-          fetchCourseEnrollment(courseId: courseId, studentId: studentId));
+        fetchCourseEnrollment(courseId: courseId, studentId: studentId),
+      );
     } catch (e) {
-      emit(current.copyWith(
-        createStatus: RequestState.failure(e.toString()),
-      ));
+      emit(current.copyWith(createStatus: RequestState.failure(e.toString())));
     }
   }
 
@@ -143,8 +151,9 @@ class CourseDetailsCubit extends Cubit<CourseDetailsState> {
     try {
       const endPoint = 'CourseEnrollment/GetOData/odata';
 
-      final queryBuilder =
-          ODataQueryBuilder(baseUrl: '${ApiService.baseUrlAddress}/$endPoint');
+      final queryBuilder = ODataQueryBuilder(
+        baseUrl: '${ApiService.baseUrlAddress}/$endPoint',
+      );
 
       final uri = queryBuilder
           .filter('studentId eq $studentId and courseId eq $courseId')
@@ -154,16 +163,24 @@ class CourseDetailsCubit extends Cubit<CourseDetailsState> {
         emit(current.copyWith(fetchStatus: const RequestState.loading()));
       }
 
-      final result = await courseRepository.fetchOdata<CourseEnrollmentModel>(
-        url: uri,
-        fromJson: CourseEnrollmentModel.fromJson,
+      // final result = await courseRepository.fetchOdata<CourseEnrollmentModel>(
+      //   url: uri,
+      //   fromJson: CourseEnrollmentModel.fromJson,
+      // );
+
+      final result = await courseRepository.getCourseEnrollment(
+        courseId: courseId,
+        studentId: studentId,
+        uri: uri,
       );
 
       if (!isClosed) {
-        emit(current.copyWith(
-          fetchStatus: const RequestState.success(),
-          courseEnrollment: result.first,
-        ));
+        emit(
+          current.copyWith(
+            fetchStatus: const RequestState.success(),
+            courseEnrollment: result,
+          ),
+        );
       }
 
       // if (searchId == _currentSearchId) {
@@ -171,9 +188,7 @@ class CourseDetailsCubit extends Cubit<CourseDetailsState> {
       // }
     } catch (e) {
       if (!isClosed) {
-        emit(current.copyWith(
-          fetchStatus: RequestState.failure(e.toString()),
-        ));
+        emit(current.copyWith(fetchStatus: RequestState.failure(e.toString())));
       }
     }
   }

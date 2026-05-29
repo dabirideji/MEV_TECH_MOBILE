@@ -1,9 +1,9 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:injectable/injectable.dart';
-import 'package:template/core/utils/multiple_status_states.dart';
-import 'package:template/features/user/data/models/subscription_model.dart';
-import 'package:template/features/user/data/repository/user_repository.dart';
+import 'package:mevtech/core/utils/multiple_status_states.dart';
+import 'package:mevtech/features/user/data/models/subscription_model.dart';
+import 'package:mevtech/features/user/data/repository/user_repository.dart';
 
 part 'subscription_state.dart';
 
@@ -47,7 +47,7 @@ class SubscriptionCubit extends Cubit<SubscriptionState> {
     if (state is! SubscriptionSuccess) return;
     final current = state as SubscriptionSuccess;
     const callbackUrl = 'https://www.google.com';
-    // 'dev.adryanev.template.dev://payment_complete';
+    // 'com.mevtech.app.dev://payment_complete';
     // getRedirectUri();
 
     try {
@@ -95,11 +95,11 @@ class SubscriptionCubit extends Cubit<SubscriptionState> {
     const currentFlavor = String.fromEnvironment('FLAVOR');
     switch (currentFlavor) {
       case 'production':
-        return 'dev.adryanev.template://auth-callback';
+        return 'com.mevtech.app://auth-callback';
       case 'staging':
-        return 'dev.adryanev.template.stg://auth-callback';
+        return 'com.mevtech.app.stg://auth-callback';
       case 'development':
-        return 'dev.adryanev.template.dev://auth-callback';
+        return 'com.mevtech.app.dev://auth-callback';
       default:
         throw Exception('Unknown or missing FLAVOR');
     }

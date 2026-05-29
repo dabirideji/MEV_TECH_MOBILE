@@ -20,3 +20,30 @@ String generateTemporaryId() {
   // Generates a client-side unique ID (e.g., '12345678-abcd-...')
   return _uuid.v4();
 }
+
+Color getColorForUser(String userId) {
+  if (userId.isEmpty) {
+    return Colors.black; // Default color for empty ID
+  }
+
+  final userColorPalette = [
+    Colors.blue,
+    Colors.red,
+    Colors.cyan,
+    Colors.orange,
+    Colors.purple,
+    Colors.teal,
+    Colors.pink,
+    Colors.indigo,
+  ];
+
+  // 1. Get the integer hash code of the userId
+  final hash = userId.hashCode;
+
+  // 2. Ensure the hash is non-negative and wrap it using the modulo operator.
+  // The result will be an index from 0 up to (userColorPalette.length - 1).
+  final index = hash.abs() % userColorPalette.length;
+
+  // 3. Return the color at that deterministic index.
+  return userColorPalette[index];
+}

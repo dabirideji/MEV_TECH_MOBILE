@@ -3,18 +3,18 @@ import 'dart:math';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
-
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:forui/forui.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mevtech/core/utils/colors.dart';
+import 'package:mevtech/features/course/course-widget/course_thumbnail.dart';
+import 'package:mevtech/features/course/data/models/course-content-models/course_content_model.dart';
+import 'package:mevtech/features/course/data/models/course-models/course_model.dart';
+import 'package:mevtech/features/presentation/dashboard/dashboard_cubit.dart';
+import 'package:mevtech/features/presentation/utilities-class/mev_tech_utilities.dart';
+import 'package:mevtech/features/presentation/widgets/course.dart';
 import 'package:non_uniform_border/non_uniform_border.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:template/core/utils/colors.dart';
-import 'package:template/features/course/course-widget/course_thumbnail.dart';
-import 'package:template/features/course/data/models/course-content-models/course_content_model.dart';
-import 'package:template/features/course/data/models/course-models/course_model.dart';
-import 'package:template/features/presentation/dashboard/dashboard_cubit.dart';
-import 'package:template/features/presentation/utilities-class/mev_tech_utilities.dart';
-import 'package:template/features/presentation/widgets/course.dart';
 
 class CourseCard extends StatelessWidget {
   const CourseCard({required this.course, super.key});
@@ -49,8 +49,10 @@ class CourseCard extends StatelessWidget {
                 else if (course.id == 'AU')
                   acaUniIcon(),
                 Container(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 10.w,
+                    vertical: 4.h,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColor.primary,
                     borderRadius: BorderRadius.circular(40),
@@ -78,9 +80,7 @@ class CourseCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(8.r),
               image: DecorationImage(
                 fit: BoxFit.cover,
-                image: AssetImage(
-                  course.imagePath,
-                ),
+                image: AssetImage(course.imagePath),
               ),
             ),
           ),
@@ -90,18 +90,13 @@ class CourseCard extends StatelessWidget {
             textAlign: TextAlign.center,
             overflow: TextOverflow.ellipsis,
             maxLines: 2,
-            style: TextStyle(
-              fontWeight: FontWeight.w800,
-              fontSize: 18.sp,
-            ),
+            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18.sp),
           ),
           SizedBox(height: 5.h),
           RichText(
             text: TextSpan(
               text: '${course.durationType}: ',
-              style: const TextStyle(
-                color: Colors.black54,
-              ),
+              style: const TextStyle(color: Colors.black54),
               children: [
                 TextSpan(
                   text: course.duration,
@@ -156,19 +151,13 @@ class CourseCard extends StatelessWidget {
   }
 
   Widget ciQIcon() {
-    return Image.asset(
-      'assets/icons/CiQ-icon.png',
-      width: 70.w,
-    );
+    return Image.asset('assets/icons/CiQ-icon.png', width: 70.w);
   }
 
   Widget acaUniIcon() {
     return Container(
       margin: EdgeInsets.only(left: 15.w),
-      child: Image.asset(
-        'assets/icons/Aca-Uni-icon.png',
-        width: 35.w,
-      ),
+      child: Image.asset('assets/icons/Aca-Uni-icon.png', width: 35.w),
     );
   }
 }
@@ -228,17 +217,11 @@ class MainCourseCardSlide extends StatelessWidget {
           children: [
             Text(
               '$failureMessage ⛔',
-              style: TextStyle(
-                color: Colors.red,
-                fontSize: 12.sp,
-              ),
+              style: TextStyle(color: Colors.red, fontSize: 12.sp),
             ),
             TextButton.icon(
               onPressed: onRetry,
-              icon: const Icon(
-                Icons.send,
-                color: AppColor.primary,
-              ),
+              icon: const Icon(Icons.send, color: AppColor.primary),
               label: Text(
                 'Reload Course',
                 style: TextStyle(
@@ -284,8 +267,10 @@ class MainCourseCardSlide extends StatelessWidget {
                   children: [
                     mevTechIcon(),
                     Container(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 10.w,
+                        vertical: 4.h,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColor.primary,
                         borderRadius: BorderRadius.circular(40),
@@ -313,9 +298,7 @@ class MainCourseCardSlide extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8.r),
                   image: DecorationImage(
                     fit: BoxFit.cover,
-                    image: NetworkImage(
-                      course.courseImageUrl,
-                    ),
+                    image: NetworkImage(course.courseImageUrl),
                   ),
                 ),
               ),
@@ -325,18 +308,13 @@ class MainCourseCardSlide extends StatelessWidget {
                 textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,
                 maxLines: 2,
-                style: TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 18.sp,
-                ),
+                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18.sp),
               ),
               SizedBox(height: 5.h),
               RichText(
                 text: const TextSpan(
                   text: 'Flexible Duration: ',
-                  style: TextStyle(
-                    color: Colors.black54,
-                  ),
+                  style: TextStyle(color: Colors.black54),
                   children: [
                     TextSpan(
                       text: '2-3 Weeks Learning',
@@ -394,13 +372,14 @@ class MainCourseCardSlide extends StatelessWidget {
 }
 
 class CategoryIcons extends StatelessWidget {
-  const CategoryIcons(
-      {required this.categories,
-      required this.status,
-      required this.onClick,
-      required this.onRetry,
-      super.key,
-      this.failureMessage = ''});
+  const CategoryIcons({
+    required this.categories,
+    required this.status,
+    required this.onClick,
+    required this.onRetry,
+    super.key,
+    this.failureMessage = '',
+  });
 
   final List<CourseCategoryModel> categories;
   final LoadStatus status;
@@ -424,8 +403,10 @@ class CategoryIcons extends StatelessWidget {
     } else if (categoryName == Course.marketing) {
       return const Icon(Icons.campaign_outlined, color: Colors.red);
     } else if (categoryName == Course.dataScience) {
-      return const Icon(Icons.data_thresholding_outlined,
-          color: Colors.blueGrey);
+      return const Icon(
+        Icons.data_thresholding_outlined,
+        color: Colors.blueGrey,
+      );
     } else if (categoryName == Course.health) {
       return const Icon(Icons.health_and_safety, color: Colors.pinkAccent);
     } else if (categoryName == Course.hospitality) {
@@ -460,10 +441,7 @@ class CategoryIcons extends StatelessWidget {
             itemCount: 6,
             separatorBuilder: (context, index) => SizedBox(width: 15.w),
             itemBuilder: (context, index) {
-              return CircleAvatar(
-                backgroundColor: Colors.white,
-                radius: 20.r,
-              );
+              return CircleAvatar(backgroundColor: Colors.white, radius: 20.r);
             },
           ),
         ),
@@ -480,24 +458,17 @@ class CategoryIcons extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Text(
-              failureMessage,
-              style: TextStyle(
-                fontSize: 12.sp,
-              ),
-            ),
+            Text(failureMessage, style: TextStyle(fontSize: 12.sp)),
             TextButton.icon(
               onPressed: onRetry,
-              icon: const Icon(
-                Icons.send,
-                color: AppColor.primary,
-              ),
+              icon: const Icon(Icons.send, color: AppColor.primary),
               label: Text(
                 'Retry',
                 style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12.sp),
+                  color: Colors.black,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12.sp,
+                ),
               ),
             ),
           ],
@@ -584,8 +555,9 @@ class MiniCourseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final categoryList =
-        courses.where((course) => course.id == category).toList();
+    final categoryList = courses
+        .where((course) => course.id == category)
+        .toList();
     return Theme(
       data: Theme.of(context).copyWith(
         splashColor: Colors.transparent,
@@ -606,8 +578,9 @@ class MiniCourseCard extends StatelessWidget {
         title: Container(
           padding: EdgeInsets.all(12.r),
           decoration: BoxDecoration(
-            color:
-                isMenuExpanded ? AppColor.secondaryFade : AppColor.primaryFaint,
+            color: isMenuExpanded
+                ? AppColor.secondaryFade
+                : AppColor.primaryFaint,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -670,9 +643,7 @@ class MiniCourseCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(8.r),
                               image: DecorationImage(
                                 fit: BoxFit.cover,
-                                image: AssetImage(
-                                  course.courseImageUrl,
-                                ),
+                                image: AssetImage(course.courseImageUrl),
                               ),
                             ),
                           ),
@@ -689,11 +660,9 @@ class MiniCourseCard extends StatelessWidget {
                           SizedBox(height: 10.h),
                           Row(
                             children: [
-                              const Icon(
-                                Icons.person_2_outlined,
-                              ),
+                              const Icon(Icons.person_2_outlined),
                               Text(
-                                course.instructorId,
+                                course.instructorId ?? 'N/A',
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   fontWeight: FontWeight.w400,
@@ -895,18 +864,20 @@ class CourseModelCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8.r),
                             child: CachedNetworkImage(
                               imageUrl: course.courseImageUrl,
-                              placeholder: (context, url) => const Center(
+                              placeholder: (context, url) => Center(
                                 child: SizedBox(
                                   width: 30,
                                   height: 30,
-                                  child: CircularProgressIndicator(
-                                    color: AppColor.secondary,
-                                    backgroundColor: AppColor.primary,
+                                  child: MevTechUtilities.customLoader(
+                                    scale: 1.5,
                                   ),
                                 ),
                               ),
-                              errorWidget: (context, url, error) =>
-                                  const Icon(Icons.error),
+                              errorWidget: (context, url, error) => Icon(
+                                FIcons.imageOff,
+                                color: Colors.red,
+                                size: 25.sp,
+                              ),
                               fit: BoxFit.fill,
                             ),
                           ),
@@ -990,7 +961,7 @@ class CourseModelCard extends StatelessWidget {
     CachedNetworkImage.evictFromCache(url);
   }
 
-// Or to clear everything (not recommended unless needed):
+  // Or to clear everything (not recommended unless needed):
 
   Future<void> clearAllCache() async {
     // await DefaultCacheManager().emptyCache();
@@ -1037,8 +1008,9 @@ class CourseCategoryCard extends StatelessWidget {
         title: Container(
           padding: EdgeInsets.all(12.r),
           decoration: BoxDecoration(
-            color:
-                isMenuExpanded ? AppColor.secondaryFade : AppColor.primaryFaint,
+            color: isMenuExpanded
+                ? AppColor.secondaryFade
+                : AppColor.primaryFaint,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -1104,9 +1076,7 @@ class CourseCategoryCard extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(8.r),
                                 image: DecorationImage(
                                   fit: BoxFit.cover,
-                                  image: NetworkImage(
-                                    course.courseImageUrl,
-                                  ),
+                                  image: NetworkImage(course.courseImageUrl),
                                 ),
                               ),
                             ),
@@ -1123,10 +1093,7 @@ class CourseCategoryCard extends StatelessWidget {
                             SizedBox(height: 10.h),
                             Row(
                               children: [
-                                Icon(
-                                  Icons.school,
-                                  size: 15.w,
-                                ),
+                                Icon(Icons.school, size: 15.w),
                                 SizedBox(width: 5.w),
                                 Text(
                                   'Free',
@@ -1181,7 +1148,8 @@ class CourseContentListCard extends StatelessWidget {
           itemBuilder: (context, index) {
             final courseContent = courseContents[index];
             final videoId = MevTechUtilities.extractYoutubeId(
-                courseContent.courseContentVideoUrl);
+              courseContent.courseContentVideoUrl,
+            );
             return GestureDetector(
               onTap: () => onTap?.call(courseContent.id),
               onLongPress: () => onLongPress?.call(courseContent.id),
@@ -1306,7 +1274,7 @@ class CourseContentListCard extends StatelessWidget {
     CachedNetworkImage.evictFromCache(url);
   }
 
-// Or to clear everything (not recommended unless needed):
+  // Or to clear everything (not recommended unless needed):
 
   Future<void> clearAllCache() async {
     // await DefaultCacheManager().emptyCache();
@@ -1374,18 +1342,20 @@ class CourseOperationCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8.r),
                             child: CachedNetworkImage(
                               imageUrl: course.courseImageUrl,
-                              placeholder: (context, url) => const Center(
+                              placeholder: (context, url) => Center(
                                 child: SizedBox(
                                   width: 30,
                                   height: 30,
-                                  child: CircularProgressIndicator(
-                                    color: AppColor.secondary,
-                                    backgroundColor: AppColor.primary,
+                                  child: MevTechUtilities.customLoader(
+                                    scale: 1.5,
                                   ),
                                 ),
                               ),
-                              errorWidget: (context, url, error) =>
-                                  const Icon(Icons.error),
+                              errorWidget: (context, url, error) => Icon(
+                                FIcons.imageOff,
+                                color: Colors.red,
+                                size: 25.sp,
+                              ),
                               fit: BoxFit.fill,
                             ),
                           ),
@@ -1530,7 +1500,7 @@ class CourseOperationCard extends StatelessWidget {
     CachedNetworkImage.evictFromCache(url);
   }
 
-// Or to clear everything (not recommended unless needed):
+  // Or to clear everything (not recommended unless needed):
 
   Future<void> clearAllCache() async {
     // await DefaultCacheManager().emptyCache();

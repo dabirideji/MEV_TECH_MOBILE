@@ -1,4 +1,4 @@
-import 'package:template/features/presentation/widgets/course.dart';
+import 'package:mevtech/features/presentation/widgets/course.dart';
 
 class CourseList {
   final myList = [

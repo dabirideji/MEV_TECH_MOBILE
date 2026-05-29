@@ -1,4 +1,4 @@
-import 'package:template/features/course/mock-data/course_category.dart';
+import 'package:mevtech/features/course/mock-data/course_category.dart';
 
 class CourseApi {
   Map<String, dynamic> data = {

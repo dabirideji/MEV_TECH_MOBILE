@@ -7,13 +7,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:template/core/utils/colors.dart';
-import 'package:template/core/utils/multiple_status_states.dart';
-import 'package:template/features/course/course-widget/comment_nodes.dart';
-import 'package:template/features/course/data/models/course-content-models/course_content_model.dart';
-import 'package:template/features/course/logic/course-content-cubit/course_content_cubit.dart';
-import 'package:template/features/presentation/utilities-class/form_validator.dart';
-import 'package:template/features/presentation/utilities-class/mev_tech_utilities.dart';
+import 'package:mevtech/core/utils/colors.dart';
+import 'package:mevtech/core/utils/multiple_status_states.dart';
+import 'package:mevtech/features/course/course-widget/comment_nodes.dart';
+import 'package:mevtech/features/course/data/models/course-content-models/course_content_model.dart';
+import 'package:mevtech/features/course/logic/course-content-cubit/course_content_cubit.dart';
+import 'package:mevtech/features/presentation/utilities-class/form_validator.dart';
+import 'package:mevtech/features/presentation/utilities-class/mev_tech_utilities.dart';
 
 class ContentHeaderLoding extends StatelessWidget {
   const ContentHeaderLoding({super.key});
@@ -52,11 +52,7 @@ class ContentHeaderLoding extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                width: 180.w,
-                height: 16.h,
-                color: Colors.white,
-              ),
+              Container(width: 180.w, height: 16.h, color: Colors.white),
               Container(
                 width: 60.w,
                 height: 16.h,
@@ -84,10 +80,7 @@ class ContentOverview extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: Colors.grey.shade200,
-          width: 1.5,
-        ),
+        border: Border.all(color: Colors.grey.shade200, width: 1.5),
       ),
       child: Column(
         children: [
@@ -121,10 +114,7 @@ class ContentOverview extends StatelessWidget {
                             width: 0.8,
                           ),
                         ),
-                        child: Icon(
-                          Icons.thumb_up_outlined,
-                          size: 15.w,
-                        ),
+                        child: Icon(Icons.thumb_up_outlined, size: 15.w),
                       ),
                       SizedBox(width: 7.w),
                       Container(
@@ -136,10 +126,7 @@ class ContentOverview extends StatelessWidget {
                             width: 0.8,
                           ),
                         ),
-                        child: Icon(
-                          Icons.thumb_down_outlined,
-                          size: 15.w,
-                        ),
+                        child: Icon(Icons.thumb_down_outlined, size: 15.w),
                       ),
                     ],
                   ),
@@ -157,31 +144,28 @@ class ContentOverview extends StatelessWidget {
               SizedBox(height: 10.h),
             ],
           ),
-          Divider(
-            thickness: 0.7,
-            color: Colors.grey.shade300,
-          ),
+          Divider(thickness: 0.7, color: Colors.grey.shade300),
           SizedBox(height: 10.h),
-          Row(
-            children: [
-              Text(
-                'Instructor:',
-                style: GoogleFonts.poppins(
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black54,
-                ),
-              ),
-              SizedBox(width: 7.w),
-              Text(
-                'Willy Morgan',
-                style: GoogleFonts.poppins(
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
+          // Row(
+          //   children: [
+          //     Text(
+          //       'Instructor:',
+          //       style: GoogleFonts.poppins(
+          //         fontSize: 12.sp,
+          //         fontWeight: FontWeight.w500,
+          //         color: Colors.black54,
+          //       ),
+          //     ),
+          //     SizedBox(width: 7.w),
+          //     Text(
+          //       'Willy Morgan',
+          //       style: GoogleFonts.poppins(
+          //         fontSize: 12.sp,
+          //         fontWeight: FontWeight.w600,
+          //       ),
+          //     ),
+          //   ],
+          // ),
         ],
       ),
     );
@@ -232,10 +216,7 @@ class _ContentCommentState extends State<ContentComment> {
             children: [
               const CircleAvatar(
                 backgroundColor: AppColor.primary,
-                child: Text(
-                  'YO',
-                  style: TextStyle(color: Colors.white),
-                ),
+                child: Text('YO', style: TextStyle(color: Colors.white)),
               ),
               SizedBox(width: 12.w),
               Expanded(
@@ -249,15 +230,11 @@ class _ContentCommentState extends State<ContentComment> {
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8.r),
-                      borderSide: BorderSide(
-                        color: Colors.grey.shade300,
-                      ),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
                     ),
                     disabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8.r),
-                      borderSide: BorderSide(
-                        color: Colors.grey.shade300,
-                      ),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8.r),
@@ -278,13 +255,12 @@ class _ContentCommentState extends State<ContentComment> {
           Align(
             alignment: Alignment.centerRight,
             child: ElevatedButton.icon(
-              onPressed:
-                  widget.commentStatus.isCreating ? null : widget.onPostComment,
+              onPressed: widget.commentStatus.isCreating
+                  ? null
+                  : widget.onPostComment,
               label: Text(
                 widget.commentStatus.isCreating ? 'Posting..' : 'Post Comment',
-                style: const TextStyle(
-                  color: Colors.white,
-                ),
+                style: const TextStyle(color: Colors.white),
               ),
               icon: widget.commentStatus.isCreating
                   ? SizedBox(
@@ -294,10 +270,7 @@ class _ContentCommentState extends State<ContentComment> {
                         color: Colors.white,
                       ),
                     )
-                  : const Icon(
-                      Icons.send,
-                      color: Colors.white,
-                    ),
+                  : const Icon(Icons.send, color: Colors.white),
               style: ElevatedButton.styleFrom(
                 backgroundColor: widget.commentStatus.isCreating
                     ? AppColor.primaryFaint
@@ -312,13 +285,9 @@ class _ContentCommentState extends State<ContentComment> {
           Builder(
             builder: (context) {
               if (widget.commentStatus.isFetching) {
-                return const Center(
-                  child: ContentCommentLoading(),
-                );
+                return const Center(child: ContentCommentLoading());
               } else if (widget.commentStatus.isFetchFailure) {
-                return const Center(
-                  child: Text('Failed to load comments.'),
-                );
+                return const Center(child: Text('Failed to load comments.'));
               } else {
                 if (widget.comments.isEmpty) {
                   return const Center(
@@ -334,7 +303,8 @@ class _ContentCommentState extends State<ContentComment> {
                   physics: const NeverScrollableScrollPhysics(),
                   shrinkWrap: true,
                   padding: EdgeInsets.only(bottom: 10.h),
-                  itemCount: widget.comments.length +
+                  itemCount:
+                      widget.comments.length +
                       (widget.commentStatus.isPaginating ? 1 : 0),
                   itemBuilder: (context, index) {
                     if (index < widget.comments.length) {
@@ -452,9 +422,9 @@ class _ExpandableCommentTreeState extends State<ExpandableCommentTree> {
         final textFocus = FocusNode();
         return Padding(
           padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context)
-                .viewInsets
-                .bottom, // Adjusts for keyboard
+            bottom: MediaQuery.of(
+              context,
+            ).viewInsets.bottom, // Adjusts for keyboard
             left: 16,
             right: 16,
             top: 16,
@@ -469,9 +439,7 @@ class _ExpandableCommentTreeState extends State<ExpandableCommentTree> {
                   const Text('Replying to '),
                   Text(
                     userFullName,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -495,7 +463,9 @@ class _ExpandableCommentTreeState extends State<ExpandableCommentTree> {
                     filled: true,
                     fillColor: Colors.grey[200],
                     contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
                   ),
                   style: const TextStyle(fontSize: 14),
                   validator: FormValidator.customField,
@@ -569,8 +539,8 @@ class _ExpandableCommentTreeState extends State<ExpandableCommentTree> {
     final userFullname = comment.user != null
         ? '${comment.user!.firstName} ${comment.user!.lastName}'
         : comment.userFullName != null
-            ? comment.userFullName!
-            : 'Deleted User';
+        ? comment.userFullName!
+        : 'Deleted User';
 
     return userFullname;
   }
@@ -579,11 +549,11 @@ class _ExpandableCommentTreeState extends State<ExpandableCommentTree> {
     final nameInitial = comment.user != null
         ? '${comment.user!.firstName[0]} ${comment.user!.lastName[0]}'
         : comment.userFullName != null
-            ? comment.userFullName!.substring(
-                0,
-                comment.userFullName!.length.clamp(0, 2),
-              )
-            : 'NA';
+        ? comment.userFullName!.substring(
+            0,
+            comment.userFullName!.length.clamp(0, 2),
+          )
+        : 'NA';
     return nameInitial.toUpperCase();
   }
 
@@ -596,8 +566,9 @@ class _ExpandableCommentTreeState extends State<ExpandableCommentTree> {
         widget.rootComment.replies != null &&
         widget.rootComment.replies!.isNotEmpty) {
       // If expanded, render all actual replies as RegularCommentNodes
-      repliesToRender =
-          widget.rootComment.replies?.map(RegularCommentNode.new).toList();
+      repliesToRender = widget.rootComment.replies
+          ?.map(RegularCommentNode.new)
+          .toList();
     } else if (hasReplies) {
       // If collapsed BUT has replies, render ONE ViewMoreRepliesNode
       repliesToRender = [
@@ -613,8 +584,10 @@ class _ExpandableCommentTreeState extends State<ExpandableCommentTree> {
       child: CommentTreeWidget<CourseContentCommentModel, CommentTreeNode>(
         widget.rootComment,
         repliesToRender ?? [],
-        treeThemeData:
-            TreeThemeData(lineColor: Colors.grey.shade300, lineWidth: 3),
+        treeThemeData: TreeThemeData(
+          lineColor: Colors.grey.shade300,
+          lineWidth: 3,
+        ),
         avatarRoot: (context, comment) => PreferredSize(
           preferredSize: Size.fromRadius(widget.avatarRootSize),
           child: widget.isNestedChild
@@ -653,8 +626,8 @@ class _ExpandableCommentTreeState extends State<ExpandableCommentTree> {
                   node.count == 1
                       ? 'View ${node.count} reply...'
                       : node.count > 1
-                          ? 'View ${node.count} replies...'
-                          : '',
+                      ? 'View ${node.count} replies...'
+                      : '',
                   style: TextStyle(
                     fontWeight: FontWeight.w900,
                     fontSize: 11.sp,
@@ -697,7 +670,8 @@ class _ExpandableCommentTreeState extends State<ExpandableCommentTree> {
           } else if (node is RegularCommentNode) {
             final comment = node.comment;
             final hasNestedReplies = comment.replies?.isNotEmpty ?? false;
-            final isReplying = (widget.commentUUID == comment.id) &&
+            final isReplying =
+                (widget.commentUUID == comment.id) &&
                 (widget.commentStatus.isCreating &&
                     widget.commentStatus.hasSubtype);
 
@@ -719,8 +693,10 @@ class _ExpandableCommentTreeState extends State<ExpandableCommentTree> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 8,
+                      horizontal: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColor.primaryLight2,
                       borderRadius: BorderRadius.circular(12),
@@ -730,36 +706,32 @@ class _ExpandableCommentTreeState extends State<ExpandableCommentTree> {
                       children: [
                         Text(
                           _userFullname(comment),
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black,
-                                  ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
                         ),
-                        const SizedBox(
-                          height: 4,
-                        ),
+                        const SizedBox(height: 4),
                         Text(
                           comment.message,
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    fontWeight: FontWeight.w300,
-                                    color: Colors.black,
-                                  ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.w300,
+                                color: Colors.black,
+                              ),
                         ),
                       ],
                     ),
                   ),
                   DefaultTextStyle(
                     style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                          color: Colors.grey[700],
-                          fontWeight: FontWeight.bold,
-                        ),
+                      color: Colors.grey[700],
+                      fontWeight: FontWeight.bold,
+                    ),
                     child: Row(
                       children: [
-                        Text(
-                          formatTimeAgo(comment.createdAt),
-                        ),
+                        Text(formatTimeAgo(comment.createdAt)),
                         TextButton(
                           onPressed: () {},
                           style: TextButton.styleFrom(
@@ -771,11 +743,11 @@ class _ExpandableCommentTreeState extends State<ExpandableCommentTree> {
                           ),
                           child: Text(
                             'Like',
-                            style:
-                                Theme.of(context).textTheme.bodySmall!.copyWith(
-                                      color: Colors.grey.shade700,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                            style: Theme.of(context).textTheme.bodySmall!
+                                .copyWith(
+                                  color: Colors.grey.shade700,
+                                  fontWeight: FontWeight.bold,
+                                ),
                           ),
                         ),
                         if (isReplying)
@@ -798,8 +770,10 @@ class _ExpandableCommentTreeState extends State<ExpandableCommentTree> {
                                 userFullName: _userFullname(comment),
                                 parentCommentId: comment.id,
                                 onSend: (replyMessage, parentCommentId) {
-                                  widget.onReply
-                                      ?.call(replyMessage, parentCommentId);
+                                  widget.onReply?.call(
+                                    replyMessage,
+                                    parentCommentId,
+                                  );
                                 },
                               );
                             },
@@ -812,9 +786,7 @@ class _ExpandableCommentTreeState extends State<ExpandableCommentTree> {
                             ),
                             child: Text(
                               'Reply',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall!
+                              style: Theme.of(context).textTheme.bodySmall!
                                   .copyWith(
                                     color: Colors.grey.shade700,
                                     fontWeight: FontWeight.bold,
@@ -832,7 +804,8 @@ class _ExpandableCommentTreeState extends State<ExpandableCommentTree> {
           return const SizedBox.shrink();
         },
         contentRoot: (context, comment) {
-          final isReplying = (widget.commentUUID == comment.id) &&
+          final isReplying =
+              (widget.commentUUID == comment.id) &&
               (widget.commentStatus.isCreating &&
                   widget.commentStatus.hasSubtype);
 
@@ -851,46 +824,44 @@ class _ExpandableCommentTreeState extends State<ExpandableCommentTree> {
                     Text(
                       _userFullname(comment),
                       style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
                     ),
-                    const SizedBox(
-                      height: 4,
-                    ),
+                    const SizedBox(height: 4),
                     Text(
                       comment.message,
                       style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                            fontWeight: FontWeight.w300,
-                            color: Colors.black,
-                          ),
+                        fontWeight: FontWeight.w300,
+                        color: Colors.black,
+                      ),
                     ),
                   ],
                 ),
               ),
               DefaultTextStyle(
                 style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                      color: Colors.grey[700],
-                      fontWeight: FontWeight.bold,
-                    ),
+                  color: Colors.grey[700],
+                  fontWeight: FontWeight.bold,
+                ),
                 child: Row(
                   children: [
-                    Text(
-                      formatTimeAgo(comment.createdAt),
-                    ),
+                    Text(formatTimeAgo(comment.createdAt)),
                     TextButton(
                       onPressed: () {},
                       style: TextButton.styleFrom(
                         padding: EdgeInsets.zero,
-                        visualDensity:
-                            const VisualDensity(horizontal: -4, vertical: -4),
+                        visualDensity: const VisualDensity(
+                          horizontal: -4,
+                          vertical: -4,
+                        ),
                       ),
                       child: Text(
                         'Like',
                         style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                              color: Colors.grey.shade700,
-                              fontWeight: FontWeight.bold,
-                            ),
+                          color: Colors.grey.shade700,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     if (isReplying)
@@ -913,23 +884,27 @@ class _ExpandableCommentTreeState extends State<ExpandableCommentTree> {
                             userFullName: _userFullname(comment),
                             parentCommentId: comment.id,
                             onSend: (replyMessage, parentCommentId) {
-                              widget.onReply
-                                  ?.call(replyMessage, parentCommentId);
+                              widget.onReply?.call(
+                                replyMessage,
+                                parentCommentId,
+                              );
                             },
                           );
                         },
                         style: TextButton.styleFrom(
                           padding: EdgeInsets.zero,
-                          visualDensity:
-                              const VisualDensity(horizontal: -4, vertical: -4),
+                          visualDensity: const VisualDensity(
+                            horizontal: -4,
+                            vertical: -4,
+                          ),
                         ),
                         child: Text(
                           'Reply',
-                          style:
-                              Theme.of(context).textTheme.bodySmall!.copyWith(
-                                    color: Colors.grey.shade700,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                          style: Theme.of(context).textTheme.bodySmall!
+                              .copyWith(
+                                color: Colors.grey.shade700,
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
                       ),
                   ],
@@ -962,13 +937,9 @@ class ContentNote extends StatelessWidget {
     Widget noteListWidget;
 
     if (noteStatus.isFetching) {
-      noteListWidget = const Center(
-        child: ContentNoteLoding(),
-      );
+      noteListWidget = const Center(child: ContentNoteLoding());
     } else if (noteStatus.isFetchFailure) {
-      noteListWidget = const Center(
-        child: Text('Failed to load notes.'),
-      );
+      noteListWidget = const Center(child: Text('Failed to load notes.'));
     } else {
       noteListWidget = _buildNotesList(notes);
     }
@@ -982,10 +953,7 @@ class ContentNote extends StatelessWidget {
             children: [
               CircleAvatar(
                 backgroundColor: Colors.blueAccent.shade400,
-                child: const Text(
-                  'YO',
-                  style: TextStyle(color: Colors.white),
-                ),
+                child: const Text('YO', style: TextStyle(color: Colors.white)),
               ),
               SizedBox(width: 12.w),
               Expanded(
@@ -999,15 +967,11 @@ class ContentNote extends StatelessWidget {
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8.r),
-                      borderSide: BorderSide(
-                        color: Colors.grey.shade300,
-                      ),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
                     ),
                     disabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8.r),
-                      borderSide: BorderSide(
-                        color: Colors.grey.shade300,
-                      ),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8.r),
@@ -1030,21 +994,17 @@ class ContentNote extends StatelessWidget {
               onPressed: noteStatus.isCreating ? null : onPressed,
               label: Text(
                 noteStatus.isCreating ? 'Saving..' : 'Save Note',
-                style: const TextStyle(
-                  color: Colors.white,
-                ),
+                style: const TextStyle(color: Colors.white),
               ),
               icon: noteStatus.isCreating
                   ? SizedBox(
                       width: 20.w,
                       height: 20.h,
-                      child:
-                          const CircularProgressIndicator(color: Colors.white),
+                      child: const CircularProgressIndicator(
+                        color: Colors.white,
+                      ),
                     )
-                  : const Icon(
-                      Icons.upload_file,
-                      color: Colors.white,
-                    ),
+                  : const Icon(Icons.upload_file, color: Colors.white),
               style: ElevatedButton.styleFrom(
                 backgroundColor: noteStatus.isCreating
                     ? AppColor.primaryFaint
@@ -1064,9 +1024,7 @@ class ContentNote extends StatelessWidget {
 
   Widget _buildNotesList(List<CourseContentNoteModel> notes) {
     if (notes.isEmpty) {
-      return const Center(
-        child: Text('Add notes!'),
-      );
+      return const Center(child: Text('Add notes!'));
     }
     return Column(
       children: List.generate(notes.length, (index) {
@@ -1077,9 +1035,7 @@ class ContentNote extends StatelessWidget {
           padding: EdgeInsets.all(8.r),
           decoration: BoxDecoration(
             color: Colors.grey.shade200,
-            border: Border.all(
-              color: Colors.grey.shade400,
-            ),
+            border: Border.all(color: Colors.grey.shade400),
             borderRadius: BorderRadius.circular(8.r),
           ),
           child: Column(
@@ -1260,17 +1216,9 @@ class ContentCommentLoading extends StatelessWidget {
               SizedBox(width: 8.w),
               Column(
                 children: [
-                  Container(
-                    width: 150.w,
-                    height: 12.h,
-                    color: Colors.white,
-                  ),
+                  Container(width: 150.w, height: 12.h, color: Colors.white),
                   SizedBox(height: 5.h),
-                  Container(
-                    width: 150.w,
-                    height: 12.h,
-                    color: Colors.white,
-                  ),
+                  Container(width: 150.w, height: 12.h, color: Colors.white),
                 ],
               ),
               Container(
@@ -1297,17 +1245,9 @@ class ContentCommentLoading extends StatelessWidget {
               SizedBox(width: 8.w),
               Column(
                 children: [
-                  Container(
-                    width: 150.w,
-                    height: 12.h,
-                    color: Colors.white,
-                  ),
+                  Container(width: 150.w, height: 12.h, color: Colors.white),
                   SizedBox(height: 5.h),
-                  Container(
-                    width: 150.w,
-                    height: 12.h,
-                    color: Colors.white,
-                  ),
+                  Container(width: 150.w, height: 12.h, color: Colors.white),
                 ],
               ),
               Container(
