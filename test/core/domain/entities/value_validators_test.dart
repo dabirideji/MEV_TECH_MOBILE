@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:template/core/domain/entities/value_validators.dart';
-import 'package:template/core/domain/failures/value_failure.dart';
-import 'package:template/core/extensions/dartz_extensions.dart';
+import 'package:mevtech/core/domain/entities/value_validators.dart';
+import 'package:mevtech/core/domain/failures/value_failure.dart';
+import 'package:mevtech/core/extensions/dartz_extensions.dart';
 
 void main() {
   group('Value Validator', () {

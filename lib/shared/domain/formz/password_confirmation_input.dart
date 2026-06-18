@@ -1,5 +1,6 @@
 import 'package:formz/formz.dart';
-import 'package:template/l10n/l10n.dart';
+// import 'package:mevtech/l10n/app_localizations.dart';
+
 
 enum PasswordConfirmationValidationError { mismatch }
 
@@ -22,10 +23,10 @@ class PasswordConfirmationInput
 
 extension on PasswordConfirmationValidationError {
   // ignore: unused_element
-  String errorMessage(AppLocalizations i10n) {
-    switch (this) {
-      case PasswordConfirmationValidationError.mismatch:
-        return i10n.confirmPasswordMismatch;
-    }
-  }
+  // String errorMessage(AppLocalizations i10n) {
+  //   switch (this) {
+  //     case PasswordConfirmationValidationError.mismatch:
+  //       return i10n.confirmPasswordMismatch;
+  //   }
+  // }
 }

@@ -1,47 +1,94 @@
-name: template
-description: MEV TECH MOBILE
-version: 1.0.0+1
-publish_to: none
+name: mevtech
+description: "Master tech and business skills with MevTech. Learn, grow, and lead today!"
+# The following line prevents the package from being accidentally published to
+# pub.dev using `flutter pub publish`. This is preferred for private packages.
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+3
 
 environment:
-  sdk: ">=3.6.0 <4.0.0"
+  sdk: ^3.10.1
 
 dependencies:
-  bloc: ^8.1.4
+  flutter:
+    sdk: flutter
+
+  animated_bottom_navigation_bar: ^1.4.0
+  bloc: ^9.1.0
+  cached_network_image: ^3.4.1
+  carousel_slider: ^5.0.0
   change_case: ^2.1.0
   collection: ^1.19.1
+  comment_tree: ^0.3.0
+  contentsize_tabbarview: ^0.0.2
   crypto: ^3.0.6
   cupertino_icons: ^1.0.8
   dartz: ^0.10.1
+  dropdown_flutter: ^1.0.2
   equatable: ^2.0.7
-  flutter:
-    sdk: flutter
-  flutter_bloc: ^8.1.6
-  flutter_localizations:
-    sdk: flutter
+  flutter_bloc: ^9.1.1
+  flutter_cache_manager: ^3.4.1
+  flutter_html: ^3.0.0
+  flutter_image_compress: ^2.4.0
+  
+  flutter_local_notifications: ^19.4.1
+  # flutter_localizations:
+  #   sdk: flutter
   flutter_native_splash: ^2.4.3
   flutter_screenutil: ^5.9.3
+  flutter_web_auth_2: ^4.1.0
+  flutter_widget_from_html_core: ^0.17.0
   formz: ^0.8.0
-  get_it: ^8.0.3
-  go_router: ^14.6.2
+  get_it: ^9.2.0
+  go_router: ^17.0.0
   google_fonts: ^6.2.1
+  google_sign_in: ^7.2.0
+  http: ^1.3.0
+  image_picker: ^1.1.2
   injectable: ^2.5.0
   intl: ^0.20.1
   json_annotation: ^4.9.0
+  logging: ^1.3.0
   meta: ^1.16.0
+  non_uniform_border: ^1.0.0
+  observe_internet_connectivity: ^1.0.2
+  path: ^1.9.1
+  quick_quiz_view: ^0.0.2
   rxdart: ^0.28.0
   shared_preferences: ^2.3.4
+  shimmer: ^3.0.0
+  signalr_netcore: ^1.4.3
+  sqflite: ^2.4.2
+  toastification: ^3.0.3
   uuid: ^4.5.1
+  webview_flutter: ^4.13.0
+  youtube_player_flutter: ^9.1.2
+  youtube_player_iframe: ^5.2.1
+  focus_detector: ^2.0.1
+  forui: ^0.17.0
+  onesignal_flutter: ^5.3.7
+
 
 dev_dependencies:
-  bloc_test: ^9.1.7
-  build_runner: ^2.4.14
-  flutter_gen_runner: ^5.8.0
   flutter_test:
     sdk: flutter
+  bloc_test: ^10.0.0
+  build_runner: ^2.4.14
+  flutter_gen_runner: ^5.8.0
+  flutter_launcher_icons: ^0.14.4
   injectable_generator: ^2.6.2
   mocktail: ^1.0.4
-  very_good_analysis: ^7.0.0
+  very_good_analysis: ^10.0.0 
+  
+  flutter_lints: ^6.0.0
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/App-icon.png"
+  remove_alpha_ios: true
+  adaptive_icon_background: "#ffffff" 
+  adaptive_icon_foreground: "assets/icons/App-icon.png"
 
 dependency_overrides:
   collection: ^1.19.1
@@ -58,12 +105,42 @@ flutter_gen:
     # flare_flutter: true
     # rive: true
 
+# The following section is specific to Flutter packages.
 flutter:
+
+  
   uses-material-design: true
-  generate: true
+  # generate: true
 
   assets:
     - assets/fonts/
     - assets/google_fonts/
     - assets/icons/
     - assets/images/
+    - assets/splash/
+
+  # An image asset can refer to one or more resolution-specific "variants", see
+  # https://flutter.dev/to/resolution-aware-images
+
+  # For details regarding adding assets from package dependencies, see
+  # https://flutter.dev/to/asset-from-package
+
+  # To add custom fonts to your application, add a fonts section here,
+  # in this "flutter" section. Each entry in this list should have a
+  # "family" key with the font family name, and a "fonts" key with a
+  # list giving the asset and other descriptors for the font. For
+  # example:
+  # fonts:
+  #   - family: Schyler
+  #     fonts:
+  #       - asset: fonts/Schyler-Regular.ttf
+  #       - asset: fonts/Schyler-Italic.ttf
+  #         style: italic
+  #   - family: Trajan Pro
+  #     fonts:
+  #       - asset: fonts/TrajanPro.ttf
+  #       - asset: fonts/TrajanPro_Bold.ttf
+  #         weight: 700
+  #
+  # For details regarding fonts from package dependencies,
+  # see https://flutter.dev/to/font-from-package

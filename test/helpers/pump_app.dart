@@ -6,20 +6,23 @@
 // https://opensource.org/licenses/MIT.
 
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+// import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:template/app/router/app_router.dart';
-import 'package:template/l10n/l10n.dart';
+import 'package:mevtech/app/router/app_router.dart';
+// import 'package:mevtech/l10n/app_localizations.dart';
+
+
+// import 'package:mevtech/l10n/l10n.dart';
 
 extension PumpApp on WidgetTester {
   Future<void> pumpApp(Widget widget) {
     return pumpWidget(
       MaterialApp(
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-        ],
-        supportedLocales: AppLocalizations.supportedLocales,
+        // localizationsDelegates: const [
+        //   AppLocalizations.delegate,
+        //   GlobalMaterialLocalizations.delegate,
+        // ],
+        // supportedLocales: AppLocalizations.supportedLocales,
         home: widget,
       ),
     );
@@ -32,14 +35,14 @@ extension PumpApp on WidgetTester {
   }) {
     return pumpWidget(
       MaterialApp.router(
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-        ],
-        supportedLocales: AppLocalizations.supportedLocales,
-        routeInformationProvider: router(location).routeInformationProvider,
-        routeInformationParser: router(location).routeInformationParser,
-        routerDelegate: router(location).routerDelegate,
+        // localizationsDelegates: const [
+        //   AppLocalizations.delegate,
+        //   GlobalMaterialLocalizations.delegate,
+        // ],
+        // supportedLocales: AppLocalizations.supportedLocales,
+        // routeInformationProvider: router(location).routeInformationProvider,
+        // routeInformationParser: router(location).routeInformationParser,
+        // routerDelegate: router(location).routerDelegate,
       ),
     );
   }
